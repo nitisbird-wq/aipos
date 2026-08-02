@@ -1,0 +1,10 @@
+.data/
+.data-test/
+.data-test-*/
+.next/
+coverage/
+playwright-report/
+test-results/
+node_modules/
+drizzle/
+package-lock.json
