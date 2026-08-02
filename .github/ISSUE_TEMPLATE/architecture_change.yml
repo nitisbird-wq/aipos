@@ -1,0 +1,56 @@
+name: Architecture change
+description: Propose a change to a locked decision, ADR, or domain contract
+title: "[arch] "
+labels: ["architecture"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Changing Phase 1 locked decisions or approved ADRs requires a **new ADR** and human approval.
+        Do not include secrets.
+  - type: textarea
+    id: current
+    attributes:
+      label: Current decision
+      description: Cite Decision ID (D1–D6), ADR, or contract section
+    validations:
+      required: true
+  - type: textarea
+    id: proposed
+    attributes:
+      label: Proposed change
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: true
+  - type: textarea
+    id: consequences
+    attributes:
+      label: Consequences
+      description: Pros, cons, and operational impact
+    validations:
+      required: true
+  - type: textarea
+    id: contracts
+    attributes:
+      label: Affected contracts
+      description: Schemas, state machines, verification, Notion projection, API, etc.
+    validations:
+      required: true
+  - type: textarea
+    id: migration
+    attributes:
+      label: Migration / rollback
+    validations:
+      required: true
+  - type: checkboxes
+    id: adr_required
+    attributes:
+      label: ADR requirement
+      options:
+        - label: This change requires a new ADR before implementation
+          required: true

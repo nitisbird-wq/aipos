@@ -1,0 +1,69 @@
+name: Bug report
+description: Report a defect in Mission Intake MVP or repository tooling
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do **not** paste API keys, tokens, passwords, Notion secrets, or production data.
+        Redact logs before attaching.
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: e.g. local Windows / GitHub Actions / Node 20
+      placeholder: local / CI
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      description: Minimal steps to reproduce
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - Low
+        - Medium
+        - High
+        - Critical
+    validations:
+      required: true
+  - type: input
+    id: mission_impact
+    attributes:
+      label: Mission impact
+      description: Mission ID or "none" / "tooling only"
+      placeholder: none
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Redacted logs
+      description: Paste only redacted output (no secrets)
+      render: shell
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Confirmations
+      options:
+        - label: I have removed secrets and personal data from this report
+          required: true

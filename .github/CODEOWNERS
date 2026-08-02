@@ -1,0 +1,28 @@
+# CODEOWNERS — AIPOS path ownership
+# Owner handle: @nitis (confirm this matches the GitHub account for this repository).
+# Enforcement requires branch protection + "Require review from CODEOWNERS".
+# Private repos need GitHub Pro/Team for CODEOWNERS enforcement.
+
+# Default
+*                               @nitis
+
+# Architecture / governance docs
+/docs/                          @nitis
+/adr/                           @nitis
+/AGENTS.md                      @nitis
+/README.md                      @nitis
+
+# Domain contracts
+/packages/schemas/              @nitis
+
+# Database migrations / SQL contracts
+/apps/web/drizzle/              @nitis
+
+# Application
+/apps/web/src/                  @nitis
+
+# Repository governance
+/.github/                       @nitis
+
+# AIPOS local auditor / doctor tooling
+/scripts/aipos/                 @nitis

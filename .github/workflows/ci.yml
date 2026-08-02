@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # OSS Gitleaks CLI (pinned). Avoids gitleaks-action license requirement.
+      - name: Install Gitleaks
+        run: |
+          set -euo pipefail
+          VERSION="8.24.3"
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/gitleaks_${VERSION}_linux_x64.tar.gz" \
+            | tar -xz gitleaks
+          ./gitleaks version
+
+      - name: Scan repository (redacted)
+        run: ./gitleaks detect --source . --verbose --redact --exit-code 1
+
+  verify:
+    name: Verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: secrets
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Format check
+        run: npm run format:check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      # Critical findings → exit 2; High (non-soft) → exit 1 under --profile pr
+      # Soft High (e.g. Branch protection) does not fail PR profile.
+      # Git remote passes on Actions checkouts that include origin.
+      - name: AIPOS Doctor (PR profile)
+        run: npm run aipos -- doctor --profile pr
+
+      # Block Critical advisories only. High/Moderate tracked via Dependabot.
+      # Do not use npm audit fix --force in CI.
+      - name: Dependency audit (critical)
+        run: npm audit --audit-level=critical
+
+      - name: Dependency audit report (high, advisory)
+        run: npm audit --audit-level=high
+        continue-on-error: true

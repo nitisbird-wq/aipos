@@ -1,0 +1,56 @@
+name: Feature request
+description: Propose a product or tooling enhancement within AIPOS scope
+title: "[feat] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Prefer Mission / Requirement IDs when available.
+        Do not include secrets or production credentials.
+  - type: input
+    id: mission
+    attributes:
+      label: Mission
+      description: Mission ID or short mission name
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What problem does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: value
+    attributes:
+      label: Business value
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Proposed scope
+      description: In-scope / out-of-scope for MVP
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+    validations:
+      required: true
+  - type: dropdown
+    id: risk_tier
+    attributes:
+      label: Risk tier
+      options:
+        - L0
+        - L1
+        - L2
+        - L3
+        - L4
+        - Unknown
+    validations:
+      required: true
