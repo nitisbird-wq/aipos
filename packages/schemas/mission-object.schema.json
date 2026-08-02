@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aipos.local/schemas/mission-object.schema.json",
+  "title": "MissionObject",
+  "description": "Mission aggregate after Mapping Accept. status=ready means ready_for_planning (NOT ready for execution/dispatch). planning_status stays not_started in Intake MVP. Separate from Sync state machine. Enum rename ready→ready_for_planning requires ADR.",
+  "version": "1.0",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "mission_id",
+    "object_version",
+    "revision",
+    "source_intake_id",
+    "source_intake_version",
+    "mapping_version",
+    "status",
+    "planning_status",
+    "planning_revision",
+    "criticality",
+    "subtask_ids",
+    "current_blockers",
+    "approval_policy_refs",
+    "anticipated_approval_points",
+    "evidence_refs"
+  ],
+  "properties": {
+    "mission_id": { "type": "string", "pattern": "^MIS-" },
+    "object_version": { "type": "string", "const": "1.0" },
+    "revision": { "type": "integer", "minimum": 1 },
+    "source_intake_id": { "type": "string", "pattern": "^INT-" },
+    "source_intake_version": { "type": "string" },
+    "mapping_version": { "type": "string", "const": "1.0" },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "ready", "understanding", "blocked", "cancelled"],
+      "description": "MVP lifecycle uses ready|blocked|cancelled. ready = ready_for_planning. draft/understanding reserved for forward compatibility."
+    },
+    "planning_status": {
+      "type": "string",
+      "enum": ["not_started", "in_progress", "blocked", "completed", "replanning", "failed"],
+      "description": "Intake MVP expects not_started; Planning module owns later values"
+    },
+    "planning_revision": { "type": "integer", "minimum": 0 },
+    "last_planned_at": { "type": ["string", "null"] },
+    "planning_reason": { "type": ["string", "null"] },
+    "criticality": { "type": "string", "enum": ["low", "normal", "high", "critical"] },
+    "subtask_ids": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Must be empty at Intake MVP accept; filled only by later Planning"
+    },
+    "current_blockers": { "type": "array" },
+    "approval_policy_refs": { "type": "array", "items": { "type": "string" } },
+    "anticipated_approval_points": { "type": "array", "items": { "type": "string" } },
+    "evidence_refs": { "type": "array", "items": { "type": "string" } },
+    "title": { "type": "string" },
+    "mission_summary": { "type": "string" },
+    "desired_outcome": { "type": "string" },
+    "success_criteria": { "type": "array", "items": { "type": "string" } },
+    "operational_risk": { "type": "string", "enum": ["L0", "L1", "L2", "L3", "L4"] },
+    "sensitivity_flags": { "type": "array", "items": { "type": "string" } },
+    "governance": { "type": "object" },
+    "planning_input": { "type": "object" },
+    "intake_evidence": { "type": "object" }
+  },
+  "not": {
+    "anyOf": [
+      { "required": ["assigned_specialist"] },
+      { "required": ["provider_model"] },
+      { "required": ["retry_count"] }
+    ]
+  }
+}

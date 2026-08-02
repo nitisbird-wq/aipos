@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aipos.local/schemas/notion-sync.schema.json",
+  "title": "NotionSyncRecord",
+  "description": "App DB SSOT for Notion Mission Registry projection. Separate state machine from Intake readiness and Mission status. C-01 verified write fields required before claiming external_verified.",
+  "version": "1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mission_id",
+    "sync_status",
+    "updated_at"
+  ],
+  "properties": {
+    "mission_id": {
+      "type": "string",
+      "pattern": "^MIS-",
+      "description": "App DB owned; maps 1:1 to missions.id"
+    },
+    "notion_page_id": {
+      "type": ["string", "null"],
+      "description": "Present only after successful readback; reused on retry — never create a second page for the same mission_id + source_record_version"
+    },
+    "sync_status": {
+      "type": "string",
+      "enum": ["not_started", "pending", "synced", "mock_synced", "failed", "conflict"],
+      "description": "not_started=no projection enqueued; pending=awaiting write/readback; synced=verified external; mock_synced=dev-only (MUST NOT present as Notion verified); failed=retryable; conflict=source_record_version diverged after sync (reserved)"
+    },
+    "sync_attempt_id": {
+      "type": ["string", "null"],
+      "description": "Id for the current/last Notion projection attempt"
+    },
+    "verified_by": {
+      "type": ["string", "null"],
+      "description": "Actor who authorized projection (operator:<id>); never chatgpt alone"
+    },
+    "verified_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "verification_method": {
+      "anyOf": [
+        { "type": "null" },
+        {
+          "type": "string",
+          "enum": ["user_confirm_mapping", "manual_retry", "diagnostic_force"]
+        }
+      ]
+    },
+    "verification_version": {
+      "type": ["string", "null"],
+      "description": "Policy/schema version string used at verify time"
+    },
+    "source_record_version": {
+      "type": ["string", "null"],
+      "description": "Mission revision (and intake version) at verify time; invalidate verification if mission content changes"
+    },
+    "policy_decision_id": {
+      "type": ["string", "null"],
+      "description": "Mapping/Handling gate result id or joined policy decision refs"
+    },
+    "last_error": { "type": ["string", "null"] },
+    "synced_at": { "type": ["string", "null"], "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" }
+  }
+}

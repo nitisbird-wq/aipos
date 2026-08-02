@@ -1,0 +1,210 @@
+[
+  {
+    "capability_id": "code.implement",
+    "family": "code",
+    "name": "Code Implementation",
+    "enabled": true,
+    "specialists": [
+      { "specialist_id": "cursor", "score": 5, "adapter_id": "adapter:cursor", "enabled": true },
+      { "specialist_id": "claude", "score": 5, "adapter_id": "adapter:claude", "enabled": true },
+      { "specialist_id": "gpt", "score": 4, "adapter_id": "adapter:openai", "enabled": true },
+      { "specialist_id": "gemini", "score": 3, "adapter_id": "adapter:gemini", "enabled": true }
+    ],
+    "alternatives": [],
+    "installable": false,
+    "allows_manual": true,
+    "auto_route_enabled": false
+  },
+  {
+    "capability_id": "docs.summarize",
+    "family": "docs",
+    "name": "Document Summarization",
+    "enabled": true,
+    "specialists": [
+      { "specialist_id": "claude", "score": 5, "adapter_id": "adapter:claude", "enabled": true },
+      { "specialist_id": "gpt", "score": 5, "adapter_id": "adapter:openai", "enabled": true },
+      { "specialist_id": "gemini", "score": 4, "adapter_id": "adapter:gemini", "enabled": true }
+    ],
+    "alternatives": [],
+    "installable": false,
+    "allows_manual": true,
+    "auto_route_enabled": false
+  },
+  {
+    "capability_id": "deck.generate",
+    "family": "deck",
+    "name": "Deck Generation",
+    "enabled": true,
+    "specialists": [
+      { "specialist_id": "gamma", "score": 5, "adapter_id": "adapter:gamma", "enabled": true },
+      { "specialist_id": "canva", "score": 3, "adapter_id": "adapter:canva", "enabled": true }
+    ],
+    "alternatives": ["docs.outline"],
+    "installable": false,
+    "allows_manual": true,
+    "auto_route_enabled": false
+  },
+  {
+    "capability_id": "design.graphic",
+    "family": "design",
+    "name": "Graphic Design",
+    "enabled": true,
+    "specialists": [
+      { "specialist_id": "canva", "score": 5, "adapter_id": "adapter:canva", "enabled": true },
+      { "specialist_id": "adobe", "score": 5, "adapter_id": "adapter:adobe", "enabled": true }
+    ],
+    "alternatives": [],
+    "installable": false,
+    "allows_manual": true,
+    "auto_route_enabled": false
+  },
+  {
+    "capability_id": "video.generate_ai",
+    "family": "video",
+    "name": "AI Video Generation",
+    "enabled": true,
+    "specialists": [],
+    "alternatives": [],
+    "installable": true,
+    "installation_hint": "Connect Runway/Kling/Veo adapter when approved",
+    "allows_manual": true,
+    "auto_route_enabled": false
+  },
+  {
+    "capability_id": "automation.flow",
+    "family": "automation",
+    "name": "Automation Flows",
+    "enabled": true,
+    "specialists": [
+      { "specialist_id": "n8n", "score": 5, "adapter_id": "adapter:n8n", "enabled": true }
+    ],
+    "alternatives": [],
+    "installable": false,
+    "allows_manual": true,
+    "auto_route_enabled": false
+  },
+  {
+    "capability_id": "research.synthesize",
+    "family": "research",
+    "name": "Research Synthesis",
+    "enabled": true,
+    "specialists": [
+      { "specialist_id": "claude", "score": 5, "adapter_id": "adapter:claude", "enabled": true },
+      { "specialist_id": "gemini", "score": 5, "adapter_id": "adapter:gemini", "enabled": true },
+      { "specialist_id": "gpt", "score": 4, "adapter_id": "adapter:openai", "enabled": true }
+    ],
+    "alternatives": [],
+    "installable": false,
+    "allows_manual": true,
+    "auto_route_enabled": false
+  },
+  {
+    "capability_id": "strategy.analyze",
+    "family": "strategy_analysis",
+    "name": "Strategy Analysis",
+    "enabled": true,
+    "specialists": [
+      { "specialist_id": "claude", "score": 5, "adapter_id": "adapter:claude", "enabled": true },
+      { "specialist_id": "gpt", "score": 4, "adapter_id": "adapter:openai", "enabled": true }
+    ],
+    "alternatives": [],
+    "installable": false,
+    "allows_manual": true,
+    "auto_route_enabled": false
+  },
+  {
+    "capability_id": "knowledge.manage",
+    "family": "knowledge_management",
+    "name": "Knowledge Management",
+    "enabled": true,
+    "specialists": [
+      { "specialist_id": "notion", "score": 5, "adapter_id": "adapter:notion", "enabled": true },
+      { "specialist_id": "claude", "score": 4, "adapter_id": "adapter:claude", "enabled": true }
+    ],
+    "alternatives": [],
+    "installable": false,
+    "allows_manual": true,
+    "auto_route_enabled": false
+  },
+  {
+    "capability_id": "data.analyze",
+    "family": "data_analysis",
+    "name": "Data Analysis",
+    "enabled": true,
+    "specialists": [
+      { "specialist_id": "gemini", "score": 5, "adapter_id": "adapter:gemini", "enabled": true },
+      { "specialist_id": "gpt", "score": 4, "adapter_id": "adapter:openai", "enabled": true },
+      { "specialist_id": "claude", "score": 4, "adapter_id": "adapter:claude", "enabled": true }
+    ],
+    "alternatives": [],
+    "installable": false,
+    "allows_manual": true,
+    "auto_route_enabled": false
+  },
+  {
+    "capability_id": "workflow.design",
+    "family": "workflow_design",
+    "name": "Workflow / SOP Design",
+    "enabled": true,
+    "specialists": [
+      { "specialist_id": "claude", "score": 5, "adapter_id": "adapter:claude", "enabled": true },
+      { "specialist_id": "n8n", "score": 4, "adapter_id": "adapter:n8n", "enabled": true }
+    ],
+    "alternatives": [],
+    "installable": false,
+    "allows_manual": true,
+    "auto_route_enabled": false
+  },
+  {
+    "capability_id": "domain.police.generic",
+    "family": "domain.police",
+    "name": "Police Domain (Reserved)",
+    "enabled": true,
+    "status": "unvalidated",
+    "human_review_required": true,
+    "auto_route_enabled": false,
+    "specialists": [],
+    "alternatives": [],
+    "installable": false,
+    "allows_manual": true
+  },
+  {
+    "capability_id": "domain.legal.generic",
+    "family": "domain.legal",
+    "name": "Legal Domain (Reserved)",
+    "enabled": true,
+    "status": "unvalidated",
+    "human_review_required": true,
+    "auto_route_enabled": false,
+    "specialists": [],
+    "alternatives": [],
+    "installable": false,
+    "allows_manual": true
+  },
+  {
+    "capability_id": "domain.business.generic",
+    "family": "domain.business",
+    "name": "Business Domain (Reserved)",
+    "enabled": true,
+    "status": "unvalidated",
+    "human_review_required": true,
+    "auto_route_enabled": false,
+    "specialists": [],
+    "alternatives": [],
+    "installable": false,
+    "allows_manual": true
+  },
+  {
+    "capability_id": "domain.research.generic",
+    "family": "domain.research",
+    "name": "Research Domain (Reserved)",
+    "enabled": true,
+    "status": "unvalidated",
+    "human_review_required": true,
+    "auto_route_enabled": false,
+    "specialists": [],
+    "alternatives": [],
+    "installable": false,
+    "allows_manual": true
+  }
+]

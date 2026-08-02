@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aipos.local/schemas/transition-command.schema.json",
+  "title": "StateTransitionCommand",
+  "description": "Command payload for mission/intake/sync transitions. Replaces forbidden PATCH /missions/{id}/status. State machines remain separate: Intake readiness, Mission status, Sync status.",
+  "version": "1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "command",
+    "actor",
+    "timestamp",
+    "reason",
+    "correlation_id",
+    "previous_state",
+    "new_state",
+    "policy_result"
+  ],
+  "properties": {
+    "command": {
+      "type": "string",
+      "enum": [
+        "intake_await_confirmation",
+        "intake_confirm",
+        "intake_cancel",
+        "mission_block",
+        "mission_cancel",
+        "mission_ready",
+        "sync_enqueue",
+        "sync_mark_synced",
+        "sync_mark_failed",
+        "sync_retry"
+      ]
+    },
+    "aggregate_type": {
+      "type": "string",
+      "enum": ["intake", "mission", "notion_sync"]
+    },
+    "aggregate_id": { "type": "string", "minLength": 1 },
+    "actor": { "type": "string", "minLength": 1 },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "reason": { "type": "string", "minLength": 1 },
+    "correlation_id": { "type": "string", "minLength": 1 },
+    "causation_id": { "type": ["string", "null"] },
+    "idempotency_key": { "type": ["string", "null"] },
+    "previous_state": { "type": "string" },
+    "new_state": { "type": "string" },
+    "policy_result": {
+      "type": "object",
+      "required": ["decision"],
+      "properties": {
+        "decision": {
+          "type": "string",
+          "enum": ["allow", "block", "warn", "require_approval"]
+        },
+        "policy_decision_id": { "type": "string" },
+        "policy_refs": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

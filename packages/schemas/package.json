@@ -1,0 +1,9 @@
+{
+  "name": "@aipos/schemas",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Machine-readable JSON Schema contracts for AIPOS Intake MVP (intake, mission, policy, notion sync/verification, audit, transitions)",
+  "files": [
+    "*.schema.json"
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aipos.local/schemas/policy.schema.json",
+  "title": "AIPOSPolicy",
+  "description": "Governance policy definition (seeded; App DB stores versions). Policy decision results at runtime appear on audit_events.policy_result and notion_sync.policy_decision_id.",
+  "version": "1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "policy_id",
+    "version",
+    "name",
+    "rule_key",
+    "description",
+    "severity",
+    "enabled",
+    "action_on_violation",
+    "effective_from",
+    "change_reason",
+    "change_log"
+  ],
+  "properties": {
+    "policy_id": { "type": "string" },
+    "version": { "type": "string" },
+    "name": { "type": "string" },
+    "rule_key": { "type": "string" },
+    "description": { "type": "string" },
+    "severity": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
+    "enabled": { "type": "boolean" },
+    "action_on_violation": { "type": "string", "enum": ["block", "warn", "require_approval", "audit_only"] },
+    "effective_from": { "type": "string" },
+    "change_reason": { "type": "string" },
+    "change_log": { "type": "array" }
+  }
+}

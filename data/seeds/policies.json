@@ -1,0 +1,93 @@
+[
+  {
+    "policy_id": "AIPOS-GOV-001",
+    "version": "1.0",
+    "name": "Global Operating Rules",
+    "rule_key": "external_sensitive_data_requires_approval",
+    "description": "External transmission of sensitive data requires Authority Approval.",
+    "severity": "high",
+    "enabled": true,
+    "action_on_violation": "block",
+    "effective_from": "2026-07-30",
+    "change_reason": "MVP seed",
+    "change_log": [{ "at": "2026-07-30", "note": "Initial seed" }]
+  },
+  {
+    "policy_id": "AIPOS-GOV-002",
+    "version": "1.0",
+    "name": "Handling Gate Required",
+    "rule_key": "sensitivity_requires_handling_gate",
+    "description": "Any sensitivity flag must pass Handling Gate; acknowledgment required when flags present.",
+    "severity": "high",
+    "enabled": true,
+    "action_on_violation": "block",
+    "effective_from": "2026-07-30",
+    "change_reason": "MVP seed",
+    "change_log": []
+  },
+  {
+    "policy_id": "AIPOS-GOV-003",
+    "version": "1.0",
+    "name": "No Direct Status Patch",
+    "rule_key": "mission_status_transition_commands_only",
+    "description": "Mission status may only change via transition commands with audit fields.",
+    "severity": "critical",
+    "enabled": true,
+    "action_on_violation": "block",
+    "effective_from": "2026-07-30",
+    "change_reason": "MVP seed",
+    "change_log": []
+  },
+  {
+    "policy_id": "AIPOS-GOV-004",
+    "version": "1.0",
+    "name": "No Subtasks Before Confirm",
+    "rule_key": "no_subtasks_before_user_confirmation",
+    "description": "Real Subtask IDs must not be created before user confirmation and Mapping Accept.",
+    "severity": "critical",
+    "enabled": true,
+    "action_on_violation": "block",
+    "effective_from": "2026-07-30",
+    "change_reason": "MVP seed",
+    "change_log": []
+  },
+  {
+    "policy_id": "AIPOS-GOV-005",
+    "version": "1.0",
+    "name": "Verified External Writes",
+    "rule_key": "external_write_requires_verified_result",
+    "description": "Never claim Notion or other external update succeeded without verified response.",
+    "severity": "high",
+    "enabled": true,
+    "action_on_violation": "block",
+    "effective_from": "2026-07-30",
+    "change_reason": "MVP seed",
+    "change_log": []
+  },
+  {
+    "policy_id": "AIPOS-GOV-006",
+    "version": "1.0",
+    "name": "Chat-only Destination",
+    "rule_key": "chat_only_uses_intake_channel",
+    "description": "Chat-only processing must use system=intake_channel; system=none is forbidden.",
+    "severity": "medium",
+    "enabled": true,
+    "action_on_violation": "block",
+    "effective_from": "2026-07-30",
+    "change_reason": "MVP seed",
+    "change_log": []
+  },
+  {
+    "policy_id": "AIPOS-GOV-007",
+    "version": "1.0",
+    "name": "Unknown Capability Escalation",
+    "rule_key": "unknown_capability_must_escalate",
+    "description": "Unknown capabilities must escalate to resolution; never guess specialists. Auto-routing disabled in Intake MVP.",
+    "severity": "high",
+    "enabled": true,
+    "action_on_violation": "require_approval",
+    "effective_from": "2026-07-30",
+    "change_reason": "MVP seed",
+    "change_log": []
+  }
+]

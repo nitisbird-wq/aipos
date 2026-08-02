@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aipos.local/schemas/audit-event.schema.json",
+  "title": "AuditEvent",
+  "description": "Append-only audit metadata (M-03). Used for command-based state transitions; direct PATCH of mission status is forbidden.",
+  "version": "1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "event_id",
+    "actor",
+    "action",
+    "reason",
+    "correlation_id",
+    "policy_result",
+    "occurred_at"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Stable audit event id (DB column: id)"
+    },
+    "aggregate_type": {
+      "type": "string",
+      "enum": ["intake", "mission", "notion_sync", "policy", "system"]
+    },
+    "aggregate_id": {
+      "type": ["string", "null"],
+      "description": "Primary aggregate id (mission_id or intake_id)"
+    },
+    "mission_id": { "type": ["string", "null"], "pattern": "^MIS-" },
+    "intake_id": { "type": ["string", "null"], "pattern": "^INT-" },
+    "actor": {
+      "type": "string",
+      "minLength": 1,
+      "description": "operator:<id> | system:aipos_core | never chatgpt as sole authorizer"
+    },
+    "action": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Command name (e.g. confirm_intake, map_accept, transition_block, notion_retry)"
+    },
+    "reason": { "type": "string", "minLength": 1 },
+    "correlation_id": { "type": "string", "minLength": 1 },
+    "causation_id": {
+      "type": ["string", "null"],
+      "description": "Optional parent event/command id"
+    },
+    "previous_state": { "type": ["string", "null"] },
+    "new_state": { "type": ["string", "null"] },
+    "policy_result": {
+      "type": "object",
+      "description": "Policy decision snapshot (allow/block/warn + refs)",
+      "required": ["decision"],
+      "properties": {
+        "decision": {
+          "type": "string",
+          "enum": ["allow", "block", "warn", "require_approval"]
+        },
+        "policy_decision_id": { "type": "string" },
+        "policy_refs": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "notes": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "DB column: created_at"
+    }
+  }
+}

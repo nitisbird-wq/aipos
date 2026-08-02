@@ -1,0 +1,161 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aipos.local/schemas/intake-mission-bundle.schema.json",
+  "title": "IntakeMissionBundle",
+  "description": "Intake aggregate / confirmed bundle contract. readiness_status is the Intake state machine (separate from Mission status and Sync). Semantic lock: ready_to_dispatch means ready_to_map (NOT specialist dispatch). Conversation labels capturing/understanding/confirmed map via readiness + confirmed_by_user; do not rename enums without ADR.",
+  "version": "1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "intake_id",
+    "intake_version",
+    "requester_id",
+    "source",
+    "source_message_ref",
+    "raw_request",
+    "mission_summary",
+    "desired_outcome",
+    "success_criteria",
+    "constraints",
+    "assumptions",
+    "missing_blockers",
+    "draft_workstreams",
+    "capability_families",
+    "operational_risk",
+    "sensitivity_flags",
+    "sensitivity_acknowledged",
+    "approval_requirements",
+    "knowledge_refs",
+    "attachments",
+    "data_destinations",
+    "data_handling_requirements",
+    "deadline",
+    "readiness_status",
+    "confirmed_by_user",
+    "idempotency_key",
+    "created_at",
+    "updated_at"
+  ],
+  "properties": {
+    "intake_id": { "type": "string", "pattern": "^INT-" },
+    "intake_version": { "type": "string", "const": "1.0" },
+    "requester_id": { "type": "string", "minLength": 1 },
+    "source": { "type": "string", "enum": ["web_app", "chatgpt"] },
+    "source_message_ref": { "type": "string" },
+    "raw_request": { "type": "string", "minLength": 1 },
+    "mission_summary": { "type": "string" },
+    "desired_outcome": { "type": "string" },
+    "success_criteria": { "type": "array", "items": { "type": "string" } },
+    "constraints": { "type": "array", "items": { "type": "string" } },
+    "assumptions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "text", "critical", "source"],
+        "properties": {
+          "id": { "type": "string" },
+          "text": { "type": "string" },
+          "critical": { "type": "boolean" },
+          "source": { "type": "string", "enum": ["inferred", "user_stated", "knowledge"] }
+        }
+      }
+    },
+    "missing_blockers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["code", "question", "blocking", "resolved"],
+        "properties": {
+          "code": { "type": "string" },
+          "question": { "type": "string" },
+          "blocking": { "type": "boolean" },
+          "answer": { "type": "string" },
+          "resolved": { "type": "boolean" }
+        }
+      }
+    },
+    "draft_workstreams": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "purpose", "expected_outputs", "capability_families", "depends_on_ws", "approval_points"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^WS" },
+          "name": { "type": "string" },
+          "purpose": { "type": "string" },
+          "expected_outputs": { "type": "array", "items": { "type": "string" } },
+          "capability_families": { "type": "array", "items": { "type": "string" } },
+          "depends_on_ws": { "type": "array", "items": { "type": "string" } },
+          "approval_points": { "type": "array", "items": { "type": "string" } },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "capability_families": { "type": "array", "items": { "type": "string" } },
+    "operational_risk": { "type": "string", "enum": ["L0", "L1", "L2", "L3", "L4"] },
+    "sensitivity_flags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "personal_data",
+          "police_case_data",
+          "legal_privileged",
+          "financial",
+          "credentials",
+          "health",
+          "minors",
+          "internal_confidential",
+          "public_reputation",
+          "production_system"
+        ]
+      }
+    },
+    "sensitivity_acknowledged": { "type": "boolean" },
+    "approval_requirements": { "type": "array", "items": { "type": "object" } },
+    "knowledge_refs": { "type": "array", "items": { "type": "object" } },
+    "attachments": { "type": "array", "items": { "type": "object" } },
+    "data_destinations": {
+      "type": "array",
+      "minItems": 1,
+      "description": "H-03 destination lifecycle. Notion registry is a separate entry (system=notion). system=none forbidden.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["system", "trust_class", "purpose", "persistence", "external_transfer"],
+        "properties": {
+          "system": { "type": "string", "not": { "const": "none" } },
+          "trust_class": { "type": "string" },
+          "purpose": { "type": "string" },
+          "persistence": { "type": "string" },
+          "external_transfer": { "type": "boolean" },
+          "data_classification": {
+            "type": "string",
+            "enum": ["public", "internal", "confidential", "restricted"]
+          },
+          "retention_days": { "type": "integer", "minimum": 0 },
+          "redaction_required": { "type": "boolean" },
+          "redaction_policy": { "type": "string" },
+          "owner": { "type": "string" },
+          "lawful_purpose": { "type": "string" },
+          "encryption_requirement": { "type": "string" },
+          "allowed_processors": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "data_handling_requirements": { "type": "array", "items": { "type": "string" } },
+    "deadline": { "type": ["string", "null"], "format": "date-time" },
+    "readiness_status": {
+      "type": "string",
+      "enum": ["needs_input", "awaiting_confirmation", "ready_to_dispatch", "cancelled"],
+      "description": "needs_input≈capturing/understanding gaps; awaiting_confirmation; ready_to_dispatch=ready_to_map; cancelled=terminal. Do not rename ready_to_dispatch without ADR."
+    },
+    "confirmed_by_user": { "type": "boolean" },
+    "idempotency_key": { "type": "string", "minLength": 1 },
+    "created_at": { "type": "string" },
+    "updated_at": { "type": "string" }
+  }
+}
