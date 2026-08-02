@@ -61,9 +61,7 @@ describe("Idempotency / duplicate intake", () => {
     );
     expect(first.ok).toBe(true);
     if (!first.ok) return;
-    expect(first.mission_id).toBe(
-      missionIdFromIntake(bundle.intake_id, bundle.intake_version),
-    );
+    expect(first.mission_id).toBe(missionIdFromIntake(bundle.intake_id, bundle.intake_version));
 
     const second = await confirmIntake(
       bundle.intake_id,

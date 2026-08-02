@@ -148,11 +148,7 @@ export class DevFileRepository implements Repository {
     await this.write(s);
   }
 
-  async listAudit(filter: {
-    mission_id?: string;
-    intake_id?: string;
-    correlation_id?: string;
-  }) {
+  async listAudit(filter: { mission_id?: string; intake_id?: string; correlation_id?: string }) {
     const s = await this.read();
     return s.audit_events
       .filter((e) => (filter.mission_id ? e.mission_id === filter.mission_id : true))
