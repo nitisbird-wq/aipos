@@ -1,0 +1,29 @@
+{
+  "name": "aipos",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Nitis Pro AIPOS — Mission Intake MVP v0.1",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w web",
+    "build": "npm run build -w web",
+    "start": "npm run start -w web",
+    "lint": "npm run lint -w web",
+    "test": "npm run test -w web",
+    "test:e2e-smoke": "npm run test:e2e-smoke -w web",
+    "format": "npm run format -w web",
+    "format:check": "npm run format:check -w web",
+    "aipos": "tsx scripts/aipos/cli.ts",
+    "doctor": "tsx scripts/aipos/cli.ts doctor",
+    "audit": "tsx scripts/aipos/cli.ts audit"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.4"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
