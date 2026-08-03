@@ -15,7 +15,8 @@
     "test:e2e-smoke": "tsx scripts/e2e-smoke.ts",
     "test:e2e-thai": "tsx scripts/e2e-thai-smoke.ts",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "echo Run drizzle/0000_init.sql against DATABASE_URL (Neon/Postgres)"
+    "db:migrate": "tsx scripts/db-migrate.ts",
+    "test:pg": "AIPOS_RUN_PG_TESTS=true vitest run src/lib/repositories"
   },
   "dependencies": {
     "drizzle-orm": "^0.44.4",
