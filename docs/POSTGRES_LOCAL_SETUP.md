@@ -38,13 +38,23 @@ export DATABASE_URL=postgresql://aipos:aipos_dev_only@localhost:5432/aipos
 npm run db:migrate -w web
 ```
 
-Applies `apps/web/drizzle/0000_init.sql` (`CREATE TABLE IF NOT EXISTS` / `CREATE INDEX IF NOT EXISTS`).
+Applies all `apps/web/drizzle/*.sql` in sorted order (`CREATE … IF NOT EXISTS` / unique indexes). Non-destructive — no DROP/TRUNCATE in migrate.
 
 Repeat for the test DB if needed:
 
 ```bash
 DATABASE_URL=postgresql://aipos:aipos_dev_only@localhost:5432/aipos_test npm run db:migrate -w web
 ```
+
+### Rollback (Phase 2 hardening)
+
+| Change | Rollback |
+|---|---|
+| Code (`persistConfirmedMapping`, confirm path) | Revert PR / set `FORCE_POSTGRES=false` to use file adapter |
+| Unique index `missions_source_intake_version_uidx` | Optional: `DROP INDEX IF EXISTS missions_source_intake_version_uidx;` — only if you must undo DB constraint; leaves data intact |
+| Data | Confirm mapping does not migrate file→PG; rolling back code does not delete PG rows |
+
+Do **not** drop `missions` / `intakes` tables to roll back this hardening.
 
 ## Enable Postgres mode in the app
 
