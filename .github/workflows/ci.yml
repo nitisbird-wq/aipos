@@ -52,8 +52,22 @@ jobs:
           node-version: "20"
           cache: npm
 
+      # Include optional native bindings (e.g. @tailwindcss/oxide-linux-*).
+      # npm has a known bug omitting optional deps across platforms from incomplete lockfiles.
       - name: Install
-        run: npm ci
+        run: npm ci --include=optional
+
+      - name: Verify Tailwind Oxide binding
+        working-directory: apps/web
+        run: |
+          set -euo pipefail
+          npm ls @tailwindcss/oxide
+          node -e "require('@tailwindcss/oxide'); console.log('oxide native binding ok')"
+          case "$(uname -s)-$(uname -m)" in
+            Linux-x86_64)
+              npm ls @tailwindcss/oxide-linux-x64-gnu || npm ls @tailwindcss/oxide-linux-x64-musl
+              ;;
+          esac
 
       - name: Format check
         run: npm run format:check
