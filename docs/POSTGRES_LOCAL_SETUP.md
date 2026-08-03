@@ -7,9 +7,20 @@ Authoritative schema: `apps/web/drizzle/0000_init.sql` (aligned with `docs/DATAB
 
 ## Option A — Docker Compose
 
+Full local stack (Postgres + n8n):
+
+```bash
+npm run services:up
+# or: docker compose -f docker-compose.yml up -d
+```
+
+Postgres-only (legacy):
+
 ```bash
 docker compose -f docker-compose.postgres.yml up -d
 ```
+
+See also `docs/DEVELOPER_CONTROL_CENTER.md`.
 
 Creates:
 

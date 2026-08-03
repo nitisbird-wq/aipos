@@ -68,7 +68,8 @@ npm run aipos -- doctor --profile pr
 # npm run test:e2e -w web
 ```
 
-Agent rules: see `AGENTS.md`.
+Agent rules: see `AGENTS.md`.  
+Developer Control Center (status / local stack / Bruno): `docs/DEVELOPER_CONTROL_CENTER.md` — `npm run status`, `npm run services:up`, `npm run verify`.
 ## Out of scope (v0.1)
 
 Specialist execution, routing/matching/assignment, real Subtask creation, real Notion/AI credentials, deploy.

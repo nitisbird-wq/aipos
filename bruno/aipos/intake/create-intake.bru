@@ -1,0 +1,38 @@
+meta {
+  name: Create intake
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/intakes
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Idempotency-Key: BRUNO-INTAKE-{{$timestamp}}
+}
+
+body:json {
+  {
+    "raw_request": "Bruno API smoke: prepare a short competitive analysis draft",
+    "idempotency_key": "BRUNO-INTAKE-SMOKE-1"
+  }
+}
+
+script:post-response {
+  const data = res.getBody();
+  if (data && data.bundle && data.bundle.intake_id) {
+    bru.setEnvVar("intakeId", data.bundle.intake_id);
+  } else if (data && data.intake_id) {
+    bru.setEnvVar("intakeId", data.intake_id);
+  }
+}
+
+tests {
+  test("create intake succeeds", function() {
+    expect(res.status).to.be.oneOf([200, 201]);
+  });
+}

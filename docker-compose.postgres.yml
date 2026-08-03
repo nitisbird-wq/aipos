@@ -1,4 +1,6 @@
-# Local PostgreSQL for AIPOS Phase 2 (dev placeholders only — not production)
+# Local PostgreSQL ONLY (legacy / docs Option A).
+# Prefer full stack: docker-compose.yml via `npm run services:up` (postgres + n8n).
+# Dev placeholders only — not production.
 services:
   postgres:
     image: postgres:16-alpine
