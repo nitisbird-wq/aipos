@@ -27,6 +27,10 @@ AIPOS ปัจจุบันทำหน้าที่เป็น **Mission 
 - PostgreSQL/Neon ใช้งานจริงเป็น default runtime
 - n8n runtime orchestration
 - Autonomous multi-agent execution
+- **Artifact** — **NOT STARTED**
+- **Review** (post-execution human review) — **NOT STARTED** (อย่าสับสนกับ Intake Confirm)
+- **Closeout** — **NOT STARTED**
+- **Monitoring** — **PARTIAL / THIN** (มีแค่ mission list + audit + Notion sync badge; ไม่มี alerting/SLO)
 
 สรุปสั้นๆ: **AIPOS ตอนนี้ช่วย “ควบคุมการพัฒนา + รับ mission เข้าสู่ระบบอย่างมีวินัย” ได้แล้ว แต่ยังไม่ช่วย “ดำเนิน mission จนจบด้วย specialists”**
 
@@ -214,16 +218,20 @@ Merge (มนุษย์; ตัวอย่างที่เกิดแล�
 
 | รายการ | สถานะหลักฐาน |
 |---|---|
-| Planning Engine | schema มี `planning_*` แต่สถานะคง `not_started`; ไม่มี engine |
-| Assignment / Capability Matching automation | capabilities seed เป็นข้อมูล; ห้าม auto-route ใน MVP |
+| Planning Engine | **NOT STARTED** — schema มี `planning_*` แต่สถานะคง `not_started`; ไม่มี engine |
+| Assignment / Capability Matching automation | **NOT STARTED** — capabilities seed เป็นข้อมูล; ห้าม auto-route ใน MVP |
 | Specialists (Claude/Cursor/n8n/etc. as executors) | นอก scope; ไม่ถูกเรียกใน code paths ของ Intake |
-| Execution / Artifact Review | ยังไม่มี |
+| Execution | **NOT STARTED** |
+| Artifact | **NOT STARTED** — ไม่มี artifact service / API / ตาราง |
+| Review (ผลงานหลัง execute) | **NOT STARTED** — มีแค่ Intake Confirm ก่อนสร้าง Mission |
+| Closeout | **NOT STARTED** — เอกสาร D5 เท่านั้น; ไม่มี API/UI/`completed` mission status |
+| Monitoring | **PARTIAL / THIN** — dashboard list + audit + sync badge; ไม่มี health/alerting |
 | Runtime Orchestrator (AIPOS เป็นตัวรัน mission ยาว) | Core ทำ intake/gates/audit/sync contract เท่านั้น |
-| PostgreSQL Production เป็น default | schema/drizzle พร้อม; runtime default = file store |
-| Real Notion Sync + G5 readback | mock only ใน MVP; real writes disabled |
+| PostgreSQL Production เป็น default | schema/drizzle พร้อม; runtime default = file store (Phase 2 adapter เป็น opt-in) |
+| Real Notion Sync + G5 readback | mock only ใน MVP; real writes disabled; **ทิศทาง App DB → Notion เท่านั้น** |
 | n8n Runtime | Doctor ระบุ N/A / PLANNED |
 | Full Hard Control G0–G5 + Evidence/Handoff objects | เอกสารครบ; implementation บางส่วนใน intake เท่านั้น |
-| In-repo ADR corpus ที่สมบูรณ์ | `adr/` ไฟล์ว่าง; อ้างอิง Notion/docs แทน |
+| In-repo ADR corpus ที่สมบูรณ์ | มี ADR-005 (Phase 3a Proposed); ADR-001 ไฟล์เดิมว่าง |
 | Traceability matrix / architecture version graph | backlog ยังไม่ส่งมอบ |
 | Multi-tenant / strong auth | single operator assumption |
 
@@ -233,13 +241,24 @@ Merge (มนุษย์; ตัวอย่างที่เกิดแล�
 
 | ระยะ | สิ่งที่มี/จะเพิ่ม | หลักฐานอ้างอิง |
 |---|---|---|
-| **Current** | Governance docs + domain schemas + Mission Intake app + tooling + CI green | ประวัติ `main` ถึง `5da6723` |
+| **Current** | Governance docs + domain schemas + Mission Intake app + tooling + CI green | ประวัติ `main` |
 | ↓ | | |
-| **Phase 2** | Postgres live + Real Notion verified sync + Three-State honesty ครบใน API + Know-Me sync เริ่มใช้ได้ | D6 ขั้น 2–3; Architecture Contract C-01; Hard Control foundation |
+| **Phase 2** | Postgres runtime adapter (opt-in) + Real Notion verified sync (ยังค้าง) + Three-State | D6 ขั้น 2–3; PR #8; Architecture Contract C-01 |
 | ↓ | | |
-| **Phase 3** | Gate/verifier เต็ม (G0–G5) + Pilot tests + Planning → confirm-once → L0–L1 execute + artifacts | D2/D4/D6; MVP scope ขยายเกิน Intake |
+| **Phase 3a** | Planning → confirm-once → L0–L1 Subtasks → Propose/Approve Assignment (**จบที่ assigned**) | ADR-005; `docs/PHASE_3_*.md` — **ไม่รวม** Execution/Artifact/Review/Closeout |
 | ↓ | | |
-| **Full AIPOS** | Matching/Assignment, specialists, n8n connectors, closeout/feedback, policy CRUD, multi-channel intake (เช่น ChatGPT Actions 0.2) | Phase 1 decisions + out-of-scope MVP list |
+| **Phase 3b+ / Execution** | Execution via n8n adapter + artifacts + review (ADR แยก) | D2/D6; ต้อง reconcile auto-run vs human gates |
+| ↓ | | |
+| **Full AIPOS** | Closeout/feedback, specialists at scale, policy CRUD, multi-channel intake | Phase 1 decisions + out-of-scope MVP list |
+
+### Traffic lights (do not mark green without code evidence)
+
+| Capability | Traffic light |
+|---|---|
+| Artifact | **NOT STARTED** |
+| Review | **NOT STARTED** |
+| Closeout | **NOT STARTED** |
+| Monitoring | **PARTIAL / THIN** |
 
 หมายเหตุตรงไปตรงมา: **roadmap ด้านบนมาจากเอกสารที่อนุมัติแล้ว ไม่ใช่จากโค้ดที่ implement ครบ** — อย่าตีความว่า Phase 2+ พร้อมใช้
 
