@@ -3,6 +3,7 @@ import type { MissionObject, NotionSyncRecord } from "@/lib/schemas/mission";
 import type { AuditEvent, Capability, Policy } from "@/lib/schemas/policy";
 import type { Repository } from "./types";
 import { DevFileRepository } from "./dev-file-store";
+import { PostgresRepository } from "./postgres-store";
 
 declare global {
   var __aiposRepo: Repository | undefined;
@@ -11,10 +12,9 @@ declare global {
 
 /**
  * Repository factory.
- * - If DATABASE_URL is set: ready for Postgres (Neon). Full Drizzle wiring
- *   can be enabled without redesign; MVP local default uses file adapter
- *   unless FORCE_POSTGRES=true.
- * - If DATABASE_URL is unset: DEVELOPMENT file adapter (explicitly marked).
+ * - DATABASE_URL unset → DEVELOPMENT file adapter (explicitly marked).
+ * - DATABASE_URL set + FORCE_POSTGRES=true → PostgreSQL adapter (App DB runtime SSOT).
+ * - DATABASE_URL set without FORCE_POSTGRES → file adapter (schema ready; opt-in required).
  */
 export function getRepository(): Repository {
   if (globalThis.__aiposRepo) return globalThis.__aiposRepo;
@@ -23,13 +23,13 @@ export function getRepository(): Repository {
   const forcePostgres = process.env.FORCE_POSTGRES === "true";
 
   if (databaseUrl && forcePostgres) {
-    // Postgres adapter path is reserved for Neon/Postgres credentials.
-    // For v0.1 local runnable MVP without forcing a live DB connection in CI,
-    // fall through to file adapter unless FORCE_POSTGRES is set with a live URL.
-    // When FORCE_POSTGRES=true, operators should run migrations from drizzle/.
-    console.warn(
-      "[aipos] FORCE_POSTGRES=true — Postgres mode requested. Using file adapter bridge until connection pool is configured in this environment.",
+    console.info(
+      "[aipos] FORCE_POSTGRES=true with DATABASE_URL — using PostgreSQL runtime adapter.",
     );
+    const repo = new PostgresRepository();
+    globalThis.__aiposRepo = repo;
+    globalThis.__aiposPersistenceMode = "postgres";
+    return repo;
   }
 
   if (!databaseUrl) {
@@ -38,7 +38,7 @@ export function getRepository(): Repository {
     );
   } else {
     console.info(
-      "[aipos] DATABASE_URL present. Local MVP uses marked development file adapter unless FORCE_POSTGRES=true with migrations applied. Schema ready for Neon.",
+      "[aipos] DATABASE_URL present but FORCE_POSTGRES is not true — using marked development file adapter. Set FORCE_POSTGRES=true after applying drizzle/0000_init.sql to enable Postgres mode.",
     );
   }
 
@@ -62,3 +62,6 @@ export type {
   Capability,
   Policy,
 };
+
+export { DevFileRepository } from "./dev-file-store";
+export { PostgresRepository } from "./postgres-store";

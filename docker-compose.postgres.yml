@@ -1,0 +1,21 @@
+# Local PostgreSQL for AIPOS Phase 2 (dev placeholders only — not production)
+services:
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: aipos
+      POSTGRES_PASSWORD: aipos_dev_only
+      POSTGRES_DB: aipos
+    volumes:
+      - aipos_pg_data:/var/lib/postgresql/data
+      - ./docker/postgres/init-test-db.sql:/docker-entrypoint-initdb.d/01-init-test-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aipos -d aipos"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  aipos_pg_data:

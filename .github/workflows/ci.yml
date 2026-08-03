@@ -42,6 +42,24 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     needs: secrets
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: aipos
+          POSTGRES_PASSWORD: aipos_dev_only
+          POSTGRES_DB: aipos_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U aipos -d aipos_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # CI-only local Postgres (not production). Enables repository contract + PG adapter tests.
+      AIPOS_TEST_DATABASE_URL: postgresql://aipos:aipos_dev_only@localhost:5432/aipos_test
+      AIPOS_RUN_PG_TESTS: "true"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -68,6 +86,11 @@ jobs:
               npm ls @tailwindcss/oxide-linux-x64-gnu || npm ls @tailwindcss/oxide-linux-x64-musl
               ;;
           esac
+
+      - name: Migrate test database
+        run: npm run db:migrate -w web
+        env:
+          DATABASE_URL: postgresql://aipos:aipos_dev_only@localhost:5432/aipos_test
 
       - name: Format check
         run: npm run format:check

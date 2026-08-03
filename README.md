@@ -41,9 +41,10 @@ Open [http://localhost:3000](http://localhost:3000) → **Mission Commander** (c
 | Condition | Behavior |
 |---|---|
 | `DATABASE_URL` unset | **Development-only** file adapter at `apps/web/.data/dev-store.json` (explicitly marked in UI/logs) |
-| Neon/Postgres available | Apply `apps/web/drizzle/0000_init.sql`, set `DATABASE_URL`, then enable Postgres mode (`FORCE_POSTGRES=true` when wiring the live pool) |
+| `DATABASE_URL` set + `FORCE_POSTGRES=true` | **PostgreSQL runtime adapter** (App DB SSOT). Apply `apps/web/drizzle/0000_init.sql` first — see `docs/POSTGRES_LOCAL_SETUP.md` |
+| `DATABASE_URL` set, `FORCE_POSTGRES` not true | File adapter remains active (opt-in required; schema ready) |
 
-PostgreSQL-compatible schema is prepared; MVP does **not** silently pretend file store is production.
+PostgreSQL mode is Phase 2 Runtime Foundation (Intake / Mission / Audit / Notion sync state). It does **not** include Planning, Assignment, or Execution.
 
 ### Notion
 
@@ -59,6 +60,9 @@ npm run format -w web
 npm run doctor
 npm run aipos -- doctor --profile local
 npm run aipos -- doctor --profile pr
+# Postgres (optional local):
+# npm run db:migrate -w web
+# AIPOS_TEST_DATABASE_URL=postgresql://aipos:aipos_dev_only@localhost:5432/aipos_test npm test
 # Optional E2E (install browsers first):
 # npx playwright install
 # npm run test:e2e -w web
