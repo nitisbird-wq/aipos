@@ -73,3 +73,13 @@ npm.cmd run format:check
 ```
 
 On Windows PowerShell, prefer `npm.cmd` if `npm` is blocked by execution policy.
+
+## Cursor Cloud specific instructions
+
+This environment is Linux; use plain `npm` (the `npm.cmd` note above is Windows-only). Node 20+ is required (`engines.node >= 20`).
+
+- **Product/scope.** Single runnable product: the Next.js App Router app in `apps/web` (npm workspace `web`), served at `http://localhost:3000`. Root scripts (`dev`, `build`, `lint`, `test`, `format:check`) delegate to that workspace. No database, Notion, or AI credentials are needed for local dev — see below.
+- **Runs fully self-contained.** With `DATABASE_URL` empty the app uses the DEV file store at `apps/web/.data/dev-store.json`; `NOTION_ADAPTER=mock` and `ANALYZE_PROVIDER=none` mean no external calls. Do not treat missing Postgres/Notion/AI as blockers.
+- **Env file.** Copy `.env.example` to `apps/web/.env.local` before running (`cp .env.example apps/web/.env.local`). Keep `DATABASE_URL` empty for the file store, and set `OPERATOR_PASSWORD` (default operator login is `operator@example.com` / `dev-password`). This file is gitignored and is not created by the update script.
+- **Standard commands** are already documented in `README.md` and root `package.json` scripts: `npm run dev` (Turbopack dev server), `npm run lint`, `npm test` (Vitest), `npm run build`, `npm run format:check`, and `npm run doctor` (AIPOS audit — run before handoff). CI mirrors these in `.github/workflows/ci.yml`.
+- **Gotchas.** Install with `npm ci --include=optional` so the `@tailwindcss/oxide` native binding is present (CI enforces this; a plain install from an incomplete lockfile can omit it and break the build). `npm run doctor` writes a gitignored `AIPOS_AUDIT_REPORT.md` — leave it untracked. `test:e2e` (Playwright) needs browsers installed (`npx playwright install`) and is not part of the default check set.
