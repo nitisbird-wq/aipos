@@ -1,12 +1,12 @@
 #!/usr/bin/env tsx
 /**
- * Apply apps/web/drizzle/0000_init.sql against DATABASE_URL.
+ * Apply all apps/web/drizzle/*.sql files in sorted order against DATABASE_URL.
  * Idempotent (CREATE IF NOT EXISTS). Non-destructive for existing data.
  *
- * Usage (from repo root or apps/web):
+ * Usage:
  *   DATABASE_URL=postgresql://aipos:aipos_dev_only@localhost:5432/aipos npm run db:migrate -w web
  */
-import { readFileSync } from "fs";
+import { readdirSync, readFileSync } from "fs";
 import path from "path";
 import postgres from "postgres";
 
@@ -17,13 +17,24 @@ async function main() {
     process.exit(1);
   }
 
-  const sqlPath = path.resolve(__dirname, "../drizzle/0000_init.sql");
-  const ddl = readFileSync(sqlPath, "utf8");
+  const dir = path.resolve(__dirname, "../drizzle");
+  const files = readdirSync(dir)
+    .filter((f) => f.endsWith(".sql"))
+    .sort();
 
-  const sql = postgres(url, { max: 1, prepare: false });
+  if (files.length === 0) {
+    console.error(`No .sql files in ${dir}`);
+    process.exit(1);
+  }
+
+  const sql = postgres(url, { max: 1, prepare: false, onnotice: () => {} });
   try {
-    await sql.unsafe(ddl);
-    console.log(`[aipos] Applied ${sqlPath}`);
+    for (const file of files) {
+      const sqlPath = path.join(dir, file);
+      const ddl = readFileSync(sqlPath, "utf8");
+      await sql.unsafe(ddl);
+      console.log(`[aipos] Applied ${sqlPath}`);
+    }
   } finally {
     await sql.end({ timeout: 5 });
   }
