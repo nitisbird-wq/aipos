@@ -3,7 +3,11 @@ import path from "path";
 import type { IntakeMissionBundle } from "@/lib/schemas/intake";
 import type { MissionObject, NotionSyncRecord } from "@/lib/schemas/mission";
 import type { AuditEvent, Capability, Policy } from "@/lib/schemas/policy";
-import type { Repository } from "./types";
+import type {
+  Repository,
+  PersistConfirmedMappingInput,
+  PersistConfirmedMappingResult,
+} from "./types";
 
 type StoreShape = {
   intakes: Record<string, IntakeMissionBundle>;
@@ -165,5 +169,28 @@ export class DevFileRepository implements Repository {
   async listCapabilities() {
     const s = await this.read();
     return s.capabilities;
+  }
+
+  async persistConfirmedMapping(
+    input: PersistConfirmedMappingInput,
+  ): Promise<PersistConfirmedMappingResult> {
+    const s = await this.read();
+    const existing = Object.values(s.missions).find(
+      (m) =>
+        m.source_intake_id === input.mission.source_intake_id &&
+        m.source_intake_version === input.mission.source_intake_version,
+    );
+    if (existing) {
+      return { created: false, mission: existing };
+    }
+
+    s.intakes[input.bundle.intake_id] = input.bundle;
+    s.missions[input.mission.mission_id] = input.mission;
+    s.audit_events.push(input.audit);
+    if (!s.notion_sync[input.notionSyncPending.mission_id]) {
+      s.notion_sync[input.notionSyncPending.mission_id] = input.notionSyncPending;
+    }
+    await this.write(s);
+    return { created: true, mission: input.mission };
   }
 }

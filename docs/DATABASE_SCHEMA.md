@@ -104,6 +104,7 @@ Append-only (M-03). Command transitions must record actor, reason, correlation, 
 
 - intakes(idempotency_key) unique
 - missions(source_intake_id)
+- missions(source_intake_id, source_intake_version) **unique** (C-03 mapping idempotency)
 - missions(status, updated_at)
 - audit_events(mission_id, created_at)
 - audit_events(correlation_id)

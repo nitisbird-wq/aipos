@@ -7,6 +7,7 @@
   type CorrectIntakeRequest,
 } from "@/lib/schemas/intake";
 import { getRepository, getPersistenceMode } from "@/lib/repositories";
+import { isUniqueViolation } from "@/lib/db/errors";
 import { analyzeMissionHeuristic } from "@/lib/services/analyze";
 import { evaluateReadiness } from "@/lib/gates/readiness-gate";
 import { evaluateHandling } from "@/lib/gates/handling-gate";
@@ -85,7 +86,15 @@ export async function createIntake(
     updated_at: now,
   };
 
-  await repo.saveIntake(bundle);
+  try {
+    await repo.saveIntake(bundle);
+  } catch (err) {
+    if (isUniqueViolation(err)) {
+      const raced = await repo.getIntakeByIdempotencyKey(idempotency_key);
+      if (raced) return { bundle: raced, reused: true };
+    }
+    throw err;
+  }
   await repo.appendAudit({
     id: newAuditId(),
     aggregate_type: "intake",
@@ -385,12 +394,10 @@ export async function confirmIntake(
 
   const mission = mapBundleToMission(bundle);
   const policy_decision_id = newPolicyDecisionId("MAP");
-  await repo.saveIntake(bundle);
-  await repo.saveMission(mission);
-
-  await repo.appendAudit({
+  const now = nowIso();
+  const mappingAudit = {
     id: newAuditId(),
-    aggregate_type: "mission",
+    aggregate_type: "mission" as const,
     mission_id: mission.mission_id,
     intake_id: bundle.intake_id,
     actor,
@@ -401,22 +408,60 @@ export async function confirmIntake(
     previous_state: "ready_to_dispatch",
     new_state: "ready",
     policy_result: {
-      decision: "allow",
+      decision: "allow" as const,
       policy_decision_id,
       ...mapping.policy_result,
     },
-    created_at: nowIso(),
+    created_at: now,
+  };
+  const notionSyncPending = {
+    mission_id: mission.mission_id,
+    notion_page_id: null,
+    sync_status: "pending" as const,
+    sync_attempt_id: null,
+    verified_by: null,
+    verified_at: null,
+    verification_method: null,
+    verification_version: null,
+    source_record_version: null,
+    policy_decision_id,
+    last_error: null,
+    synced_at: null,
+    updated_at: now,
+  };
+
+  const persisted = await repo.persistConfirmedMapping({
+    bundle,
+    mission,
+    audit: mappingAudit,
+    notionSyncPending,
   });
 
-  const notionOutcome = await syncMissionToNotion(mission, actor, correlation_id, {
+  if (!persisted.created) {
+    const sync = await repo.getNotionSync(persisted.mission.mission_id);
+    return {
+      ok: true as const,
+      mission_id: persisted.mission.mission_id,
+      status: persisted.mission.status,
+      reused: true as const,
+      notion: {
+        sync_status: sync?.sync_status ?? "not_started",
+        notion_page_id: sync?.notion_page_id ?? null,
+        mock_record_id: null,
+        message: "Idempotent confirm — existing mission returned",
+      },
+    };
+  }
+
+  const notionOutcome = await syncMissionToNotion(persisted.mission, actor, correlation_id, {
     policy_decision_id,
     verification_method: "user_confirm_mapping",
   });
 
   return {
     ok: true as const,
-    mission_id: mission.mission_id,
-    status: mission.status,
+    mission_id: persisted.mission.mission_id,
+    status: persisted.mission.status,
     reused: false as const,
     notion: {
       sync_status: notionOutcome.sync_status,

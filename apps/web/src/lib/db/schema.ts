@@ -8,6 +8,7 @@ import {
   uuid,
   primaryKey,
   index,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 /**
@@ -65,6 +66,10 @@ export const missions = pgTable(
   (t) => [
     index("missions_source_intake_id_idx").on(t.source_intake_id),
     index("missions_status_updated_at_idx").on(t.status, t.updated_at),
+    uniqueIndex("missions_source_intake_version_uidx").on(
+      t.source_intake_id,
+      t.source_intake_version,
+    ),
   ],
 );
 
