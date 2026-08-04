@@ -40,6 +40,10 @@ export function newPolicyDecisionId(prefix = "PD"): string {
   return `${prefix}-${crypto.randomUUID().replace(/-/g, "").slice(0, 10).toUpperCase()}`;
 }
 
+export function newPreflightId(): string {
+  return `PF-${crypto.randomUUID().replace(/-/g, "").slice(0, 12).toUpperCase()}`;
+}
+
 export function nowIso(): string {
   return new Date().toISOString();
 }

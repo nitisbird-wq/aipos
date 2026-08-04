@@ -8,6 +8,7 @@
 } from "@/lib/schemas/intake";
 import { getRepository, getPersistenceMode } from "@/lib/repositories";
 import { analyzeMissionHeuristic } from "@/lib/services/analyze";
+import { runCapabilityPreflight } from "@/lib/services/preflight-service";
 import { evaluateReadiness } from "@/lib/gates/readiness-gate";
 import { evaluateHandling } from "@/lib/gates/handling-gate";
 import { evaluateMapping } from "@/lib/gates/mapping-gate";
@@ -120,16 +121,28 @@ export async function analyzeIntake(intakeId: string, actor: string): Promise<In
 
   const { intake_validation, ...missionFields } = analysis;
 
+  const preflight = await runCapabilityPreflight({
+    intake_id: intakeId,
+    capability_families: missionFields.capability_families,
+    operational_risk: missionFields.operational_risk,
+  });
+
   const updated: IntakeMissionBundle = {
     ...existing,
     ...missionFields,
     knowledge_refs: [
       ...existing.knowledge_refs.filter(
-        (r) => (r as { kind?: string }).kind !== "intake_validation",
+        (r) =>
+          (r as { kind?: string }).kind !== "intake_validation" &&
+          (r as { kind?: string }).kind !== "preflight",
       ),
       {
         kind: "intake_validation",
         ...intake_validation,
+      },
+      {
+        kind: "preflight",
+        ...preflight,
       },
     ],
     data_destinations: [{ ...INTAKE_CHANNEL_DESTINATION }],
@@ -158,6 +171,36 @@ export async function analyzeIntake(intakeId: string, actor: string): Promise<In
       decision: "allow",
       readiness,
       analyze_provider: process.env.ANALYZE_PROVIDER || "none",
+    },
+    created_at: nowIso(),
+  });
+
+  await repo.appendAudit({
+    id: newAuditId(),
+    aggregate_type: "intake",
+    mission_id: null,
+    intake_id: intakeId,
+    actor,
+    action: "preflight:capability_connection_authority",
+    reason: preflight.evidence_summary,
+    correlation_id: newCorrelationId(),
+    causation_id: null,
+    previous_state: existing.readiness_status,
+    new_state: updated.readiness_status,
+    policy_result: {
+      decision: preflight.user_diy_allowed ? "allow" : "allow",
+      preflight_id: preflight.preflight_id,
+      overall_status: preflight.overall_status,
+      user_diy_allowed: preflight.user_diy_allowed,
+      user_diy_reason: preflight.user_diy_reason,
+      requires_authority_approval: preflight.requires_authority_approval,
+      tool_selection: preflight.tools.map((t) => ({
+        tool_id: t.tool_id,
+        connection_status: t.connection_status,
+        authority_status: t.authority_status,
+        selection_reason: t.selection_reason,
+        missing_permissions: t.missing_permissions,
+      })),
     },
     created_at: nowIso(),
   });

@@ -1,0 +1,62 @@
+[
+  {
+    "tool_id": "tool:notion-mission-registry",
+    "display_name": "Notion Mission Registry",
+    "kind": "connector",
+    "capability_families": ["knowledge", "knowledge_management", "docs"],
+    "adapter_id": "adapter:notion",
+    "enabled": true,
+    "connect_instructions": "Set NOTION_ADAPTER=notion-sdk, provide NOTION_TOKEN and NOTION_MISSIONS_DATABASE_ID in apps/web/.env.local (never commit secrets). Real writes remain gated by product phase.",
+    "required_permissions": ["notion:databases:read", "notion:pages:write"],
+    "evidence_env_keys": ["NOTION_ADAPTER", "NOTION_TOKEN", "NOTION_MISSIONS_DATABASE_ID"],
+    "notes": "Outbound projection only. Mock adapter is never Connected/Verified."
+  },
+  {
+    "tool_id": "tool:analyze-heuristic",
+    "display_name": "Local Analyze Heuristic",
+    "kind": "local_runtime",
+    "capability_families": ["docs", "code", "deck", "research"],
+    "adapter_id": "adapter:analyze-none",
+    "enabled": true,
+    "connect_instructions": "Default ANALYZE_PROVIDER=none — deterministic local stub; no external API key required.",
+    "required_permissions": [],
+    "evidence_env_keys": ["ANALYZE_PROVIDER"],
+    "notes": "Ready for intake analysis only — not specialist execution."
+  },
+  {
+    "tool_id": "tool:openai-analyze",
+    "display_name": "OpenAI Analyze Provider",
+    "kind": "adapter",
+    "capability_families": ["docs", "research"],
+    "adapter_id": "adapter:openai",
+    "enabled": true,
+    "connect_instructions": "Set ANALYZE_PROVIDER=openai and OPENAI_API_KEY in env (local only). Not enabled for execution dispatch in Phase 2.",
+    "required_permissions": ["openai:chat.completions"],
+    "evidence_env_keys": ["ANALYZE_PROVIDER", "OPENAI_API_KEY"],
+    "notes": "Presence of key ≠ Verified execution authority."
+  },
+  {
+    "tool_id": "tool:n8n-execution",
+    "display_name": "n8n Execution Adapter",
+    "kind": "adapter",
+    "capability_families": ["automation"],
+    "adapter_id": "adapter:n8n",
+    "enabled": true,
+    "connect_instructions": "Phase 4+: configure signed n8n adapter after ADR approval. Local compose may expose UI at http://localhost:5678 but that is not Connected for mission execution.",
+    "required_permissions": ["n8n:workflow:execute", "aipos:callback:signed"],
+    "evidence_env_keys": [],
+    "notes": "No live execution preflight claim in Phase 2 — status remains unknown_unverified / not used for dispatch."
+  },
+  {
+    "tool_id": "tool:cursor-agent",
+    "display_name": "Cursor Coding Agent",
+    "kind": "agent",
+    "capability_families": ["code"],
+    "adapter_id": "adapter:cursor",
+    "enabled": true,
+    "connect_instructions": "Cursor runs in the developer environment. There is no AIPOS live connection probe in Phase 2 — do not claim Connected from registry alone.",
+    "required_permissions": ["repo:read", "repo:write"],
+    "evidence_env_keys": [],
+    "notes": "Selection for planning only until specialist adapter phase."
+  }
+]
