@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aipos.local/schemas/connection-status.schema.json",
+  "title": "ConnectionStatus",
+  "description": "Evidence-backed connection probe result. Forbidden to report Connected/Verified without evidence fields populated.",
+  "version": "1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tool_id",
+    "status",
+    "probed_at",
+    "evidence",
+    "claims"
+  ],
+  "properties": {
+    "tool_id": { "type": "string", "minLength": 1 },
+    "status": {
+      "type": "string",
+      "enum": [
+        "unknown",
+        "not_configured",
+        "credential_present",
+        "mock_only",
+        "disconnected",
+        "connected",
+        "error"
+      ],
+      "description": "connected requires evidence.probe_id. mock_only and credential_present are NOT Connected/Verified."
+    },
+    "probed_at": { "type": "string", "format": "date-time" },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method", "summary"],
+      "properties": {
+        "method": {
+          "type": "string",
+          "enum": [
+            "env_presence",
+            "adapter_mode",
+            "explicit_disconnected",
+            "live_probe",
+            "none"
+          ]
+        },
+        "summary": { "type": "string" },
+        "probe_id": {
+          "type": ["string", "null"],
+          "description": "Required non-null for status=connected"
+        },
+        "adapter_mode": { "type": ["string", "null"] },
+        "env_keys_present": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "claims": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["connected", "verified"],
+      "description": "Honesty flags — must stay false unless evidence supports them",
+      "properties": {
+        "connected": { "type": "boolean" },
+        "verified": {
+          "type": "boolean",
+          "description": "external_verified readback only; never true for mock"
+        }
+      }
+    },
+    "connect_instructions": { "type": ["string", "null"] },
+    "error": { "type": ["string", "null"] }
+  }
+}

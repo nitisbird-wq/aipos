@@ -13,6 +13,7 @@ import { evaluateHandling } from "@/lib/gates/handling-gate";
 import { evaluateMapping } from "@/lib/gates/mapping-gate";
 import { mapBundleToMission } from "@/lib/services/mapping-service";
 import { syncMissionToNotion } from "@/lib/services/notion-sync-service";
+import { runCapabilityPreflight } from "@/lib/services/preflight-service";
 import {
   assertOperatorActor,
   newAuditId,
@@ -384,9 +385,58 @@ export async function confirmIntake(
   }
 
   const mission = mapBundleToMission(bundle);
+
+  // Phase 2 Core Control: Capability–Connection–Authority Preflight
+  // before Assignment/Execution (Assignment/Execution remain Phase 3).
+  const preflight = await runCapabilityPreflight({
+    bundle,
+    missionId: mission.mission_id,
+  });
+  mission.gate_results = {
+    ...(mission.gate_results ?? {}),
+    preflight,
+  };
+  mission.planning_input = {
+    ...(mission.planning_input ?? {}),
+    preflight_disposition: preflight.disposition,
+    selected_tool_id: preflight.selected_tool_id,
+    assignment_execution_blocked: preflight.assignment_execution_blocked ?? true,
+  };
+  mission.evidence_refs = [...mission.evidence_refs, `preflight:${preflight.preflight_id}`];
+
   const policy_decision_id = newPolicyDecisionId("MAP");
   await repo.saveIntake(bundle);
   await repo.saveMission(mission);
+
+  await repo.appendAudit({
+    id: newAuditId(),
+    aggregate_type: "mission",
+    mission_id: mission.mission_id,
+    intake_id: bundle.intake_id,
+    actor,
+    action: "preflight:evaluate",
+    reason: preflight.selection_reason,
+    correlation_id,
+    causation_id: null,
+    previous_state: "ready_to_dispatch",
+    new_state: preflight.disposition,
+    policy_result: {
+      decision:
+        preflight.disposition === "blocked"
+          ? "block"
+          : preflight.disposition === "approval_required"
+            ? "require_approval"
+            : "allow",
+      preflight_id: preflight.preflight_id,
+      disposition: preflight.disposition,
+      selected_tool_id: preflight.selected_tool_id,
+      blocking_codes: preflight.blocking_codes,
+      claims: preflight.claims,
+      user_actions: preflight.user_actions,
+      manual_fallback: preflight.manual_fallback,
+    },
+    created_at: nowIso(),
+  });
 
   await repo.appendAudit({
     id: newAuditId(),
@@ -403,6 +453,8 @@ export async function confirmIntake(
     policy_result: {
       decision: "allow",
       policy_decision_id,
+      preflight_id: preflight.preflight_id,
+      preflight_disposition: preflight.disposition,
       ...mapping.policy_result,
     },
     created_at: nowIso(),
@@ -418,6 +470,16 @@ export async function confirmIntake(
     mission_id: mission.mission_id,
     status: mission.status,
     reused: false as const,
+    preflight: {
+      preflight_id: preflight.preflight_id,
+      disposition: preflight.disposition,
+      selected_tool_id: preflight.selected_tool_id,
+      selection_reason: preflight.selection_reason,
+      user_actions: preflight.user_actions,
+      claims: preflight.claims,
+      assignment_execution_blocked: preflight.assignment_execution_blocked ?? true,
+      blocking_codes: preflight.blocking_codes,
+    },
     notion: {
       sync_status: notionOutcome.sync_status,
       notion_page_id: notionOutcome.notion_page_id,
