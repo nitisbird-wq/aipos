@@ -243,7 +243,7 @@ Merge (มนุษย์; ตัวอย่างที่เกิดแล�
 |---|---|---|
 | **Current** | Governance docs + domain schemas + Mission Intake app + tooling + CI green | ประวัติ `main` |
 | ↓ | | |
-| **Phase 2** | Postgres runtime adapter (opt-in) + Real Notion verified sync (ยังค้าง) + Three-State | D6 ขั้น 2–3; PR #8; Architecture Contract C-01 |
+| **Phase 2** | Postgres runtime adapter (opt-in) + Capability–Connection–Authority Preflight (evaluate/audit) + Real Notion verified sync (ยังค้าง) | D6 ขั้น 2–3; PR #8; `docs/PHASE_2_PREFLIGHT.md`; Architecture Contract C-01 |
 | ↓ | | |
 | **Phase 3a** | Planning → confirm-once → L0–L1 Subtasks → Propose/Approve Assignment (**จบที่ assigned**) | ADR-005; `docs/PHASE_3_*.md` — **ไม่รวม** Execution/Artifact/Review/Closeout |
 | ↓ | | |

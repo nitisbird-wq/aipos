@@ -34,8 +34,10 @@ jobs:
             | tar -xz gitleaks
           ./gitleaks version
 
+      # Scan commits reachable from HEAD only. Default gitleaks walks all local
+      # refs, which fails PRs on unrelated branch false-positives (e.g. bruno fixtures).
       - name: Scan repository (redacted)
-        run: ./gitleaks detect --source . --verbose --redact --exit-code 1
+        run: ./gitleaks detect --source . --verbose --redact --exit-code 1 --log-opts="HEAD"
 
   verify:
     name: Verify

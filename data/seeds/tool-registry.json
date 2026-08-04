@@ -1,0 +1,139 @@
+[
+  {
+    "tool_id": "tool:notion",
+    "display_name": "Notion Mission Registry Connector",
+    "kind": "connector",
+    "capability_ids": ["knowledge.manage"],
+    "capability_families": ["knowledge_management"],
+    "enabled": true,
+    "required_permissions": [
+      "notion:read_mission_db",
+      "notion:write_mission_page"
+    ],
+    "connect_instructions": "Set NOTION_ADAPTER=notion (when enabled), NOTION_TOKEN, and NOTION_MISSIONS_DATABASE_ID. Verified claims require successful readback of notion_page_id.",
+    "credential_env_keys": ["NOTION_TOKEN", "NOTION_MISSIONS_DATABASE_ID"],
+    "allows_manual_fallback": true,
+    "execution_phase": "intake_support",
+    "notes": "MVP real writes remain disabled; mock adapter never yields Verified."
+  },
+  {
+    "tool_id": "tool:openai",
+    "display_name": "OpenAI Connector",
+    "kind": "connector",
+    "capability_ids": [
+      "docs.summarize",
+      "research.synthesize",
+      "strategy.analyze",
+      "data.analyze",
+      "code.implement"
+    ],
+    "capability_families": [
+      "docs",
+      "research",
+      "strategy_analysis",
+      "data_analysis",
+      "code"
+    ],
+    "enabled": true,
+    "required_permissions": ["openai:chat_completions"],
+    "connect_instructions": "Set OPENAI_API_KEY in the app environment. Credential presence alone is not Authorized; live probe + grant evidence required before Assignment/Execution.",
+    "credential_env_keys": ["OPENAI_API_KEY"],
+    "allows_manual_fallback": true,
+    "execution_phase": "phase3_or_later"
+  },
+  {
+    "tool_id": "tool:claude",
+    "display_name": "Claude Connector",
+    "kind": "connector",
+    "capability_ids": [
+      "docs.summarize",
+      "research.synthesize",
+      "strategy.analyze",
+      "workflow.design",
+      "code.implement"
+    ],
+    "capability_families": [
+      "docs",
+      "research",
+      "strategy_analysis",
+      "workflow_design",
+      "code"
+    ],
+    "enabled": true,
+    "required_permissions": ["anthropic:messages"],
+    "connect_instructions": "Set ANTHROPIC_API_KEY. Do not claim Connected/Authorized until a probe returns evidence.",
+    "credential_env_keys": ["ANTHROPIC_API_KEY"],
+    "allows_manual_fallback": true,
+    "execution_phase": "phase3_or_later"
+  },
+  {
+    "tool_id": "tool:cursor",
+    "display_name": "Cursor Code Agent",
+    "kind": "agent",
+    "capability_ids": ["code.implement"],
+    "capability_families": ["code"],
+    "enabled": true,
+    "required_permissions": ["cursor:repo_write"],
+    "connect_instructions": "Authorize Cursor agent access to the target repository and confirm operator session. Phase 2 records registry readiness only; no auto-dispatch.",
+    "credential_env_keys": [],
+    "allows_manual_fallback": true,
+    "execution_phase": "phase3_or_later"
+  },
+  {
+    "tool_id": "tool:n8n",
+    "display_name": "n8n Workflow Connector",
+    "kind": "adapter",
+    "capability_ids": ["automation.flow", "workflow.design"],
+    "capability_families": ["automation", "workflow_design"],
+    "enabled": true,
+    "required_permissions": ["n8n:workflow_execute"],
+    "connect_instructions": "Configure N8N_BASE_URL and N8N_API_KEY when Phase 3+ execution is approved. Out of Phase 2 runtime scope.",
+    "credential_env_keys": ["N8N_BASE_URL", "N8N_API_KEY"],
+    "allows_manual_fallback": true,
+    "execution_phase": "phase3_or_later",
+    "notes": "No n8n routing in Phase 2."
+  },
+  {
+    "tool_id": "tool:gamma",
+    "display_name": "Gamma Deck Connector",
+    "kind": "connector",
+    "capability_ids": ["deck.generate"],
+    "capability_families": ["deck"],
+    "enabled": true,
+    "required_permissions": ["gamma:generate"],
+    "connect_instructions": "Set GAMMA_API_KEY when the connector is approved for use.",
+    "credential_env_keys": ["GAMMA_API_KEY"],
+    "allows_manual_fallback": true,
+    "execution_phase": "phase3_or_later"
+  },
+  {
+    "tool_id": "tool:canva",
+    "display_name": "Canva Design Connector",
+    "kind": "connector",
+    "capability_ids": ["deck.generate", "design.graphic"],
+    "capability_families": ["deck", "design"],
+    "enabled": true,
+    "required_permissions": ["canva:design_create"],
+    "connect_instructions": "Connect Canva OAuth / API credentials (CANVA_ACCESS_TOKEN) when approved.",
+    "credential_env_keys": ["CANVA_ACCESS_TOKEN"],
+    "allows_manual_fallback": true,
+    "execution_phase": "phase3_or_later"
+  },
+  {
+    "tool_id": "tool:gemini",
+    "display_name": "Gemini Connector",
+    "kind": "connector",
+    "capability_ids": [
+      "docs.summarize",
+      "research.synthesize",
+      "data.analyze"
+    ],
+    "capability_families": ["docs", "research", "data_analysis"],
+    "enabled": true,
+    "required_permissions": ["google:generate_content"],
+    "connect_instructions": "Set GEMINI_API_KEY / GOOGLE_API_KEY. Presence is not Authorized.",
+    "credential_env_keys": ["GEMINI_API_KEY", "GOOGLE_API_KEY"],
+    "allows_manual_fallback": true,
+    "execution_phase": "phase3_or_later"
+  }
+]

@@ -51,3 +51,16 @@ Before MVP is “pass” for deploy readiness:
 10. Intake UI works without n8n  
 11. Notion is never used as the sole runtime transaction store  
 12. Intake channel and Notion registry destinations are recorded as separate destination entries  
+
+## Phase 2 Preflight (Capability–Connection–Authority)
+
+**Contract:** [PHASE_2_PREFLIGHT.md](./PHASE_2_PREFLIGHT.md) v1.0.0
+
+1. Confirming an intake runs Preflight and writes audit action `preflight:evaluate` with disposition + selection reason  
+2. Preflight never sets `claims.connected` / `claims.authorized` / `claims.verified` without supporting evidence  
+3. When a matching Connector exists but is not evidenced Connected → disposition `connect_required` includes tool name + `connect_instructions`  
+4. When permissions are insufficient → `missing_permissions` listed; disposition `permission_required` (or connect path surfaces grant actions)  
+5. Manual fallback (`manual_fallback.allowed=true` / `NO_TOOL_USE_MANUAL`) only after Preflight proves no ready acting tool  
+6. L3–L4 risk yields `approval_required` (or required_approvals includes `authority_approval`) even if credentials are present  
+7. Mission stores Preflight under `gate_results.preflight` and blocks Assignment/Execution via `assignment_execution_blocked` until disposition allows later phases  
+8. No specialist adapter / n8n dispatch is invoked by Preflight (Phase 2 evaluate-only)  

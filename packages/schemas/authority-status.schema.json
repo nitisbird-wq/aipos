@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aipos.local/schemas/authority-status.schema.json",
+  "title": "AuthorityStatus",
+  "description": "Authority / permission assessment for a tool acting on behalf of the operator. Authorized requires evidence; insufficient lists missing permissions.",
+  "version": "1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tool_id",
+    "status",
+    "missing_permissions",
+    "required_approvals",
+    "claims",
+    "assessed_at"
+  ],
+  "properties": {
+    "tool_id": { "type": "string", "minLength": 1 },
+    "status": {
+      "type": "string",
+      "enum": [
+        "unknown",
+        "not_authorized",
+        "insufficient",
+        "requires_approval",
+        "authorized"
+      ]
+    },
+    "missing_permissions": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "required_approvals": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "e.g. authority_approval for L3–L4"
+    },
+    "claims": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["authorized"],
+      "properties": {
+        "authorized": {
+          "type": "boolean",
+          "description": "Must be false unless status=authorized with grant evidence"
+        }
+      }
+    },
+    "grant_evidence": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "method": { "type": "string" },
+        "summary": { "type": "string" },
+        "granted_permissions": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "assessed_at": { "type": "string", "format": "date-time" },
+    "notes": { "type": ["string", "null"] }
+  }
+}

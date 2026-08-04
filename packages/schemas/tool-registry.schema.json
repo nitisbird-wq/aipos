@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aipos.local/schemas/tool-registry.schema.json",
+  "title": "ToolRegistryEntry",
+  "description": "Phase 2 Capability–Connection–Authority Preflight: registry entry for a Tool/Connector/Agent that may act on behalf of the operator. No specialist execution adapters.",
+  "version": "1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tool_id",
+    "display_name",
+    "kind",
+    "capability_ids",
+    "enabled",
+    "required_permissions",
+    "connect_instructions",
+    "allows_manual_fallback",
+    "execution_phase"
+  ],
+  "properties": {
+    "tool_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Stable id (e.g. tool:notion, tool:openai)"
+    },
+    "display_name": { "type": "string", "minLength": 1 },
+    "kind": {
+      "type": "string",
+      "enum": ["connector", "agent", "runtime", "adapter"]
+    },
+    "capability_ids": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Capability registry ids this tool can serve"
+    },
+    "capability_families": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "enabled": { "type": "boolean" },
+    "required_permissions": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Permission keys that must be evidenced before Authorized claim"
+    },
+    "connect_instructions": {
+      "type": "string",
+      "minLength": 1,
+      "description": "How to enable/connect this connector (shown when disconnected)"
+    },
+    "credential_env_keys": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Env keys whose presence is weak evidence only (credential_present, not Connected)"
+    },
+    "allows_manual_fallback": {
+      "type": "boolean",
+      "description": "Manual user work allowed only after Preflight proves no ready tool"
+    },
+    "execution_phase": {
+      "type": "string",
+      "enum": ["phase3_or_later", "intake_support", "none"],
+      "description": "phase3_or_later = registry only in Phase 2; no dispatch"
+    },
+    "notes": { "type": "string" }
+  }
+}

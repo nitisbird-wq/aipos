@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aipos.local/schemas/preflight-result.schema.json",
+  "title": "PreflightResult",
+  "description": "Capability–Connection–Authority Preflight result recorded as audit evidence before Assignment/Execution. Phase 2: evaluate only; no specialist dispatch.",
+  "version": "1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "preflight_id",
+    "schema_version",
+    "intake_id",
+    "mission_id",
+    "evaluated_at",
+    "capability_families",
+    "candidate_tools",
+    "connection_results",
+    "authority_results",
+    "selected_tool_id",
+    "selection_reason",
+    "disposition",
+    "user_actions",
+    "manual_fallback",
+    "claims",
+    "blocking_codes"
+  ],
+  "properties": {
+    "preflight_id": { "type": "string", "minLength": 1 },
+    "schema_version": { "type": "string", "const": "1.0.0" },
+    "intake_id": { "type": "string", "pattern": "^INT-" },
+    "mission_id": { "type": ["string", "null"], "pattern": "^MIS-" },
+    "evaluated_at": { "type": "string", "format": "date-time" },
+    "operational_risk": {
+      "type": "string",
+      "enum": ["L0", "L1", "L2", "L3", "L4"]
+    },
+    "capability_families": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "candidate_tools": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "connection_results": {
+      "type": "array",
+      "items": { "$ref": "connection-status.schema.json" }
+    },
+    "authority_results": {
+      "type": "array",
+      "items": { "$ref": "authority-status.schema.json" }
+    },
+    "selected_tool_id": { "type": ["string", "null"] },
+    "selection_reason": { "type": "string", "minLength": 1 },
+    "disposition": {
+      "type": "string",
+      "enum": [
+        "ready_for_assignment",
+        "connect_required",
+        "permission_required",
+        "approval_required",
+        "manual_fallback_allowed",
+        "blocked"
+      ]
+    },
+    "user_actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "message"],
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "CONNECT_TOOL",
+              "GRANT_PERMISSION",
+              "OBTAIN_APPROVAL",
+              "NO_TOOL_USE_MANUAL",
+              "WAIT_PHASE3_EXECUTION",
+              "NONE"
+            ]
+          },
+          "tool_id": { "type": ["string", "null"] },
+          "missing_permissions": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "message": { "type": "string" },
+          "connect_instructions": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "manual_fallback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["allowed", "reason"],
+      "properties": {
+        "allowed": {
+          "type": "boolean",
+          "description": "True only after proving no ready tool exists"
+        },
+        "reason": { "type": "string" }
+      }
+    },
+    "claims": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["any_connected", "any_authorized", "any_verified"],
+      "properties": {
+        "any_connected": { "type": "boolean" },
+        "any_authorized": { "type": "boolean" },
+        "any_verified": { "type": "boolean" }
+      }
+    },
+    "blocking_codes": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "assignment_execution_blocked": {
+      "type": "boolean",
+      "description": "True until disposition is ready_for_assignment (Assignment/Execution remain Phase 3)"
+    }
+  }
+}
