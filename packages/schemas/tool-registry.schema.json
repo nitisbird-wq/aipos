@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aipos.local/schemas/tool-registry.schema.json",
+  "title": "ToolRegistryEntry",
+  "description": "AIPOS Core tool/connector/agent registry entry. Connection claims require evidence — never invent Connected/Authorized/Verified.",
+  "version": "1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tool_id",
+    "display_name",
+    "kind",
+    "capability_families",
+    "adapter_id",
+    "enabled",
+    "connect_instructions",
+    "required_permissions"
+  ],
+  "properties": {
+    "tool_id": { "type": "string", "minLength": 1 },
+    "display_name": { "type": "string" },
+    "kind": {
+      "type": "string",
+      "enum": ["connector", "agent", "adapter", "local_runtime"]
+    },
+    "capability_families": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "adapter_id": { "type": "string" },
+    "enabled": { "type": "boolean" },
+    "connect_instructions": { "type": "string" },
+    "required_permissions": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "evidence_env_keys": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Env keys inspected for connection evidence (presence only; values never logged)"
+    },
+    "notes": { "type": "string" }
+  }
+}

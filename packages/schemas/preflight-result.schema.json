@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aipos.local/schemas/preflight-result.schema.json",
+  "title": "PreflightResult",
+  "description": "Capability–Connection–Authority Preflight result. Epistemic honesty: Connected/Authorized/Verified only with evidence.",
+  "version": "1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "preflight_id",
+    "intake_id",
+    "evaluated_at",
+    "capability_families",
+    "tools",
+    "user_diy_allowed",
+    "user_diy_reason",
+    "requires_authority_approval",
+    "overall_status",
+    "evidence_summary"
+  ],
+  "properties": {
+    "preflight_id": { "type": "string", "pattern": "^PF-" },
+    "intake_id": { "type": "string", "pattern": "^INT-" },
+    "evaluated_at": { "type": "string", "format": "date-time" },
+    "capability_families": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "tools": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "tool_id",
+          "display_name",
+          "connection_status",
+          "authority_status",
+          "missing_permissions",
+          "connect_instructions",
+          "selection_reason",
+          "evidence"
+        ],
+        "properties": {
+          "tool_id": { "type": "string" },
+          "display_name": { "type": "string" },
+          "connection_status": {
+            "type": "string",
+            "enum": [
+              "not_registered",
+              "not_connected",
+              "connected_unverified",
+              "mock_only",
+              "ready_evidenced",
+              "unknown_unverified"
+            ]
+          },
+          "authority_status": {
+            "type": "string",
+            "enum": [
+              "not_applicable",
+              "insufficient_permissions",
+              "requires_human_approval",
+              "policy_blocked",
+              "authorized_evidenced",
+              "unknown_unverified"
+            ]
+          },
+          "missing_permissions": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "connect_instructions": { "type": "string" },
+          "selection_reason": { "type": "string" },
+          "evidence": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Human-readable evidence labels (no secret values)"
+          }
+        }
+      }
+    },
+    "user_diy_allowed": {
+      "type": "boolean",
+      "description": "True only when no registered tool can act for the user with evidenced readiness"
+    },
+    "user_diy_reason": { "type": "string" },
+    "requires_authority_approval": { "type": "boolean" },
+    "overall_status": {
+      "type": "string",
+      "enum": [
+        "ready_with_tools",
+        "blocked_connector",
+        "blocked_permissions",
+        "requires_approval",
+        "no_tool_user_may_diy",
+        "incomplete_evidence"
+      ]
+    },
+    "evidence_summary": { "type": "string" }
+  }
+}
