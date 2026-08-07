@@ -21,6 +21,18 @@ cp .env.example apps/web/.env.local
 npm run dev
 ```
 
+### Developer Control Center (PR/CI + local stack)
+
+See [`docs/DEVELOPER_CONTROL_CENTER.md`](docs/DEVELOPER_CONTROL_CENTER.md). Typical three commands:
+
+```bash
+npm run services:up   # Postgres + n8n (Docker; optional)
+npm run status        # git + gh PR/CI SoT + service health
+npm run verify        # status + format/lint/test/build/doctor
+```
+
+`npm run status` uses **`gh pr view --json`** as PR merge source of truth (install GitHub CLI yourself on Windows — this repo will not auto-install it).
+
 Open [http://localhost:3000](http://localhost:3000) → **Mission Commander** (chat-first New Mission). Sign in with:
 
 - Email: `operator@example.com` (or `OPERATOR_EMAIL`)

@@ -1,0 +1,17 @@
+meta {
+  name: Analyze intake
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/intakes/{{intakeId}}/analyze
+  body: none
+  auth: none
+}
+
+tests {
+  test("analyze responds", function() {
+    expect(res.status).to.be.oneOf([200, 400, 404]);
+  });
+}

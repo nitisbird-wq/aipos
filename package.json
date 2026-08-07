@@ -21,7 +21,12 @@
     "test:e2e-thai": "npm run test:e2e-thai -w web",
     "aipos": "tsx scripts/aipos/cli.ts",
     "doctor": "tsx scripts/aipos/cli.ts doctor",
-    "audit": "tsx scripts/aipos/cli.ts audit"
+    "audit": "tsx scripts/aipos/cli.ts audit",
+    "status": "tsx scripts/dev/status.ts",
+    "services:up": "tsx scripts/dev/services.ts up",
+    "services:down": "tsx scripts/dev/services.ts down",
+    "test:api": "tsx scripts/dev/test-api.ts",
+    "verify": "tsx scripts/dev/verify.ts"
   },
   "devDependencies": {
     "tsx": "^4.19.4"

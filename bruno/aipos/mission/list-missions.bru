@@ -1,0 +1,17 @@
+meta {
+  name: List missions
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/missions
+  body: none
+  auth: none
+}
+
+tests {
+  test("list missions", function() {
+    expect(res.status).to.be.oneOf([200, 401]);
+  });
+}

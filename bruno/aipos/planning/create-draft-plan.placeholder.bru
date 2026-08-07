@@ -1,0 +1,33 @@
+meta {
+  name: Create draft plan (PLACEHOLDER — Phase 3a)
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/missions/{{missionId}}/plans
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Idempotency-Key: BRUNO-PLAN-{{$timestamp}}
+}
+
+body:json {
+  {
+    "summary": "PLACEHOLDER — implement with Phase 3a Planning Foundation",
+    "notes": "Expect 404 until PR B lands"
+  }
+}
+
+docs {
+  Phase 3a placeholder. Do not treat 404 as collection failure for verify until Planning APIs exist.
+}
+
+tests {
+  test("placeholder responds (404 ok until Planning ships)", function() {
+    expect(res.status).to.be.oneOf([200, 201, 404, 401, 501]);
+  });
+}

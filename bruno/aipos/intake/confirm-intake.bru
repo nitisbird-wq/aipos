@@ -1,0 +1,35 @@
+meta {
+  name: Confirm intake
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/intakes/{{intakeId}}/confirm
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "sensitivity_acknowledged": true,
+    "reason": "Bruno smoke confirm"
+  }
+}
+
+script:post-response {
+  const data = res.getBody();
+  if (data && data.mission_id) {
+    bru.setEnvVar("missionId", data.mission_id);
+  }
+}
+
+tests {
+  test("confirm responds", function() {
+    expect(res.status).to.be.oneOf([200, 400, 404]);
+  });
+}
