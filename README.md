@@ -69,6 +69,14 @@ npm run aipos -- doctor --profile pr
 ```
 
 Agent rules: see `AGENTS.md`.
+
+## Production status (n8n Phase 1–2)
+
+**Binding SoT:** [`docs/PRODUCTION_SOURCE_OF_TRUTH.md`](docs/PRODUCTION_SOURCE_OF_TRUTH.md)
+
+- Phase 1–2 Mission Intake Pilot is **PRODUCTION PASS / FROZEN**: workflow `7fLPHiiyt7sre5RR`, active version `760150d8-2e1a-4a5e-93a9-48781c306583`.
+- Phase 3 Capability Orchestration is **not** production. Decomposer contract first; Router/Dispatcher HELD. Do not publish the inactive P3 draft `xizHBNDiy9W4RLM4`.
+
 ## Out of scope (v0.1)
 
 Specialist execution, routing/matching/assignment, real Subtask creation, real Notion/AI credentials, deploy.

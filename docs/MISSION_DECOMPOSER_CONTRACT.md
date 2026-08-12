@@ -3,7 +3,9 @@
 **Status:** Design contract — implementable; Router/Dispatcher **HELD**  
 **Supersedes:** generic “understand scope → create main output” heuristic  
 **Frozen:** Phase 1–2 intake workflow `760150d8-2e1a-4a5e-93a9-48781c306583` (do not modify)  
-**Schemas:** `packages/schemas/workstream-plan.schema.json` (`decomposer_version: ADR-006.v2`), `workstream.schema.json`
+**Production SoT:** `docs/PRODUCTION_SOURCE_OF_TRUTH.md`  
+**Schemas:** `packages/schemas/workstream-plan.schema.json` (`decomposer_version: ADR-006.v2`), `workstream.schema.json`  
+**Fixtures:** `data/seeds/decomposer-examples/` (MIS-101…107)
 
 ---
 

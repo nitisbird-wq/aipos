@@ -1,10 +1,13 @@
 # AIPOS Current Capabilities
 
-**Document status:** Analysis only (read-only of repository state)  
-**Repository tip analyzed:** `5da6723` on `main` (`fix: install Tailwind native optional dependencies in CI (#5)`)  
-**Scope of evidence:** commits on `main` from governance baseline through CI fix  
+> **n8n Phase 1–2 operational SoT:** [`docs/PRODUCTION_SOURCE_OF_TRUTH.md`](./PRODUCTION_SOURCE_OF_TRUTH.md) — Mission Intake Pilot `7fLPHiiyt7sre5RR` / active version `760150d8-…` is **PRODUCTION PASS / FROZEN**.  
+> This inventory describes the **in-repo Next.js app** and related docs. Do not treat older “Phase 2 incomplete / n8n PLANNED” language as overturning that n8n production verdict.
+
+**Document status:** Analysis of repository + reconciled 2026-08-12 for dual Phase vocabularies  
+**Repository tip analyzed:** `5da6723` on `main` (`fix: install Tailwind native optional dependencies in CI (#5)`) — historical tip; see PRODUCTION_SOURCE_OF_TRUTH for live n8n  
+**Scope of evidence:** commits on `main` from governance baseline through CI fix; n8n production IDs verified live 2026-08-12  
 **Generated from:** repository contents under `docs/`, `packages/schemas/`, `apps/web/`, `scripts/aipos/`, `.github/`, `AGENTS.md`, `README.md`  
-**Not claimed:** production deploy health, live Notion verification, or Notion ADR `verified=true` unless evidenced in this repo
+**Not claimed:** App PostgreSQL production default, ADR-005 Human approval, or ADR-006 Router/Dispatcher production
 
 ---
 
@@ -229,9 +232,9 @@ Merge (มนุษย์; ตัวอย่างที่เกิดแล�
 | Runtime Orchestrator (AIPOS เป็นตัวรัน mission ยาว) | Core ทำ intake/gates/audit/sync contract เท่านั้น |
 | PostgreSQL Production เป็น default | schema/drizzle พร้อม; runtime default = file store (Phase 2 adapter เป็น opt-in) |
 | Real Notion Sync + G5 readback | mock only ใน MVP; real writes disabled; **ทิศทาง App DB → Notion เท่านั้น** |
-| n8n Runtime | Doctor ระบุ N/A / PLANNED |
+| n8n Runtime (App Doctor / in-repo MVP) | Doctor may say N/A for **app** MVP — **not** a denial of n8n Mission Intake Pilot production (see PRODUCTION_SOURCE_OF_TRUTH) |
 | Full Hard Control G0–G5 + Evidence/Handoff objects | เอกสารครบ; implementation บางส่วนใน intake เท่านั้น |
-| In-repo ADR corpus ที่สมบูรณ์ | มี ADR-005 (Phase 3a Proposed); ADR-001 ไฟล์เดิมว่าง |
+| In-repo ADR corpus | ADR-005 **present (Proposed)**; ADR-006 **present**; ADR-001 ไฟล์เดิมว่าง |
 | Traceability matrix / architecture version graph | backlog ยังไม่ส่งมอบ |
 | Multi-tenant / strong auth | single operator assumption |
 
@@ -241,15 +244,18 @@ Merge (มนุษย์; ตัวอย่างที่เกิดแล�
 
 | ระยะ | สิ่งที่มี/จะเพิ่ม | หลักฐานอ้างอิง |
 |---|---|---|
-| **Current** | Governance docs + domain schemas + Mission Intake app + tooling + CI green | ประวัติ `main` |
+| **n8n Phase 1–2 (production)** | Chat → CONFIRM → Notion verified Mission → Linear parent | `docs/PRODUCTION_SOURCE_OF_TRUTH.md`; `7fLPHiiyt7sre5RR` / `760150d8-…`; smoke MIS-3 / NIT-9 |
+| **Current (App repo)** | Governance docs + domain schemas + Mission Intake app + tooling + CI | ประวัติ `main` |
 | ↓ | | |
-| **Phase 2** | Postgres runtime adapter (opt-in) + Real Notion verified sync (ยังค้าง) + Three-State | D6 ขั้น 2–3; PR #8; Architecture Contract C-01 |
+| **App Phase 2** | Postgres runtime adapter (opt-in) + Real Notion verified sync (app path ยังค้าง) + Three-State | D6; PR #8 — **≠** n8n Phase 2 production |
 | ↓ | | |
-| **Phase 3a** | Planning → confirm-once → L0–L1 Subtasks → Propose/Approve Assignment (**จบที่ assigned**) | ADR-005; `docs/PHASE_3_*.md` — **ไม่รวม** Execution/Artifact/Review/Closeout |
+| **Phase 3a (App-DB)** | Planning → Subtasks → Assignment | ADR-005 (**Proposed**); `docs/PHASE_3_*.md` |
 | ↓ | | |
-| **Phase 3b+ / Execution** | Execution via n8n adapter + artifacts + review (ADR แยก) | D2/D6; ต้อง reconcile auto-run vs human gates |
+| **Phase 3 (n8n Capability Orchestration)** | Decompose → Route → Dispatch; Decomposer first; Router/Dispatcher HELD | ADR-006; `MISSION_DECOMPOSER_CONTRACT.md`; draft `xizHBNDiy9W4RLM4` inactive |
 | ↓ | | |
-| **Full AIPOS** | Closeout/feedback, specialists at scale, policy CRUD, multi-channel intake | Phase 1 decisions + out-of-scope MVP list |
+| **Phase 3b+ / Execution** | Execution via n8n adapter + artifacts + review | D2/D6 |
+| ↓ | | |
+| **Full AIPOS** | Closeout/feedback, specialists at scale, policy CRUD | Phase 1 decisions |
 
 ### Traffic lights (do not mark green without code evidence)
 
@@ -259,9 +265,10 @@ Merge (มนุษย์; ตัวอย่างที่เกิดแล�
 | Review | **NOT STARTED** |
 | Closeout | **NOT STARTED** |
 | Monitoring | **PARTIAL / THIN** |
+| n8n Mission Intake Phase 1–2 | **PRODUCTION PASS** |
+| ADR-006 Router/Dispatcher | **HELD** |
 
-หมายเหตุตรงไปตรงมา: **roadmap ด้านบนมาจากเอกสารที่อนุมัติแล้ว ไม่ใช่จากโค้ดที่ implement ครบ** — อย่าตีความว่า Phase 2+ พร้อมใช้
-
+หมายเหตุ: **ห้าม** อ่านเอกสารเก่าแล้วสรุปว่า n8n Phase 2 ยังไม่เสร็จ — App Postgres/ADR-005 ยังไม่ใช่ production default
 ---
 
 ## 8. Overall Assessment

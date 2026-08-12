@@ -1,10 +1,10 @@
 # ADR-006 — Capability Orchestration (n8n Phase 3)
 
-- **Status:** Approved for Implementation  
+- **Status:** Approved for Implementation (**contracts / Decomposer first**; Router & Dispatcher **HELD**)  
 - **Date:** 2026-08-12  
 - **Deciders:** Mission owner (Human) — Phase 3 design approved with governance correction  
 - **Supersedes:** none  
-- **Related:** AIPOS-ADR-004 / Phase 1 Decisions (D1, D2); Architecture Contract; [ADR-005](./ADR-005-PLANNING-SUBTASK-ASSIGNMENT.md); frozen n8n Mission Intake Pilot `7fLPHiiyt7sre5RR` / version `760150d8-2e1a-4a5e-93a9-48781c306583`
+- **Related:** AIPOS-ADR-004 / Phase 1 Decisions (D1, D2); Architecture Contract; [ADR-005](./ADR-005-PLANNING-SUBTASK-ASSIGNMENT.md) (**present, Proposed** — App-DB track; not a blocker for ADR-006 contracts); frozen n8n Mission Intake Pilot `7fLPHiiyt7sre5RR` / version `760150d8-2e1a-4a5e-93a9-48781c306583`; SoT: [`docs/PRODUCTION_SOURCE_OF_TRUTH.md`](../docs/PRODUCTION_SOURCE_OF_TRUTH.md); Decomposer: [`docs/MISSION_DECOMPOSER_CONTRACT.md`](../docs/MISSION_DECOMPOSER_CONTRACT.md)
 
 ---
 
@@ -112,6 +112,18 @@ Phase 4 Verifier / Aggregator attaches to Collector interfaces; not in ADR-006 D
 ### D-006.8 — Claude credential non-blocking for foundation
 
 ADR, schemas, Linear taxonomy, Decomposer/Router **contracts** MUST proceed without Claude credentials. Claude-primary routes fail closed until Capability Registry shows Connected + Verified.
+
+---
+
+### D-006.9 — Inactive P3 prototype is non-authority
+
+n8n draft `AIPOS — P3 Decompose + Route v0.1` (`xizHBNDiy9W4RLM4`, inactive, version `85dd07da-…`) is a **heuristic** Webhook→Code→Respond sketch. It:
+
+- emits a single `Execute: …` workstream  
+- chooses capabilities from title keywords before domain work is defined  
+- assigns operators in the same step as decompose  
+
+It is **non-compliant** with `decomposer_version: ADR-006.v2`. Agents MUST NOT publish it, MUST NOT create a duplicate P3 workflow, and MUST NOT route live missions through it. Rewrite only after the Mission Decomposer contract is accepted.
 
 ---
 

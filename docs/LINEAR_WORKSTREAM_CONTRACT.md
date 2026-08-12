@@ -119,7 +119,9 @@ Phase 1 CONFIRM remains the only Mission approval.
 
 | Workflow | ID | Status |
 |---|---|---|
-| Mission Intake Pilot v0.1 | `7fLPHiiyt7sre5RR` | **FROZEN** production `760150d8-2e1a-4a5e-93a9-48781c306583` |
-| P3 Decompose + Route v0.1 | `xizHBNDiy9W4RLM4` | Draft inactive — heuristic decomposer/router |
+| Mission Intake Pilot v0.1 | `7fLPHiiyt7sre5RR` | **FROZEN** production active version `760150d8-2e1a-4a5e-93a9-48781c306583` (PHASE 2 PRODUCTION PASS) |
+| P3 Decompose + Route v0.1 | `xizHBNDiy9W4RLM4` | Draft **inactive** (`activeVersionId=null`) — heuristic; **non-compliant** with ADR-006.v2; do not publish |
+
+See `docs/PRODUCTION_SOURCE_OF_TRUTH.md` for workflow ID vs version ID and freeze rules.
 
 Do not publish P3 until Dispatcher contract + smoke plan are ready.
