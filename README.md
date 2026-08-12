@@ -76,6 +76,7 @@ Agent rules: see `AGENTS.md`.
 
 - Phase 1–2 Mission Intake Pilot is **PRODUCTION PASS / FROZEN**: workflow `7fLPHiiyt7sre5RR`, active version `760150d8-2e1a-4a5e-93a9-48781c306583`.
 - Phase 3 Capability Orchestration is **not** production. Decomposer contract first; Router/Dispatcher HELD. Do not publish the inactive P3 draft `xizHBNDiy9W4RLM4`.
+- Command Gateway is **design-only** (`docs/COMMAND_GATEWAY_DESIGN.md`, ADR-007 Proposed) — not implemented; must not duplicate Intake.
 
 ## Out of scope (v0.1)
 

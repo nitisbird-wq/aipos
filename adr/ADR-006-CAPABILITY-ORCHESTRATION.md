@@ -4,7 +4,7 @@
 - **Date:** 2026-08-12  
 - **Deciders:** Mission owner (Human) — Phase 3 design approved with governance correction  
 - **Supersedes:** none  
-- **Related:** AIPOS-ADR-004 / Phase 1 Decisions (D1, D2); Architecture Contract; [ADR-005](./ADR-005-PLANNING-SUBTASK-ASSIGNMENT.md) (**present, Proposed** — App-DB track; not a blocker for ADR-006 contracts); frozen n8n Mission Intake Pilot `7fLPHiiyt7sre5RR` / version `760150d8-2e1a-4a5e-93a9-48781c306583`; SoT: [`docs/PRODUCTION_SOURCE_OF_TRUTH.md`](../docs/PRODUCTION_SOURCE_OF_TRUTH.md); Decomposer: [`docs/MISSION_DECOMPOSER_CONTRACT.md`](../docs/MISSION_DECOMPOSER_CONTRACT.md)
+- **Related:** AIPOS-ADR-004 / Phase 1 Decisions (D1, D2); Architecture Contract; [ADR-005](./ADR-005-PLANNING-SUBTASK-ASSIGNMENT.md) (**present, Proposed** — App-DB track; not a blocker for ADR-006 contracts); [ADR-007](./ADR-007-COMMAND-GATEWAY.md) (**Proposed** — Owner command front-door; must not duplicate Intake); frozen n8n Mission Intake Pilot `7fLPHiiyt7sre5RR` / version `760150d8-2e1a-4a5e-93a9-48781c306583`; SoT: [`docs/PRODUCTION_SOURCE_OF_TRUTH.md`](../docs/PRODUCTION_SOURCE_OF_TRUTH.md); Decomposer: [`docs/MISSION_DECOMPOSER_CONTRACT.md`](../docs/MISSION_DECOMPOSER_CONTRACT.md)
 
 ---
 

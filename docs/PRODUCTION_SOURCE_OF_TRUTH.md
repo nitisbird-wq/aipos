@@ -97,14 +97,16 @@ ADR-005 is **not missing**. It is not yet Human-approved for App-DB schema expan
 - Publishing `xizHBNDiy9W4RLM4`  
 - Any edit to frozen intake `7fLPHiiyt7sre5RR` / `760150d8-…`  
 - Treating App Postgres default runtime as production  
+- **Command Gateway runtime** (design only: `docs/COMMAND_GATEWAY_DESIGN.md`, ADR-007 Proposed)  
 
-**Next build gate:** accept / refine Mission Decomposer contract (`ADR-006.v2`) with multi-domain examples — **before** Router/Dispatcher.
+**Next build gate:** accept / refine Mission Decomposer contract (`ADR-006.v2`) with multi-domain examples — **before** Router/Dispatcher. Command Gateway implementation waits on design acceptance (ADR-007) and must not duplicate Intake.
 
 ---
 
 ## 6. Evidence pointers
 
 - Decomposer contract: `docs/MISSION_DECOMPOSER_CONTRACT.md`  
+- Command Gateway design (not implemented): `docs/COMMAND_GATEWAY_DESIGN.md`, `adr/ADR-007-COMMAND-GATEWAY.md`  
 - Workstream schemas: `packages/schemas/workstream*.json`  
 - Fixtures: `data/seeds/decomposer-examples/`  
 - Linear ops contract: `docs/LINEAR_WORKSTREAM_CONTRACT.md`  
