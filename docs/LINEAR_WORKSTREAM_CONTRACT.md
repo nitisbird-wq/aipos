@@ -113,6 +113,11 @@ Phase 1 CONFIRM remains the only Mission approval.
 
 ---
 
-## 7. Freeze note
+## 8. Related n8n workflows
 
-Do not modify production workflow nodes to attach taxonomy. Taxonomy is applied by **new** Phase 3 Dispatcher / Adapter workflows only.
+| Workflow | ID | Status |
+|---|---|---|
+| Mission Intake Pilot v0.1 | `7fLPHiiyt7sre5RR` | **FROZEN** production `760150d8-2e1a-4a5e-93a9-48781c306583` |
+| P3 Decompose + Route v0.1 | `xizHBNDiy9W4RLM4` | Draft inactive — heuristic decomposer/router |
+
+Do not publish P3 until Dispatcher contract + smoke plan are ready.

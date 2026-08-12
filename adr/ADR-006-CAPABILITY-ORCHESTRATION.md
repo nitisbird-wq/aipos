@@ -145,7 +145,8 @@ ADR, schemas, Linear taxonomy, Decomposer/Router **contracts** MUST proceed with
 - [x] `workstream.v1` + routing decision schemas + tests  
 - [x] Linear taxonomy / issue contract documented and labels created  
 - [x] Frozen baseline version unchanged  
-- [ ] Decomposer + Router implemented as separate n8n workflows (TypeScript contracts started; n8n wiring next)  
+- [x] Decompose + Route n8n draft created (`xizHBNDiy9W4RLM4`, **inactive**, separate from frozen intake)  
+- [ ] Workstream Dispatcher + Operator Adapters (next)  
 
 ---
 
