@@ -2,7 +2,7 @@
   "name": "@aipos/schemas",
   "version": "1.0.0",
   "private": true,
-  "description": "Machine-readable JSON Schema contracts for AIPOS (intake, mission, policy, notion sync/verification, audit, transitions, ADR-006 workstream + routing)",
+  "description": "Machine-readable JSON Schema contracts for AIPOS (intake, mission, policy, notion sync/verification, audit, transitions, ADR-006 workstream + routing, ADR-007 command gateway draft)",
   "files": [
     "*.schema.json"
   ]
