@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aipos.local/schemas/routing-decision.schema.json",
+  "title": "AIPOSRoutingDecision",
+  "description": "ADR-006 capability router output for one workstream. Routes by required capabilities to eligible operators; never by hard-coded operator name alone. Encodes risk-based autonomy (D-006.4).",
+  "version": "1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "decision_id",
+    "workstream_id",
+    "mission_id",
+    "required_capabilities",
+    "eligible_operators",
+    "primary_operator",
+    "supporting_operator",
+    "tools_required",
+    "risk_level",
+    "autonomy_class",
+    "approval_required",
+    "dispatch_action",
+    "expected_artifact",
+    "acceptance_criteria",
+    "correlation_id",
+    "decided_at"
+  ],
+  "properties": {
+    "decision_id": { "type": "string", "minLength": 1 },
+    "workstream_id": {
+      "type": "string",
+      "pattern": "^WS-MIS-[0-9]+-[0-9]{2,}$"
+    },
+    "mission_id": {
+      "type": "string",
+      "pattern": "^MIS-[0-9]+$"
+    },
+    "required_capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "eligible_operators": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["operator", "score", "credential_verified", "reasons"],
+        "properties": {
+          "operator": {
+            "type": "string",
+            "enum": ["claude", "cursor", "n8n", "notion", "linear", "human"]
+          },
+          "score": { "type": "number", "minimum": 0, "maximum": 5 },
+          "credential_verified": { "type": "boolean" },
+          "reasons": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "primary_operator": {
+      "type": "string",
+      "enum": ["claude", "cursor", "n8n", "notion", "linear", "human", "unassigned"]
+    },
+    "supporting_operator": {
+      "type": ["string", "null"],
+      "enum": ["claude", "cursor", "n8n", "notion", "linear", "human", null]
+    },
+    "tools_required": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "risk_level": {
+      "type": "string",
+      "enum": ["L0", "L1", "L2", "L3", "L4"]
+    },
+    "autonomy_class": {
+      "type": "string",
+      "enum": [
+        "auto_dispatch",
+        "auto_if_reversible",
+        "require_human",
+        "fail_closed"
+      ],
+      "description": "Derived from D-006.4 risk-based policy before operator execution"
+    },
+    "approval_required": { "type": "boolean" },
+    "approval_reason": { "type": ["string", "null"] },
+    "dispatch_action": {
+      "type": "string",
+      "enum": ["dispatch_now", "await_human", "block"],
+      "description": "dispatch_now = create Linear child and invoke adapter; await_human = Human Gate; block = fail closed"
+    },
+    "block_codes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "UNKNOWN_CAPABILITY",
+          "NO_ELIGIBLE_OPERATOR",
+          "OPERATOR_CREDENTIAL_UNVERIFIED",
+          "UNKNOWN_AUTHORITY",
+          "DOMAIN_CAPABILITY_UNVALIDATED",
+          "RISK_REQUIRES_HUMAN",
+          "SENSITIVE_EXTERNAL_WRITE",
+          "IRREVERSIBLE_ACTION",
+          "SECRETS_OR_PRODUCTION_CHANGE",
+          "MERGE_OR_DEPLOY"
+        ]
+      }
+    },
+    "expected_artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": { "type": "string" },
+        "location_hint": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "acceptance_criteria": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" }
+    },
+    "reversible": {
+      "type": "boolean",
+      "description": "Required for L2 auto_if_reversible decisions"
+    },
+    "within_delegated_authority": {
+      "type": "boolean",
+      "description": "Required for L2 auto_if_reversible decisions"
+    },
+    "correlation_id": { "type": "string", "minLength": 1 },
+    "decided_at": { "type": "string", "format": "date-time" },
+    "policy_version": {
+      "type": "string",
+      "const": "ADR-006.D-006.4"
+    }
+  }
+}
