@@ -1,0 +1,176 @@
+{
+  "plan_id": "plan-MIS-103-v1",
+  "mission_id": "MIS-103",
+  "parent_linear_issue": "NIT-103",
+  "plan_version": 1,
+  "mission_objective": "Every weekday 09:00 Asia/Bangkok, post Notion Mission Registry count of Dispatch Status = Not Dispatched to Slack for ops hygiene.",
+  "desired_outcome": "Ops sees weekday morning count of undispatched Missions without manual query.",
+  "success_criteria": [
+    "Schedule fires weekdays 09:00 Asia/Bangkok",
+    "Count uses Dispatch Status = Not Dispatched",
+    "Slack receives a readable count message",
+    "Publish gated as consequential"
+  ],
+  "domain": "automation",
+  "domain_signals": ["weekday schedule", "Notion count", "Slack"],
+  "final_deliverable": "Published n8n schedule workflow plus one sample Slack message evidence",
+  "explicit_assumptions": [
+    {
+      "id": "a1",
+      "text": "Use existing AIPOS Mission Registry Notion database.",
+      "source": "inferred"
+    },
+    {
+      "id": "a2",
+      "text": "Slack destination is the existing ops channel unless Owner overrides.",
+      "source": "inferred"
+    }
+  ],
+  "owner_questions": [],
+  "reasoning_actions": [
+    {
+      "id": "ra1",
+      "action": "Specify Notion filter and Slack payload schema",
+      "produces": "sync_spec"
+    },
+    {
+      "id": "ra2",
+      "action": "Build schedule→Notion→Slack draft workflow",
+      "produces": "n8n_draft",
+      "consumes": ["sync_spec"]
+    },
+    {
+      "id": "ra3",
+      "action": "Dry-run and capture sample message",
+      "produces": "dry_run_evidence",
+      "consumes": ["n8n_draft"]
+    },
+    {
+      "id": "ra4",
+      "action": "Publish workflow after approval gate",
+      "produces": "published_workflow",
+      "consumes": ["n8n_draft", "dry_run_evidence"]
+    }
+  ],
+  "integration_required": true,
+  "mission_risk_level": "L2",
+  "workstreams": [
+    {
+      "workstream_id": "WS-MIS-103-01",
+      "mission_id": "MIS-103",
+      "parent_linear_issue": "NIT-103",
+      "title": "Specify Not Dispatched count query and Slack payload",
+      "objective": "Define the exact Notion filter and Slack message fields for the weekday count.",
+      "required_capabilities": ["workflow.design"],
+      "dependencies": [],
+      "reasoning_action_refs": ["ra1"],
+      "is_integration_workstream": false,
+      "primary_operator": "unassigned",
+      "supporting_operator": null,
+      "tools_required": [],
+      "inputs": {},
+      "expected_output": {
+        "type": "document",
+        "description": "Spec for Notion filter Dispatch Status=Not Dispatched and Slack payload"
+      },
+      "acceptance_criteria": ["Filter named explicitly", "Slack fields listed"],
+      "risk_level": "L1",
+      "approval_required": false,
+      "execution_order": 1,
+      "status": "proposed",
+      "correlation_id": "corr-mis-103",
+      "idempotency_key": "ws:MIS-103:01:v1",
+      "canonical_token": "AIPOS_WORKSTREAM_ID=WS-MIS-103-01"
+    },
+    {
+      "workstream_id": "WS-MIS-103-02",
+      "mission_id": "MIS-103",
+      "parent_linear_issue": "NIT-103",
+      "title": "Build weekday 09:00 schedule→Notion→Slack draft",
+      "objective": "Implement the n8n draft workflow per spec without publishing.",
+      "required_capabilities": ["automation.flow"],
+      "dependencies": ["WS-MIS-103-01"],
+      "reasoning_action_refs": ["ra2"],
+      "is_integration_workstream": false,
+      "primary_operator": "unassigned",
+      "supporting_operator": null,
+      "tools_required": [],
+      "inputs": { "upstream": ["sync_spec"] },
+      "expected_output": {
+        "type": "workflow",
+        "location_hint": "n8n_workflow",
+        "description": "Inactive n8n draft for weekday Not Dispatched count to Slack"
+      },
+      "acceptance_criteria": ["Schedule node configured Asia/Bangkok", "Notion + Slack nodes present"],
+      "risk_level": "L1",
+      "approval_required": false,
+      "execution_order": 2,
+      "status": "proposed",
+      "correlation_id": "corr-mis-103",
+      "idempotency_key": "ws:MIS-103:02:v1",
+      "canonical_token": "AIPOS_WORKSTREAM_ID=WS-MIS-103-02"
+    },
+    {
+      "workstream_id": "WS-MIS-103-03",
+      "mission_id": "MIS-103",
+      "parent_linear_issue": "NIT-103",
+      "title": "Dry-run and capture sample Slack count message",
+      "objective": "Execute a controlled dry-run and keep sample message evidence.",
+      "required_capabilities": ["automation.flow"],
+      "dependencies": ["WS-MIS-103-02"],
+      "reasoning_action_refs": ["ra3"],
+      "is_integration_workstream": false,
+      "primary_operator": "unassigned",
+      "supporting_operator": null,
+      "tools_required": [],
+      "inputs": { "upstream": ["n8n_draft"] },
+      "expected_output": {
+        "type": "other",
+        "description": "Execution log plus sample Slack count message"
+      },
+      "acceptance_criteria": ["Sample message includes numeric count", "Execution id recorded"],
+      "risk_level": "L1",
+      "approval_required": false,
+      "execution_order": 3,
+      "status": "proposed",
+      "correlation_id": "corr-mis-103",
+      "idempotency_key": "ws:MIS-103:03:v1",
+      "canonical_token": "AIPOS_WORKSTREAM_ID=WS-MIS-103-03"
+    },
+    {
+      "workstream_id": "WS-MIS-103-04",
+      "mission_id": "MIS-103",
+      "parent_linear_issue": "NIT-103",
+      "title": "Publish workflow into the final ops deliverable",
+      "objective": "Integrate draft + dry-run evidence into the published schedule workflow deliverable (Human gate for publish).",
+      "required_capabilities": ["automation.flow"],
+      "dependencies": ["WS-MIS-103-02", "WS-MIS-103-03"],
+      "reasoning_action_refs": ["ra4"],
+      "is_integration_workstream": true,
+      "primary_operator": "unassigned",
+      "supporting_operator": null,
+      "tools_required": [],
+      "inputs": { "upstream": ["n8n_draft", "dry_run_evidence"] },
+      "expected_output": {
+        "type": "workflow",
+        "location_hint": "n8n_workflow",
+        "description": "Published n8n schedule workflow plus one sample Slack message evidence"
+      },
+      "acceptance_criteria": [
+        "Workflow active only after approval",
+        "Sample evidence attached to Mission/Linear"
+      ],
+      "risk_level": "L2",
+      "approval_required": true,
+      "approval_reason": "Publishing automation is consequential",
+      "execution_order": 4,
+      "status": "proposed",
+      "correlation_id": "corr-mis-103",
+      "idempotency_key": "ws:MIS-103:04:v1",
+      "canonical_token": "AIPOS_WORKSTREAM_ID=WS-MIS-103-04"
+    }
+  ],
+  "correlation_id": "corr-mis-103",
+  "created_at": "2026-08-12T18:50:00.000Z",
+  "decomposer_version": "ADR-006.v2"
+}

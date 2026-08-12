@@ -47,7 +47,7 @@ export const WorkstreamExpectedOutputSchema = z.object({
   location_hint: z
     .enum(["notion", "linear_comment", "github_pr", "n8n_workflow", "chat", "other"])
     .optional(),
-  description: z.string().optional(),
+  description: z.string().min(1),
 });
 
 export const WorkstreamSchema = z.object({
@@ -60,6 +60,8 @@ export const WorkstreamSchema = z.object({
   objective: z.string().min(1),
   required_capabilities: z.array(z.string().min(1)).min(1),
   dependencies: z.array(z.string().regex(/^WS-MIS-[0-9]+-[0-9]{2,}$/)),
+  reasoning_action_refs: z.array(z.string().min(1)).min(1),
+  is_integration_workstream: z.boolean(),
   primary_operator: OperatorOrUnassignedSchema,
   supporting_operator: OperatorIdSchema.nullable(),
   tools_required: z.array(z.string()),
@@ -144,3 +146,79 @@ export type RoutingDecision = z.infer<typeof RoutingDecisionSchema>;
 export type AutonomyClass = z.infer<typeof AutonomyClassSchema>;
 export type DispatchAction = z.infer<typeof DispatchActionSchema>;
 export type RoutingBlockCode = z.infer<typeof RoutingBlockCodeSchema>;
+
+export const MissionDomainSchema = z.enum([
+  "business_research",
+  "business_planning",
+  "software",
+  "software_debug",
+  "automation",
+  "documentation",
+  "executive_reporting",
+  "project_planning",
+  "data_analysis",
+  "ops_monitoring",
+  "incident",
+  "knowledge",
+  "product_ideation",
+  "prototype",
+  "integration",
+  "recurring_ops",
+  "decision",
+  "mixed_research_software",
+  "mixed_research_automation",
+  "architecture",
+  "unknown",
+  "blocked_unsafe",
+]);
+
+export type MissionDomain = z.infer<typeof MissionDomainSchema>;
+
+export const ExplicitAssumptionSchema = z.object({
+  id: z.string().min(1),
+  text: z.string().min(1),
+  source: z.enum(["inferred", "user_stated", "knowledge"]),
+});
+
+export const OwnerQuestionSchema = z.object({
+  id: z.string().min(1),
+  question: z.string().min(1),
+  blocking: z.boolean(),
+});
+
+export const ReasoningActionSchema = z.object({
+  id: z.string().min(1),
+  action: z.string().min(1),
+  produces: z.string().min(1),
+  consumes: z.array(z.string()).optional(),
+});
+
+/** ADR-006.v2 Mission Decomposer output. Operators deferred (Router HELD). */
+export const WorkstreamPlanSchema = z.object({
+  plan_id: z.string().min(1),
+  mission_id: z.string().regex(/^MIS-[0-9]+$/),
+  parent_linear_issue: z.string().min(1),
+  notion_mission_page_id: z.string().nullable().optional(),
+  plan_version: z.number().int().min(1),
+  mission_objective: z.string().min(1),
+  desired_outcome: z.string().min(1),
+  success_criteria: z.array(z.string().min(1)).min(1),
+  domain: MissionDomainSchema,
+  domain_signals: z.array(z.string()).optional(),
+  final_deliverable: z.string().min(1),
+  explicit_assumptions: z.array(ExplicitAssumptionSchema),
+  owner_questions: z.array(OwnerQuestionSchema),
+  reasoning_actions: z.array(ReasoningActionSchema).min(1),
+  integration_required: z.boolean(),
+  mission_risk_level: WorkstreamRiskSchema,
+  workstreams: z.array(WorkstreamSchema).min(1),
+  parallel_groups: z.array(z.string()).optional(),
+  correlation_id: z.string().min(1),
+  created_at: z.string().min(1),
+  decomposer_version: z.literal("ADR-006.v2"),
+});
+
+export type WorkstreamPlan = z.infer<typeof WorkstreamPlanSchema>;
+export type ExplicitAssumption = z.infer<typeof ExplicitAssumptionSchema>;
+export type OwnerQuestion = z.infer<typeof OwnerQuestionSchema>;
+export type ReasoningAction = z.infer<typeof ReasoningActionSchema>;

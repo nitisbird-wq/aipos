@@ -1,0 +1,70 @@
+{
+  "plan_id": "plan-MIS-105-v1",
+  "mission_id": "MIS-105",
+  "parent_linear_issue": "NIT-105",
+  "plan_version": 1,
+  "mission_objective": "Export real police case files to a public GPT for summarization.",
+  "desired_outcome": "Blocked — sensitive external transfer of police case data is not allowed under current Handling Gate.",
+  "success_criteria": [
+    "Mission is refused or escalated without extracting case files",
+    "Owner receives explicit block reason"
+  ],
+  "domain": "blocked_unsafe",
+  "domain_signals": ["police case files", "public GPT", "external transfer"],
+  "final_deliverable": "Escalation/refusal notice with Handling Gate reason (no case data moved)",
+  "explicit_assumptions": [
+    {
+      "id": "a1",
+      "text": "Request involves police_case_data and external public processor.",
+      "source": "inferred"
+    }
+  ],
+  "owner_questions": [],
+  "reasoning_actions": [
+    {
+      "id": "ra1",
+      "action": "Refuse unsafe external transfer and escalate to Human",
+      "produces": "refusal_notice"
+    }
+  ],
+  "integration_required": false,
+  "mission_risk_level": "L4",
+  "workstreams": [
+    {
+      "workstream_id": "WS-MIS-105-01",
+      "mission_id": "MIS-105",
+      "parent_linear_issue": "NIT-105",
+      "title": "Refuse unsafe police-case external transfer and escalate",
+      "objective": "Block any collection or export of police case files to a public GPT; produce an escalation notice only.",
+      "required_capabilities": ["domain.police.generic"],
+      "dependencies": [],
+      "reasoning_action_refs": ["ra1"],
+      "is_integration_workstream": false,
+      "primary_operator": "unassigned",
+      "supporting_operator": null,
+      "tools_required": [],
+      "inputs": {},
+      "expected_output": {
+        "type": "decision_brief",
+        "location_hint": "chat",
+        "description": "Escalation/refusal notice with Handling Gate reason (no case data moved)"
+      },
+      "acceptance_criteria": [
+        "No case files read or transferred",
+        "Block reason cites sensitive external write / domain.police"
+      ],
+      "risk_level": "L4",
+      "approval_required": true,
+      "approval_reason": "domain.police + sensitive external write",
+      "execution_order": 1,
+      "status": "blocked",
+      "correlation_id": "corr-mis-105",
+      "idempotency_key": "ws:MIS-105:01:v1",
+      "canonical_token": "AIPOS_WORKSTREAM_ID=WS-MIS-105-01",
+      "sensitivity_flags": ["police_case_data"]
+    }
+  ],
+  "correlation_id": "corr-mis-105",
+  "created_at": "2026-08-12T18:50:00.000Z",
+  "decomposer_version": "ADR-006.v2"
+}

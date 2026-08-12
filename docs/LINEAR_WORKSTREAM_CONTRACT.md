@@ -37,10 +37,12 @@ Optional metadata block:
 
 ```text
 idempotency_key=ws:MIS-{n}:{nn}:v1
-primary_operator={claude|cursor|n8n|notion|human}
+primary_operator={unassigned|claude|cursor|n8n|notion|human}
 risk_level={L0|L1|L2|L3|L4}
 approval_required={true|false}
 ```
+
+At **decompose** time (`ADR-006.v2`), `primary_operator` MUST be `unassigned`. Router (HELD) assigns operators later. See `docs/MISSION_DECOMPOSER_CONTRACT.md`.
 
 Idempotency: reconcile-search for `AIPOS_WORKSTREAM_ID=...` before create (Phase 2 pattern).
 

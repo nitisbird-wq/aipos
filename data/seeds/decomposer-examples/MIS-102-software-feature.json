@@ -1,0 +1,173 @@
+{
+  "plan_id": "plan-MIS-102-v1",
+  "mission_id": "MIS-102",
+  "parent_linear_issue": "NIT-102",
+  "plan_version": 1,
+  "mission_objective": "Add a Mission risk badge on the AIPOS web Mission detail page showing L0–L4 from mission data, with a unit test, and open a PR.",
+  "desired_outcome": "Operators see operational_risk at a glance on Mission detail; change is reviewable via PR.",
+  "success_criteria": [
+    "Badge renders L0–L4 from mission operational_risk",
+    "Unit test covers mapping",
+    "PR opened against the AIPOS repo"
+  ],
+  "domain": "software",
+  "domain_signals": ["Mission detail page", "unit test", "PR"],
+  "final_deliverable": "GitHub PR with risk badge UI + unit test",
+  "explicit_assumptions": [
+    {
+      "id": "a1",
+      "text": "Use existing MissionObject.operational_risk; do not rename schema enums.",
+      "source": "inferred"
+    },
+    {
+      "id": "a2",
+      "text": "Match current apps/web UI tokens/patterns.",
+      "source": "inferred"
+    }
+  ],
+  "owner_questions": [],
+  "reasoning_actions": [
+    {
+      "id": "ra1",
+      "action": "Locate Mission detail UI and risk field data path",
+      "produces": "tech_path_note"
+    },
+    {
+      "id": "ra2",
+      "action": "Implement risk badge UI",
+      "produces": "badge_ui_change",
+      "consumes": ["tech_path_note"]
+    },
+    {
+      "id": "ra3",
+      "action": "Add unit test for badge mapping",
+      "produces": "badge_unit_test",
+      "consumes": ["badge_ui_change"]
+    },
+    {
+      "id": "ra4",
+      "action": "Open PR packaging UI + test",
+      "produces": "github_pr",
+      "consumes": ["badge_ui_change", "badge_unit_test"]
+    }
+  ],
+  "integration_required": true,
+  "mission_risk_level": "L1",
+  "workstreams": [
+    {
+      "workstream_id": "WS-MIS-102-01",
+      "mission_id": "MIS-102",
+      "parent_linear_issue": "NIT-102",
+      "title": "Locate Mission detail UI and risk data path",
+      "objective": "Identify the Mission detail component(s) and how operational_risk is available to the UI.",
+      "required_capabilities": ["architecture.analyze"],
+      "dependencies": [],
+      "reasoning_action_refs": ["ra1"],
+      "is_integration_workstream": false,
+      "primary_operator": "unassigned",
+      "supporting_operator": null,
+      "tools_required": [],
+      "inputs": {},
+      "expected_output": {
+        "type": "document",
+        "location_hint": "other",
+        "description": "Short tech note listing file paths and risk field wiring"
+      },
+      "acceptance_criteria": ["Names concrete files/components", "Names risk field source"],
+      "risk_level": "L1",
+      "approval_required": false,
+      "execution_order": 1,
+      "status": "proposed",
+      "correlation_id": "corr-mis-102",
+      "idempotency_key": "ws:MIS-102:01:v1",
+      "canonical_token": "AIPOS_WORKSTREAM_ID=WS-MIS-102-01"
+    },
+    {
+      "workstream_id": "WS-MIS-102-02",
+      "mission_id": "MIS-102",
+      "parent_linear_issue": "NIT-102",
+      "title": "Implement L0–L4 risk badge on Mission detail",
+      "objective": "Render a visible risk badge bound to operational_risk on the Mission detail page.",
+      "required_capabilities": ["code.implement"],
+      "dependencies": ["WS-MIS-102-01"],
+      "reasoning_action_refs": ["ra2"],
+      "is_integration_workstream": false,
+      "primary_operator": "unassigned",
+      "supporting_operator": null,
+      "tools_required": [],
+      "inputs": { "upstream": ["tech_path_note"] },
+      "expected_output": {
+        "type": "other",
+        "location_hint": "other",
+        "description": "UI code change showing L0–L4 risk badge"
+      },
+      "acceptance_criteria": ["Badge visible on detail page", "Shows correct L0–L4 value"],
+      "risk_level": "L1",
+      "approval_required": false,
+      "execution_order": 2,
+      "status": "proposed",
+      "correlation_id": "corr-mis-102",
+      "idempotency_key": "ws:MIS-102:02:v1",
+      "canonical_token": "AIPOS_WORKSTREAM_ID=WS-MIS-102-02"
+    },
+    {
+      "workstream_id": "WS-MIS-102-03",
+      "mission_id": "MIS-102",
+      "parent_linear_issue": "NIT-102",
+      "title": "Add unit test for risk badge mapping",
+      "objective": "Cover enum-to-label/color (or equivalent) mapping with a unit test.",
+      "required_capabilities": ["code.test"],
+      "dependencies": ["WS-MIS-102-02"],
+      "reasoning_action_refs": ["ra3"],
+      "is_integration_workstream": false,
+      "primary_operator": "unassigned",
+      "supporting_operator": null,
+      "tools_required": [],
+      "inputs": { "upstream": ["badge_ui_change"] },
+      "expected_output": {
+        "type": "other",
+        "location_hint": "other",
+        "description": "Unit test file covering risk badge mapping"
+      },
+      "acceptance_criteria": ["Test fails on wrong mapping", "Test passes for L0–L4 samples"],
+      "risk_level": "L1",
+      "approval_required": false,
+      "execution_order": 3,
+      "status": "proposed",
+      "correlation_id": "corr-mis-102",
+      "idempotency_key": "ws:MIS-102:03:v1",
+      "canonical_token": "AIPOS_WORKSTREAM_ID=WS-MIS-102-03"
+    },
+    {
+      "workstream_id": "WS-MIS-102-04",
+      "mission_id": "MIS-102",
+      "parent_linear_issue": "NIT-102",
+      "title": "Open PR packaging badge UI and test",
+      "objective": "Integrate UI and test into a single GitHub PR that is the Mission final deliverable.",
+      "required_capabilities": ["code.implement"],
+      "dependencies": ["WS-MIS-102-02", "WS-MIS-102-03"],
+      "reasoning_action_refs": ["ra4"],
+      "is_integration_workstream": true,
+      "primary_operator": "unassigned",
+      "supporting_operator": null,
+      "tools_required": [],
+      "inputs": { "upstream": ["badge_ui_change", "badge_unit_test"] },
+      "expected_output": {
+        "type": "code_pr",
+        "location_hint": "github_pr",
+        "description": "GitHub PR with risk badge UI + unit test"
+      },
+      "acceptance_criteria": ["PR includes UI and test", "PR description references Mission MIS-102"],
+      "risk_level": "L1",
+      "approval_required": false,
+      "execution_order": 4,
+      "status": "proposed",
+      "correlation_id": "corr-mis-102",
+      "idempotency_key": "ws:MIS-102:04:v1",
+      "canonical_token": "AIPOS_WORKSTREAM_ID=WS-MIS-102-04"
+    }
+  ],
+  "correlation_id": "corr-mis-102",
+  "created_at": "2026-08-12T18:50:00.000Z",
+  "decomposer_version": "ADR-006.v2"
+}

@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://aipos.local/schemas/workstream.schema.json",
   "title": "AIPOSWorkstream",
-  "description": "ADR-006 executable workstream unit. Linear is operational work truth for instances; Notion remains mission/business/knowledge truth. status=ready means ready_to_dispatch_workstream (not Mission.status=ready).",
-  "version": "1.0",
+  "description": "ADR-006.v2 executable workstream unit. Work defined first; required_capabilities attached after objective/output/criteria. Operators deferred to Router (unassigned at decompose time). Linear = ops work truth.",
+  "version": "2.0",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -13,6 +13,8 @@
     "objective",
     "required_capabilities",
     "dependencies",
+    "reasoning_action_refs",
+    "is_integration_workstream",
     "primary_operator",
     "supporting_operator",
     "tools_required",
@@ -49,20 +51,36 @@
     "notion_mission_page_id": {
       "type": ["string", "null"]
     },
-    "title": { "type": "string", "minLength": 1 },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Domain-specific title. Generic placeholders (Understand scope / Create main output) are non-compliant unless Mission is genuinely ambiguous."
+    },
     "objective": { "type": "string", "minLength": 1 },
     "required_capabilities": {
       "type": "array",
       "minItems": 1,
-      "items": { "type": "string", "minLength": 1 }
+      "items": { "type": "string", "minLength": 1 },
+      "description": "Derived AFTER objective, expected_output, and acceptance_criteria are defined."
     },
     "dependencies": {
       "type": "array",
       "items": { "type": "string", "pattern": "^WS-MIS-[0-9]+-[0-9]{2,}$" }
     },
+    "reasoning_action_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 },
+      "description": "References into plan.reasoning_actions[].id"
+    },
+    "is_integration_workstream": {
+      "type": "boolean",
+      "description": "True when this WS integrates upstream artifacts into the Mission final_deliverable"
+    },
     "primary_operator": {
       "type": "string",
-      "enum": ["claude", "cursor", "n8n", "notion", "linear", "human", "unassigned"]
+      "enum": ["claude", "cursor", "n8n", "notion", "linear", "human", "unassigned"],
+      "description": "Decomposer MUST emit unassigned; Router (HELD) assigns later"
     },
     "supporting_operator": {
       "type": ["string", "null"],
@@ -79,7 +97,7 @@
     "expected_output": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["type"],
+      "required": ["type", "description"],
       "properties": {
         "type": {
           "type": "string",
@@ -98,7 +116,7 @@
           "type": "string",
           "enum": ["notion", "linear_comment", "github_pr", "n8n_workflow", "chat", "other"]
         },
-        "description": { "type": "string" }
+        "description": { "type": "string", "minLength": 1 }
       }
     },
     "acceptance_criteria": {

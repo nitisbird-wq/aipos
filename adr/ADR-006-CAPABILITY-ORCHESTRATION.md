@@ -88,7 +88,7 @@ Operator families: CLAUDE, CURSOR, N8N, LINEAR (status registry), NOTION (knowle
 
 ### D-006.6 — Workstream as executable unit
 
-Missions decompose into Workstreams (`workstream.v1`). Each workstream maps to **one Linear child issue** with canonical tokens:
+Missions decompose into Workstreams (`workstream` schema **v2** / `decomposer_version: ADR-006.v2`). Binding contract: [`docs/MISSION_DECOMPOSER_CONTRACT.md`](../docs/MISSION_DECOMPOSER_CONTRACT.md). Work-first order: objective → outcome → criteria → domain → reasoning/actions → dependencies → final deliverable → **then** capabilities. Operators stay `unassigned` until Router (HELD). Each workstream maps to **one Linear child issue** with canonical tokens:
 
 ```text
 AIPOS_MISSION_ID=MIS-{n}
@@ -142,11 +142,12 @@ ADR, schemas, Linear taxonomy, Decomposer/Router **contracts** MUST proceed with
 ## Compliance checklist
 
 - [x] ADR documents boundary vs ADR-005  
-- [x] `workstream.v1` + routing decision schemas + tests  
+- [x] workstream + routing decision schemas + tests  
+- [x] ADR-006.v2 Mission Decomposer contract + multi-domain fixtures (`docs/MISSION_DECOMPOSER_CONTRACT.md`)  
 - [x] Linear taxonomy / issue contract documented and labels created  
 - [x] Frozen baseline version unchanged  
-- [x] Decompose + Route n8n draft created (`xizHBNDiy9W4RLM4`, **inactive**, separate from frozen intake)  
-- [ ] Workstream Dispatcher + Operator Adapters (next)  
+- [x] Legacy heuristic n8n draft (`xizHBNDiy9W4RLM4`, **inactive**, non-compliant with v2) — do not publish  
+- [ ] Capability Router + Workstream Dispatcher (**HELD** until decomposer accepted)  
 
 ---
 
@@ -155,5 +156,7 @@ ADR, schemas, Linear taxonomy, Decomposer/Router **contracts** MUST proceed with
 - Frozen baseline smoke: Execution `37`, Mission `MIS-3`, Linear `NIT-9`  
 - Rollback version: `1e655140-03a9-4922-82b8-9689aeba6abb`  
 - Seeds: `data/seeds/capabilities.json`  
-- Schemas: `packages/schemas/workstream.schema.json`, `packages/schemas/routing-decision.schema.json`  
+- Schemas: `packages/schemas/workstream.schema.json`, `packages/schemas/workstream-plan.schema.json`, `packages/schemas/routing-decision.schema.json`  
+- Decomposer contract: `docs/MISSION_DECOMPOSER_CONTRACT.md`  
+- Fixtures: `data/seeds/decomposer-examples/`  
 - Linear contract: `docs/LINEAR_WORKSTREAM_CONTRACT.md`  

@@ -1,0 +1,188 @@
+{
+  "plan_id": "plan-MIS-107-v1",
+  "mission_id": "MIS-107",
+  "parent_linear_issue": "NIT-107",
+  "plan_version": 1,
+  "mission_objective": "Design then document (not publish) an n8n→Linear child-issue Dispatcher contract that reuses Phase 2 reconcile; include sequence diagram and failure modes.",
+  "desired_outcome": "Owner can review a single design doc before any Dispatcher implementation or publish.",
+  "success_criteria": [
+    "Phase 2 reconcile invariants listed",
+    "Child-issue create sequence diagram included",
+    "Failure modes and fail-closed behavior tabulated",
+    "Single integrated design document"
+  ],
+  "domain": "architecture",
+  "domain_signals": ["Dispatcher contract", "Phase 2 reconcile", "sequence diagram", "failure modes"],
+  "final_deliverable": "Dispatcher design doc with diagram + failure table",
+  "explicit_assumptions": [
+    {
+      "id": "a1",
+      "text": "Document only — no n8n publish and no Dispatcher code in this Mission.",
+      "source": "user_stated"
+    },
+    {
+      "id": "a2",
+      "text": "Reuse Phase 2 AIPOS_WORKSTREAM_ID / idempotency reconcile pattern.",
+      "source": "inferred"
+    }
+  ],
+  "owner_questions": [],
+  "reasoning_actions": [
+    {
+      "id": "ra1",
+      "action": "Extract Phase 2 reconcile invariants",
+      "produces": "invariant_list"
+    },
+    {
+      "id": "ra2",
+      "action": "Draft child-issue create sequence",
+      "produces": "sequence_diagram",
+      "consumes": ["invariant_list"]
+    },
+    {
+      "id": "ra3",
+      "action": "Enumerate failure modes and fail-closed behavior",
+      "produces": "failure_table",
+      "consumes": ["invariant_list", "sequence_diagram"]
+    },
+    {
+      "id": "ra4",
+      "action": "Integrate into single design doc",
+      "produces": "design_doc",
+      "consumes": ["sequence_diagram", "failure_table"]
+    }
+  ],
+  "integration_required": true,
+  "mission_risk_level": "L1",
+  "workstreams": [
+    {
+      "workstream_id": "WS-MIS-107-01",
+      "mission_id": "MIS-107",
+      "parent_linear_issue": "NIT-107",
+      "title": "Extract Phase 2 reconcile invariants",
+      "objective": "List the reconcile-before-create and canonical-token invariants the Dispatcher must reuse.",
+      "required_capabilities": ["architecture.analyze"],
+      "dependencies": [],
+      "reasoning_action_refs": ["ra1"],
+      "is_integration_workstream": false,
+      "primary_operator": "unassigned",
+      "supporting_operator": null,
+      "tools_required": [],
+      "inputs": { "frozen_intake_version": "760150d8-2e1a-4a5e-93a9-48781c306583" },
+      "expected_output": {
+        "type": "document",
+        "location_hint": "other",
+        "description": "Invariant list for Phase 2 Linear reconcile"
+      },
+      "acceptance_criteria": [
+        "Mentions AIPOS_WORKSTREAM_ID or equivalent mission token",
+        "Mentions reconcile-before-create"
+      ],
+      "risk_level": "L1",
+      "approval_required": false,
+      "execution_order": 1,
+      "parallel_group": "A",
+      "status": "proposed",
+      "correlation_id": "corr-mis-107",
+      "idempotency_key": "ws:MIS-107:01:v1",
+      "canonical_token": "AIPOS_WORKSTREAM_ID=WS-MIS-107-01"
+    },
+    {
+      "workstream_id": "WS-MIS-107-02",
+      "mission_id": "MIS-107",
+      "parent_linear_issue": "NIT-107",
+      "title": "Draft child-issue create sequence diagram",
+      "objective": "Produce a sequence diagram for n8n→Linear child-issue create using the invariants.",
+      "required_capabilities": ["architecture.analyze"],
+      "dependencies": ["WS-MIS-107-01"],
+      "reasoning_action_refs": ["ra2"],
+      "is_integration_workstream": false,
+      "primary_operator": "unassigned",
+      "supporting_operator": null,
+      "tools_required": [],
+      "inputs": { "upstream": ["invariant_list"] },
+      "expected_output": {
+        "type": "document",
+        "location_hint": "other",
+        "description": "Sequence diagram for child-issue create"
+      },
+      "acceptance_criteria": ["Shows reconcile step before create", "Shows parent mission correlation"],
+      "risk_level": "L1",
+      "approval_required": false,
+      "execution_order": 2,
+      "parallel_group": "B",
+      "status": "proposed",
+      "correlation_id": "corr-mis-107",
+      "idempotency_key": "ws:MIS-107:02:v1",
+      "canonical_token": "AIPOS_WORKSTREAM_ID=WS-MIS-107-02"
+    },
+    {
+      "workstream_id": "WS-MIS-107-03",
+      "mission_id": "MIS-107",
+      "parent_linear_issue": "NIT-107",
+      "title": "Enumerate Dispatcher failure modes",
+      "objective": "Tabulate failure modes and fail-closed behavior for unknown capability/operator and Linear create failures.",
+      "required_capabilities": ["architecture.analyze"],
+      "dependencies": ["WS-MIS-107-01", "WS-MIS-107-02"],
+      "reasoning_action_refs": ["ra3"],
+      "is_integration_workstream": false,
+      "primary_operator": "unassigned",
+      "supporting_operator": null,
+      "tools_required": [],
+      "inputs": { "upstream": ["invariant_list", "sequence_diagram"] },
+      "expected_output": {
+        "type": "document",
+        "location_hint": "other",
+        "description": "Failure-mode table with fail-closed rows"
+      },
+      "acceptance_criteria": [
+        "Includes unknown capability / operator row",
+        "Includes Linear create failure row"
+      ],
+      "risk_level": "L1",
+      "approval_required": false,
+      "execution_order": 3,
+      "parallel_group": "B",
+      "status": "proposed",
+      "correlation_id": "corr-mis-107",
+      "idempotency_key": "ws:MIS-107:03:v1",
+      "canonical_token": "AIPOS_WORKSTREAM_ID=WS-MIS-107-03"
+    },
+    {
+      "workstream_id": "WS-MIS-107-04",
+      "mission_id": "MIS-107",
+      "parent_linear_issue": "NIT-107",
+      "title": "Integrate Dispatcher design doc",
+      "objective": "Combine sequence diagram and failure table into the single Owner-facing Dispatcher design document.",
+      "required_capabilities": ["docs.write"],
+      "dependencies": ["WS-MIS-107-02", "WS-MIS-107-03"],
+      "reasoning_action_refs": ["ra4"],
+      "is_integration_workstream": true,
+      "primary_operator": "unassigned",
+      "supporting_operator": null,
+      "tools_required": [],
+      "inputs": { "upstream": ["sequence_diagram", "failure_table"] },
+      "expected_output": {
+        "type": "document",
+        "location_hint": "notion",
+        "description": "Dispatcher design doc with diagram + failure table"
+      },
+      "acceptance_criteria": [
+        "Contains diagram and failure table",
+        "States document-only / no publish in this Mission"
+      ],
+      "risk_level": "L1",
+      "approval_required": false,
+      "execution_order": 4,
+      "parallel_group": "C",
+      "status": "proposed",
+      "correlation_id": "corr-mis-107",
+      "idempotency_key": "ws:MIS-107:04:v1",
+      "canonical_token": "AIPOS_WORKSTREAM_ID=WS-MIS-107-04"
+    }
+  ],
+  "parallel_groups": ["A", "B", "C"],
+  "correlation_id": "corr-mis-107",
+  "created_at": "2026-08-12T18:50:00.000Z",
+  "decomposer_version": "ADR-006.v2"
+}
