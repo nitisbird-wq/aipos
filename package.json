@@ -29,7 +29,7 @@
     "verify": "tsx scripts/dev/verify.ts"
   },
   "devDependencies": {
-    "tsx": "^4.19.4"
+    "tsx": "^4.23.12"
   },
   "engines": {
     "node": ">=20"
