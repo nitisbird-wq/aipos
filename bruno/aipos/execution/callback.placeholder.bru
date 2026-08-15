@@ -1,0 +1,33 @@
+meta {
+  name: Execution callback (PLACEHOLDER — Phase 4)
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/execution/{{executionJobId}}/callback
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-AIPOS-Signature: placeholder-not-valid
+}
+
+body:json {
+  {
+    "status": "succeeded",
+    "notes": "PLACEHOLDER — signed n8n callback contract lands in Phase 4 ADR/adapter"
+  }
+}
+
+docs {
+  Placeholder only. Real callback requires signed webhook + execution_jobs (Phase 4).
+}
+
+tests {
+  test("placeholder responds", function() {
+    expect(res.status).to.be.oneOf([200, 401, 403, 404, 501]);
+  });
+}

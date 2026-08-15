@@ -1,0 +1,31 @@
+meta {
+  name: Propose assignment (PLACEHOLDER — Phase 3c)
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/missions/{{missionId}}/assignments/propose
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "notes": "PLACEHOLDER — Phase 3c Assignment Engine"
+  }
+}
+
+docs {
+  Placeholder until Assignment Engine ships. 404 expected.
+}
+
+tests {
+  test("placeholder responds", function() {
+    expect(res.status).to.be.oneOf([200, 201, 404, 401, 501]);
+  });
+}
