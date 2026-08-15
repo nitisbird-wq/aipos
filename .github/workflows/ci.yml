@@ -34,8 +34,28 @@ jobs:
             | tar -xz gitleaks
           ./gitleaks version
 
-      - name: Scan repository (redacted)
-        run: ./gitleaks detect --source . --verbose --redact --exit-code 1
+      - name: Scan commits in range (redacted)
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          BEFORE: ${{ github.event.before }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          # fetch-depth: 0 fetches all remote refs; unrestricted gitleaks then flags
+          # unrelated feature-branch history (false positives / unmerged fixtures).
+          # Scope the scan to commits introduced by this event only.
+          if [ "${EVENT_NAME}" = "pull_request" ]; then
+            LOG_OPTS="${PR_BASE}..${PR_HEAD}"
+          elif [ "${EVENT_NAME}" = "push" ] && [ -n "${BEFORE}" ] && [ "${BEFORE}" != "0000000000000000000000000000000000000000" ]; then
+            LOG_OPTS="${BEFORE}..${SHA}"
+          else
+            # workflow_dispatch / first push: scan the tip commit only
+            LOG_OPTS="-1 ${SHA}"
+          fi
+          echo "gitleaks log-opts: ${LOG_OPTS}"
+          ./gitleaks detect --source . --verbose --redact --exit-code 1 --log-opts "${LOG_OPTS}"
 
   verify:
     name: Verify
