@@ -17,7 +17,11 @@ export function decomposeMissionStrategy(strategy: MissionStrategy): OutcomeWork
       reason_required: "Ensures deliverable is grounded in accepted context and constraints",
       inputs: ["mission_strategy", "context_pack"],
       expected_output: ["validated_execution_plan"],
-      acceptance_criteria: ["Dependencies enumerated", "Risks categorized", "Owner interruptions minimized"],
+      acceptance_criteria: [
+        "Dependencies enumerated",
+        "Risks categorized",
+        "Owner interruptions minimized",
+      ],
       dependencies: [],
       required_capabilities: [capabilities[0]],
       risk_level: "L1",

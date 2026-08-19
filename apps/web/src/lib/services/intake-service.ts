@@ -164,10 +164,13 @@ export async function analyzeIntake(intakeId: string, actor: string): Promise<In
   });
 
   const ownerInteraction = {
-    owner_questions_count: strategy.missing_information.filter((item) => item.owner_question_required).length,
+    owner_questions_count: strategy.missing_information.filter(
+      (item) => item.owner_question_required,
+    ).length,
     human_gate_count: routing.authority.decision === "HUMAN_GATE" ? 1 : 0,
-    avoidable_questions_count: strategy.missing_information.filter((item) => item.kind === "DISCOVERABLE")
-      .length,
+    avoidable_questions_count: strategy.missing_information.filter(
+      (item) => item.kind === "DISCOVERABLE",
+    ).length,
   };
 
   const { intake_validation, ...missionFields } = analysis;
@@ -191,9 +194,13 @@ export async function analyzeIntake(intakeId: string, actor: string): Promise<In
     knowledge_refs: [
       ...existing.knowledge_refs.filter(
         (r) =>
-          !["intake_validation", "mission_context_pack", "mission_strategy", "routing", "owner_interaction"].includes(
-            String((r as { kind?: string }).kind ?? ""),
-          ),
+          ![
+            "intake_validation",
+            "mission_context_pack",
+            "mission_strategy",
+            "routing",
+            "owner_interaction",
+          ].includes(String((r as { kind?: string }).kind ?? "")),
       ),
       {
         kind: "intake_validation",

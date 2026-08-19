@@ -23,7 +23,12 @@ const PLAYBOOKS: Record<Playbook["id"], Playbook> = {
   },
   software_build: {
     id: "software_build",
-    guidance: ["Define behavior", "Implement incrementally", "Verify with tests", "Document impact"],
+    guidance: [
+      "Define behavior",
+      "Implement incrementally",
+      "Verify with tests",
+      "Document impact",
+    ],
   },
   debug: {
     id: "debug",
@@ -35,19 +40,39 @@ const PLAYBOOKS: Record<Playbook["id"], Playbook> = {
   },
   investigation: {
     id: "investigation",
-    guidance: ["Collect signals", "Test assumptions", "Document findings", "Escalate unresolved risks"],
+    guidance: [
+      "Collect signals",
+      "Test assumptions",
+      "Document findings",
+      "Escalate unresolved risks",
+    ],
   },
   knowledge_organization: {
     id: "knowledge_organization",
-    guidance: ["Normalize taxonomy", "Structure references", "Link evidence", "Plan update cadence"],
+    guidance: [
+      "Normalize taxonomy",
+      "Structure references",
+      "Link evidence",
+      "Plan update cadence",
+    ],
   },
   business_launch: {
     id: "business_launch",
-    guidance: ["Define market objective", "Build launch plan", "Set success metrics", "Prepare go/no-go gate"],
+    guidance: [
+      "Define market objective",
+      "Build launch plan",
+      "Set success metrics",
+      "Prepare go/no-go gate",
+    ],
   },
   creative_synthesis: {
     id: "creative_synthesis",
-    guidance: ["Gather inspirations", "Draft concepts", "Iterate with constraints", "Finalize presentation"],
+    guidance: [
+      "Gather inspirations",
+      "Draft concepts",
+      "Iterate with constraints",
+      "Finalize presentation",
+    ],
   },
 };
 

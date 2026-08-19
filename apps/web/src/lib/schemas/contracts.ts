@@ -132,13 +132,7 @@ export const OwnerInteractionContractSchema = z.object({
 });
 export type OwnerInteractionContract = z.infer<typeof OwnerInteractionContractSchema>;
 
-export const WorkstreamStatusSchema = z.enum([
-  "pending",
-  "ready",
-  "blocked",
-  "done",
-  "cancelled",
-]);
+export const WorkstreamStatusSchema = z.enum(["pending", "ready", "blocked", "done", "cancelled"]);
 
 export const OutcomeWorkstreamSchema = z.object({
   workstream_id: z.string().min(1),

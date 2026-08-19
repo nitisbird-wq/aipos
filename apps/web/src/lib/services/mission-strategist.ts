@@ -24,7 +24,9 @@ function inferPlaybook(capabilities: string[]): string {
 
 function buildDeliverable(analysis: AnalyzeResult): DeliverableContract {
   const contract = {
-    deliverable_type: analysis.capability_families.includes("code") ? "software_change" : "document",
+    deliverable_type: analysis.capability_families.includes("code")
+      ? "software_change"
+      : "document",
     audience: "mission_owner",
     purpose: "Deliver mission objective with verifiable evidence",
     required_sections: ["Objective", "Approach", "Output", "Verification", "Risks"],
@@ -93,8 +95,8 @@ export function buildMissionStrategy(input: {
       "Backward planning prepared from deliverable acceptance criteria",
     ],
     missing_information: missingInfo,
-    backward_plan_summary: deliverable.acceptance_criteria.map((criterion, index) =>
-      `Step ${index + 1}: satisfy "${criterion}" with evidence`,
+    backward_plan_summary: deliverable.acceptance_criteria.map(
+      (criterion, index) => `Step ${index + 1}: satisfy "${criterion}" with evidence`,
     ),
     decomposition_ready: missingInfo.every((item) => item.kind !== "BLOCKER"),
   });

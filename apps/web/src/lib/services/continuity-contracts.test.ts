@@ -53,7 +53,9 @@ function scoreCase(input: {
 
 describe("continuity and strategy contracts", () => {
   it("creates context pack + strategy + decomposed workstreams", () => {
-    const analysis = analyzeMissionHeuristic("Implement dashboard feature and include acceptance criteria");
+    const analysis = analyzeMissionHeuristic(
+      "Implement dashboard feature and include acceptance criteria",
+    );
     const context = buildMissionContextPack({
       missionId: "MIS-TEST-1",
       actor: "operator:test",
@@ -162,7 +164,8 @@ describe("golden 20 mission coverage", () => {
         workstreamCount: workstreams.length,
         hasCapabilities: analysis.capability_families.length > 0,
         hasRouting: true,
-        ownerQuestions: strategy.missing_information.filter((item) => item.owner_question_required).length,
+        ownerQuestions: strategy.missing_information.filter((item) => item.owner_question_required)
+          .length,
         hasDeliverable: Boolean(strategy.final_deliverable.deliverable_type),
         authorityDecision: authority.decision,
       });

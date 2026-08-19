@@ -15,7 +15,9 @@ export type RoutingDecision = {
 function operatorsForCapability(capability: Capability): string[] {
   const rows = capability.specialists ?? [];
   return rows
-    .map((row) => (typeof row === "object" && row ? (row as { specialist?: string }).specialist : ""))
+    .map((row) =>
+      typeof row === "object" && row ? (row as { specialist?: string }).specialist : "",
+    )
     .filter((row): row is string => Boolean(row));
 }
 
@@ -27,7 +29,9 @@ export function routeCapabilities(input: {
   reversible?: boolean;
   delegated?: boolean;
 }): RoutingDecision {
-  const matched = input.capabilities.filter((cap) => input.required_capabilities.includes(cap.family));
+  const matched = input.capabilities.filter((cap) =>
+    input.required_capabilities.includes(cap.family),
+  );
   if (matched.length === 0) {
     return {
       task: input.task,
