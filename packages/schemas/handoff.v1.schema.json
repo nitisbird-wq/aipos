@@ -6,6 +6,10 @@
   "required": [
     "handoff_version",
     "mission_id",
+    "workstream_id",
+    "run_id",
+    "status",
+    "summary",
     "mission_state",
     "received_context",
     "completed_work",
@@ -15,9 +19,12 @@
     "failures",
     "decisions",
     "assumptions",
+    "evidence",
     "evidence_refs",
+    "blockers",
     "artifacts",
     "next_action",
+    "requires_human",
     "human_action_required",
     "risk_notes",
     "updated_at",
@@ -26,6 +33,13 @@
   "properties": {
     "handoff_version": { "const": "handoff.v1" },
     "mission_id": { "type": "string" },
+    "workstream_id": { "type": "string" },
+    "run_id": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": ["PASS", "FAIL", "BLOCKED", "IN_PROGRESS", "DONE"]
+    },
+    "summary": { "type": "string" },
     "mission_state": {
       "type": "string",
       "enum": [
@@ -54,9 +68,12 @@
     "failures": { "type": "array", "items": { "type": "string" } },
     "decisions": { "type": "array", "items": { "type": "string" } },
     "assumptions": { "type": "array", "items": { "type": "string" } },
+    "evidence": { "type": "array", "items": { "$ref": "https://aipos.dev/schemas/evidence.v1.schema.json" } },
     "evidence_refs": { "type": "array", "items": { "type": "string" } },
+    "blockers": { "type": "array", "items": { "type": "string" } },
     "artifacts": { "type": "array", "items": { "type": "string" } },
     "next_action": { "type": "string" },
+    "requires_human": { "type": "boolean" },
     "human_action_required": { "type": ["string", "null"] },
     "risk_notes": { "type": "array", "items": { "type": "string" } },
     "updated_at": { "type": "string", "format": "date-time" },

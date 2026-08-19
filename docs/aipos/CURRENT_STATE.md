@@ -19,6 +19,13 @@
 
 ## Implemented runtime modules
 
+- Control Plane state core: `apps/web/src/lib/services/control-plane-state.ts`
+- AIPOS Supervisor: `apps/web/src/lib/services/aipos-supervisor.ts`
+- Health Supervisor: `apps/web/src/lib/services/health-supervisor.ts`
+- Workstream Dispatcher: `apps/web/src/lib/services/workstream-dispatcher.ts`
+- Operator Contract packager: `apps/web/src/lib/services/operator-contract.ts`
+- Verifier + Result Integrator: `apps/web/src/lib/services/verifier-integrator.ts`
+- Human Gate policy bridge: `apps/web/src/lib/services/human-gate.ts`
 - Mission strategist: `apps/web/src/lib/services/mission-strategist.ts`
 - Playbook engine: `apps/web/src/lib/services/playbook-engine.ts`
 - Decomposer (outcome-driven): `apps/web/src/lib/services/decomposer.ts`

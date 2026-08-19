@@ -169,6 +169,10 @@ export type AuthorityDecision = z.infer<typeof AuthorityDecisionSchema>;
 export const HandoffSchema = z.object({
   handoff_version: z.literal("handoff.v1"),
   mission_id: z.string().min(1),
+  workstream_id: z.string().min(1),
+  run_id: z.string().min(1),
+  status: z.enum(["PASS", "FAIL", "BLOCKED", "IN_PROGRESS", "DONE"]),
+  summary: z.string().min(1),
   mission_state: MissionStateSchema,
   received_context: z.array(z.string()),
   completed_work: z.array(z.string()),
@@ -178,9 +182,12 @@ export const HandoffSchema = z.object({
   failures: z.array(z.string()),
   decisions: z.array(z.string()),
   assumptions: z.array(z.string()),
+  evidence: z.array(EvidenceSchema),
   evidence_refs: z.array(z.string()),
+  blockers: z.array(z.string()),
   artifacts: z.array(z.string()),
   next_action: z.string().min(1),
+  requires_human: z.boolean(),
   human_action_required: z.string().nullable(),
   risk_notes: z.array(z.string()),
   updated_at: z.string().datetime(),
@@ -204,3 +211,93 @@ export const RecoverySchema = z.object({
   allowed_recovery: z.enum(["RETRY", "REROUTE", "RECONCILE", "ROLLBACK", "ESCALATE"]),
 });
 export type RecoveryContract = z.infer<typeof RecoverySchema>;
+
+export const WorkstreamRunStatusSchema = z.enum([
+  "PENDING",
+  "DISPATCHED",
+  "WORKER_READY",
+  "EXECUTING",
+  "VERIFYING",
+  "FAILED",
+  "BLOCKED",
+  "COMPLETED",
+]);
+
+export const WorkstreamStateSchema = z.object({
+  mission_id: z.string().min(1),
+  workstream_id: z.string().min(1),
+  correlation_id: z.string().min(1),
+  title: z.string().min(1),
+  objective: z.string().min(1),
+  status: WorkstreamRunStatusSchema,
+  owner: z.string().min(1),
+  linear_issue_id: z.string().nullable(),
+  dependencies: z.array(z.string()),
+  expected_output: z.array(z.string()),
+  required_capabilities: z.array(z.string()),
+  risk_level: z.enum(["L0", "L1", "L2", "L3", "L4"]),
+  approval_required: z.boolean(),
+  updated_at: z.string().datetime(),
+});
+export type WorkstreamState = z.infer<typeof WorkstreamStateSchema>;
+
+export const AgentRunStateSchema = z.object({
+  mission_id: z.string().min(1),
+  workstream_id: z.string().min(1),
+  run_id: z.string().min(1),
+  operator: z.string().min(1),
+  status: z.enum(["QUEUED", "RUNNING", "PASSED", "FAILED", "BLOCKED"]),
+  started_at: z.string().datetime(),
+  ended_at: z.string().datetime().nullable(),
+  evidence_refs: z.array(z.string()),
+});
+export type AgentRunState = z.infer<typeof AgentRunStateSchema>;
+
+export const ArtifactStateSchema = z.object({
+  mission_id: z.string().min(1),
+  workstream_id: z.string().min(1),
+  artifact_id: z.string().min(1),
+  uri: z.string().min(1),
+  kind: z.string().min(1),
+  created_at: z.string().datetime(),
+});
+export type ArtifactState = z.infer<typeof ArtifactStateSchema>;
+
+export const VerificationStateSchema = z.object({
+  mission_id: z.string().min(1),
+  workstream_id: z.string().min(1),
+  run_id: z.string().min(1),
+  status: z.enum(["PASS", "FAIL", "PENDING"]),
+  verifier: z.string().min(1),
+  notes: z.array(z.string()),
+  recovery_required: z.boolean(),
+  verified_at: z.string().datetime(),
+});
+export type VerificationState = z.infer<typeof VerificationStateSchema>;
+
+export const BlockerStateSchema = z.object({
+  mission_id: z.string().min(1),
+  workstream_id: z.string().nullable(),
+  code: z.string().min(1),
+  detail: z.string().min(1),
+  requires_human: z.boolean(),
+  opened_at: z.string().datetime(),
+  resolved: z.boolean(),
+});
+export type BlockerState = z.infer<typeof BlockerStateSchema>;
+
+export const MissionControlStateSchema = z.object({
+  state_version: z.literal("control-plane.v1"),
+  mission_id: z.string().min(1),
+  mission_state: MissionStateSchema,
+  next_action: z.string().min(1),
+  responsible: z.string().min(1),
+  workstreams: z.array(WorkstreamStateSchema),
+  agent_runs: z.array(AgentRunStateSchema),
+  handoffs: z.array(HandoffSchema),
+  artifacts: z.array(ArtifactStateSchema),
+  verifications: z.array(VerificationStateSchema),
+  blockers: z.array(BlockerStateSchema),
+  updated_at: z.string().datetime(),
+});
+export type MissionControlState = z.infer<typeof MissionControlStateSchema>;

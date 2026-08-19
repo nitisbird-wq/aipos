@@ -12,6 +12,11 @@ This contract defines canonical continuity payloads used between ChatGPT branche
 
 Every handoff record includes:
 
+- `mission_id`
+- `workstream_id`
+- `run_id`
+- `status`
+- `summary`
 - `received_context`
 - `completed_work`
 - `changes_made`
@@ -20,9 +25,12 @@ Every handoff record includes:
 - `failures`
 - `decisions`
 - `assumptions`
+- `evidence`
 - `evidence_refs`
+- `blockers`
 - `artifacts`
 - `next_action`
+- `requires_human`
 - `human_action_required`
 - `risk_notes`
 - `updated_at`
