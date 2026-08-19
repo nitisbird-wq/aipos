@@ -8,6 +8,10 @@
 } from "@/lib/schemas/intake";
 import { getRepository, getPersistenceMode } from "@/lib/repositories";
 import { analyzeMissionHeuristic } from "@/lib/services/analyze";
+import { buildMissionContextPack, buildMissionStrategy } from "@/lib/services/mission-strategist";
+import { getPlaybook, type Playbook } from "@/lib/services/playbook-engine";
+import { decomposeMissionStrategy } from "@/lib/services/decomposer";
+import { routeCapabilities } from "@/lib/services/capability-router";
 import { evaluateReadiness } from "@/lib/gates/readiness-gate";
 import { evaluateHandling } from "@/lib/gates/handling-gate";
 import { evaluateMapping } from "@/lib/gates/mapping-gate";
@@ -117,20 +121,88 @@ export async function analyzeIntake(intakeId: string, actor: string): Promise<In
   if (existing.readiness_status === "cancelled") throw new Error("INTAKE_CANCELLED");
 
   const analysis = analyzeMissionHeuristic(existing.raw_request, existing.constraints);
+  const capabilities = await repo.listCapabilities();
+  const missionId = `MIS-PREVIEW-${existing.intake_id}`;
+  const contextPack = buildMissionContextPack({
+    missionId,
+    actor,
+    context: [
+      {
+        id: `CTX-REQ-${existing.intake_id}`,
+        context_class: "LIVE",
+        domain: "mission_intake",
+        type: "request",
+        statement: existing.raw_request,
+        source: existing.source,
+        provenance: existing.source_message_ref,
+        status: "REPORTED",
+        version: "1.0",
+        effective_at: existing.created_at,
+        freshness: "fresh",
+        review_due: existing.updated_at,
+        confidence: 0.8,
+        evidence: [],
+        owner: actor,
+        approver: existing.confirmed_by_user ? actor : undefined,
+        sensitivity: analysis.sensitivity_flags.length > 0 ? "restricted" : "internal",
+        access: "need_to_know",
+        supersedes: [],
+        conflicts_with: [],
+      },
+    ],
+  });
+  const strategy = buildMissionStrategy({ missionId, analysis, contextPack });
+  const playbook = getPlaybook(strategy.selected_playbook as Playbook["id"]);
+  const decomposed = decomposeMissionStrategy(strategy);
+  const routing = routeCapabilities({
+    task: strategy.objective,
+    required_capabilities: decomposed.flatMap((ws) => ws.required_capabilities),
+    capabilities,
+    risk_level: analysis.operational_risk,
+    reversible: true,
+    delegated: analysis.operational_risk <= "L2",
+  });
+
+  const ownerInteraction = {
+    owner_questions_count: strategy.missing_information.filter((item) => item.owner_question_required).length,
+    human_gate_count: routing.authority.decision === "HUMAN_GATE" ? 1 : 0,
+    avoidable_questions_count: strategy.missing_information.filter((item) => item.kind === "DISCOVERABLE")
+      .length,
+  };
 
   const { intake_validation, ...missionFields } = analysis;
 
   const updated: IntakeMissionBundle = {
     ...existing,
     ...missionFields,
+    draft_workstreams: decomposed.map((ws, index) => ({
+      id: `WS${index + 1}`,
+      name: ws.title,
+      purpose: ws.objective,
+      expected_outputs: ws.expected_output,
+      capability_families: ws.required_capabilities,
+      depends_on_ws: ws.dependencies.map((id) => {
+        const match = decomposed.findIndex((row) => row.workstream_id === id);
+        return match >= 0 ? `WS${match + 1}` : id;
+      }),
+      approval_points: ws.approval_required ? ["authority_approval"] : [],
+      notes: ws.reason_required,
+    })),
     knowledge_refs: [
       ...existing.knowledge_refs.filter(
-        (r) => (r as { kind?: string }).kind !== "intake_validation",
+        (r) =>
+          !["intake_validation", "mission_context_pack", "mission_strategy", "routing", "owner_interaction"].includes(
+            String((r as { kind?: string }).kind ?? ""),
+          ),
       ),
       {
         kind: "intake_validation",
         ...intake_validation,
       },
+      { kind: "mission_context_pack", ...contextPack },
+      { kind: "mission_strategy", ...strategy, playbook_guidance: playbook.guidance },
+      { kind: "routing", ...routing },
+      { kind: "owner_interaction", ...ownerInteraction },
     ],
     data_destinations: [{ ...INTAKE_CHANNEL_DESTINATION }],
     sensitivity_acknowledged:
