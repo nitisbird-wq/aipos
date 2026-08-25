@@ -4,7 +4,7 @@
 |---|---|
 | **Document** | `CONTROL_TOWER_SCOPE` |
 | **Version** | `1.0.0` |
-| **Status** | `Draft — awaiting Human Architecture Approval` |
+| **Status** | `Approved — CT-1 architecture approved 2026-08-25; CT-2 enforcement MVP authorized` |
 | **Date** | `2026-08-07` |
 | **Binding ADR** | [ADR-006](../adr/ADR-006-AIPOS-CONTROL-TOWER.md) |
 | **Delivery** | CT-1 = docs/ADR only; CT-2 = enforcement MVP (separate PR) |

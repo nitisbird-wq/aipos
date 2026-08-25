@@ -22,7 +22,7 @@
 | PR | Title (suggested) | Contents | Depends on |
 |---|---|---|---|
 | **Docs** (this) | `docs: define AIPOS Phase 3 planning architecture` | Scope, architecture, AC, delivery, ADR-005, capability corrections | — |
-| **3a.1 Schemas** | `feat: add plan/subtask/assignment schemas` | Zod + JSON Schema; Mission coarse status + `status_before_block`; **no** runtime wiring | ADR-005 |
+| **3a.1 Schemas** | `feat: add plan/subtask/assignment schemas` | Zod + JSON Schema; Mission coarse status + `status_before_block`; **no** runtime wiring | ADR-005 — **DONE** (2026-08-25) |
 | **3a.2 Migration** | `feat: add plans/subtasks/assignments tables` | Non-destructive SQL migration; Drizzle mirror | 3a.1 |
 | **3a.3 Repository** | `feat: repository methods for plans/subtasks/assignments` | Postgres + file adapter parity + contract tests | 3a.2 |
 | **3a.4 Planning commands** | `feat: plan create/submit/approve/reject` | Services + API + audit + actor checks | 3a.3 |
@@ -75,7 +75,7 @@ CI: continue PG service pattern from Phase 2 for contract tests.
 - [x] Capability status corrected in CURRENT_CAPABILITIES  
 - [x] Notion one-way rule recorded  
 - [x] State machines + matrices + open-Q decisions recorded  
-- [ ] Human review of ADR-005  
+- [x] Human review of ADR-005 — **Approved 2026-08-25**  
 - [ ] No source code / schema migration in this PR  
 - [ ] No auto-merge  
 
@@ -96,6 +96,7 @@ CI: continue PG service pattern from Phase 2 for contract tests.
 
 ## 8. Recommended next Human actions
 
-1. Merge or explicitly defer [PR #8](https://github.com/nitisbird-wq/aipos/pull/8).  
-2. Review & approve ADR-005 in this PR.  
-3. Only then authorize **3a.1** schema PR.  
+1. ~~Merge or explicitly defer [PR #8](https://github.com/nitisbird-wq/aipos/pull/8).~~ **Done** — merged.  
+2. ~~Review & approve ADR-005 in this PR.~~ **Done** — Approved 2026-08-25.  
+3. ~~Only then authorize **3a.1** schema PR.~~ **Done** — 3a.1 shipped 2026-08-25 (schema-only; no runtime wiring).  
+4. Authorize **3a.2 Migration** (non-destructive `plans`/`subtasks`/`assignments` tables + Drizzle mirror) as the next PR in sequence.  

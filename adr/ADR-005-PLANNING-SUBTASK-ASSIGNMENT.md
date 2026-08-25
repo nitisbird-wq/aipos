@@ -1,7 +1,7 @@
 # ADR-005 — Planning, Subtask, and Assignment (Phase 3a)
 
-- **Status:** Proposed (awaiting Human approval)  
-- **Date:** 2026-08-03  
+- **Status:** Approved  
+- **Date:** 2026-08-03 (Approved 2026-08-25)  
 - **Deciders:** Mission owner (Human) — Pre-Phase-3 Verification conditional approval  
 - **Supersedes:** none  
 - **Related:** AIPOS-ADR-004 / Phase 1 Decisions (D2, D6); Architecture Contract (status vocabulary); [PHASE_3_SCOPE.md](../docs/PHASE_3_SCOPE.md)
@@ -112,10 +112,16 @@ Plans, Subtasks, Assignments are runtime transactions in PostgreSQL (same SoT cl
 
 ## Compliance checklist (for implementers)
 
-- [ ] No source code in the docs PR that carries this ADR  
+- [x] No source code in the docs PR that carries this ADR  
 - [ ] Implementation PRs cite ADR-005  
 - [ ] Tests for reject→new version, status_before_block, actor auth  
 - [ ] CURRENT_CAPABILITIES remains authoritative for traffic lights  
+
+## Approval log
+
+| Date | Decision | By |
+|---|---|---|
+| 2026-08-25 | Approved — authorizes Phase 3a implementation PRs (3a.1 onward) per `docs/PHASE_3_DELIVERY_PLAN.md` | Mission owner (Human), via Claude Code session |
 
 ---
 

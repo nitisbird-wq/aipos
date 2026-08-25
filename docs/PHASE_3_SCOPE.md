@@ -1,6 +1,6 @@
 # AIPOS Phase 3 Scope — Planning & Assignment (3a)
 
-**Status:** Approved for documentation (Pre-Phase-3 Verification, conditional approval)  
+**Status:** Approved (ADR-005 approved 2026-08-25; Phase 3a implementation PRs authorized per `docs/PHASE_3_DELIVERY_PLAN.md`)  
 **Depends on:** Phase 2 Runtime Foundation (PostgreSQL App DB) — [PR #8](https://github.com/nitisbird-wq/aipos/pull/8)  
 **Binding ADR:** [ADR-005](../adr/ADR-005-PLANNING-SUBTASK-ASSIGNMENT.md)  
 **Does not modify:** `docs/AIPOS_ARCHITECTURE_CONTRACT.md` without a further ADR

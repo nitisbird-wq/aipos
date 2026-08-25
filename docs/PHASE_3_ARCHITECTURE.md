@@ -1,6 +1,6 @@
 # AIPOS Phase 3 Architecture — Planning & Assignment (3a)
 
-**Status:** Draft for Human approval via ADR-005  
+**Status:** Approved via ADR-005 (2026-08-25)  
 **Scope:** [PHASE_3_SCOPE.md](./PHASE_3_SCOPE.md)  
 **ADR:** [ADR-005](../adr/ADR-005-PLANNING-SUBTASK-ASSIGNMENT.md)
 

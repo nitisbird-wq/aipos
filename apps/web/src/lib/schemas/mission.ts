@@ -5,10 +5,15 @@ export const MissionStatusSchema = z.enum([
   "draft",
   "ready",
   "understanding",
+  "active",
   "blocked",
   "cancelled",
+  "closed",
 ]);
 export type MissionStatus = z.infer<typeof MissionStatusSchema>;
+// `active`, `closed` added under ADR-005 (Phase 3a coarse status, D-005.3).
+// `closed` is reserved — not reachable until a Closeout ADR ships.
+// `draft` / `understanding` remain reserved legacy values (ADR-005 D-005.3).
 
 export const PlanningStatusSchema = z.enum([
   "not_started",
@@ -29,6 +34,7 @@ export const MissionObjectSchema = z
     source_intake_version: z.string(),
     mapping_version: z.literal("1.0"),
     status: MissionStatusSchema,
+    status_before_block: MissionStatusSchema.nullable().optional(),
     planning_status: PlanningStatusSchema,
     planning_revision: z.number().int().min(0),
     last_planned_at: z.string().nullable(),

@@ -25,4 +25,9 @@ describe("transition buttons by state", () => {
   it("invalid mission_ready from ready is not allowed", () => {
     expect(isTransitionAllowed("ready", "mission_ready")).toBe(false);
   });
+
+  it("active and closed (ADR-005 D-005.3) have no MVP transition-button wiring yet", () => {
+    expect(getTransitionAvailability("active").every((a) => !a.allowed)).toBe(true);
+    expect(getTransitionAvailability("closed").every((a) => !a.allowed)).toBe(true);
+  });
 });

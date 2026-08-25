@@ -218,8 +218,8 @@ Merge (มนุษย์; ตัวอย่างที่เกิดแล�
 
 | รายการ | สถานะหลักฐาน |
 |---|---|
-| Planning Engine | **NOT STARTED** — schema มี `planning_*` แต่สถานะคง `not_started`; ไม่มี engine |
-| Assignment / Capability Matching automation | **NOT STARTED** — capabilities seed เป็นข้อมูล; ห้าม auto-route ใน MVP |
+| Planning Engine | **NOT STARTED** — Phase 3a.1 (2026-08-25) added `Plan`/`Subtask`/`Assignment` Zod + JSON Schema contracts only (`apps/web/src/lib/schemas/{plan,subtask,assignment}.ts`, `packages/schemas/{plan,subtask,assignment}.schema.json`); no repository, service, API route, or table exists yet — no mission can actually be planned |
+| Assignment / Capability Matching automation | **NOT STARTED** — capabilities seed เป็นข้อมูล; ห้าม auto-route ใน MVP; Assignment schema exists (3a.1) but unwired |
 | Specialists (Claude/Cursor/n8n/etc. as executors) | นอก scope; ไม่ถูกเรียกใน code paths ของ Intake |
 | Execution | **NOT STARTED** |
 | Artifact | **NOT STARTED** — ไม่มี artifact service / API / ตาราง |

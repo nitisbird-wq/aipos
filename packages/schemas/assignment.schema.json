@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aipos.local/schemas/assignment.schema.json",
+  "title": "Assignment",
+  "description": "Phase 3a Assignment aggregate (ADR-005). Phase 3a ends at status=approved -- no dispatch, no n8n, no execution_job. Schema-only contract; runtime persistence lands in later 3a implementation PRs (docs/PHASE_3_DELIVERY_PLAN.md).",
+  "version": "1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "assignment_id",
+    "mission_id",
+    "subtask_id",
+    "status",
+    "proposed_specialist",
+    "approved_by",
+    "created_at",
+    "updated_at"
+  ],
+  "properties": {
+    "assignment_id": { "type": "string", "pattern": "^ASG-" },
+    "mission_id": { "type": "string", "pattern": "^MIS-" },
+    "subtask_id": { "type": "string", "pattern": "^SUB-" },
+    "status": {
+      "type": "string",
+      "enum": ["proposed", "awaiting_approval", "approved", "rejected", "revoked"]
+    },
+    "proposed_specialist": { "type": "string", "minLength": 1 },
+    "approved_by": { "type": ["string", "null"] },
+    "rejected_reason": { "type": ["string", "null"] },
+    "correlation_id": { "type": "string", "minLength": 1 },
+    "created_at": { "type": "string" },
+    "updated_at": { "type": "string" }
+  }
+}
