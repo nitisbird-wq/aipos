@@ -28,6 +28,43 @@ Chat-first aliases may wrap the same services (`/api/chat`, `/api/chat/confirm`)
 | POST | `/missions/{id}/transitions` | Allowed transition commands only |
 | GET | `/missions/{id}/audit` | Audit events (append-only) |
 | POST | `/missions/{id}/notion/retry` | Retry Notion sync when `sync_status=failed` |
+| GET | `/missions/{id}/control-plane` | Control Plane snapshot: state, health, supervisor assessment |
+| POST | `/missions/{id}/control-plane` | Run Control Plane v1 pipeline (Supervisor → dispatch → verify → integrate) |
+
+### Control Plane
+
+**GET** `/missions/{id}/control-plane`
+
+```json
+{
+  "ok": true,
+  "state": { "schema_version": "control-plane-state.v1", "mission_id": "MIS-...", "..." : "..." },
+  "health": { "status": "HEALTHY", "..." : "..." },
+  "supervisor": { "next_action": "...", "responsible": "...", "..." : "..." }
+}
+```
+
+**POST** `/missions/{id}/control-plane`
+
+Request body (optional):
+
+```json
+{ "simulate_worker_pass": true }
+```
+
+- Default `simulate_worker_pass=true` runs the pipeline with simulated worker handoff success (no external worker).
+- Set `simulate_worker_pass=false` to require real worker handoff evidence (pipeline may stall at verification).
+
+Response includes `supervisor`, `dispatch`, `assignments`, `verifications`, `integration`, `health`, `human_gate`, and `state`.
+
+Errors:
+
+| Code | When |
+|---|---|
+| `MISSION_NOT_FOUND` | Unknown mission id |
+| `LINEAR_LIVE_MISCONFIGURED` | `LINEAR_ADAPTER=live` without `LINEAR_API_KEY` / `LINEAR_TEAM_ID` |
+
+Linear dispatch uses `LINEAR_ADAPTER=mock` by default (no external writes). Live dispatch requires explicit env configuration.
 
 ## Forbidden
 

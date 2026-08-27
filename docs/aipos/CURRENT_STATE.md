@@ -4,7 +4,8 @@
 
 - Frozen production workflow baseline remains unchanged.
 - New continuity and strategy contracts are implemented as additive orchestration contracts.
-- Dispatcher remains intentionally blocked.
+- Control Plane v1 pipeline is implemented (Supervisor → Decompose → Human Gate → Linear dispatch → Worker packages → Verify → Integrate → Health).
+- Workstream Dispatcher is implemented with mock Linear default; live Linear dispatch is opt-in via `LINEAR_ADAPTER=live` + credentials.
 
 ## Implemented contracts
 
@@ -35,6 +36,8 @@
 - Decomposer (playbook/outcome-driven, rejects generic titles): `apps/web/src/lib/services/decomposer.ts`
 - Authority evaluator: `apps/web/src/lib/services/authority.ts`
 - Capability router + operator handle: `apps/web/src/lib/services/capability-router.ts`
+- Control Plane pipeline orchestrator: `apps/web/src/lib/services/control-plane-pipeline.ts`
+- Mission control-plane API: `apps/web/src/app/api/missions/[id]/control-plane/route.ts`
 
 ## Continuity contract behavior
 
