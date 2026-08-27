@@ -23,6 +23,7 @@
 - AIPOS Supervisor: `apps/web/src/lib/services/aipos-supervisor.ts`
 - Health Supervisor: `apps/web/src/lib/services/health-supervisor.ts`
 - Workstream Dispatcher (idempotent + repair): `apps/web/src/lib/services/workstream-dispatcher.ts`
+- Linear dispatch client (mock default / live opt-in): `apps/web/src/lib/linear/client.ts`
 - Operator Contract packager: `apps/web/src/lib/services/operator-contract.ts`
 - Verifier + Result Integrator: `apps/web/src/lib/services/verifier-integrator.ts`
 - Human Gate policy bridge: `apps/web/src/lib/services/human-gate.ts`
