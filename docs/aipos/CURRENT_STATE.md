@@ -22,15 +22,18 @@
 - Control Plane state core: `apps/web/src/lib/services/control-plane-state.ts`
 - AIPOS Supervisor: `apps/web/src/lib/services/aipos-supervisor.ts`
 - Health Supervisor: `apps/web/src/lib/services/health-supervisor.ts`
-- Workstream Dispatcher: `apps/web/src/lib/services/workstream-dispatcher.ts`
+- Workstream Dispatcher (idempotent + repair): `apps/web/src/lib/services/workstream-dispatcher.ts`
 - Operator Contract packager: `apps/web/src/lib/services/operator-contract.ts`
 - Verifier + Result Integrator: `apps/web/src/lib/services/verifier-integrator.ts`
 - Human Gate policy bridge: `apps/web/src/lib/services/human-gate.ts`
+- Evidence promotion guards: `apps/web/src/lib/services/evidence.ts`
+- Recovery SBI/GROW planner: `apps/web/src/lib/services/recovery.ts`
+- Canonical handoff builder: `apps/web/src/lib/services/handoff.ts`
 - Mission strategist: `apps/web/src/lib/services/mission-strategist.ts`
 - Playbook engine: `apps/web/src/lib/services/playbook-engine.ts`
-- Decomposer (outcome-driven): `apps/web/src/lib/services/decomposer.ts`
+- Decomposer (playbook/outcome-driven, rejects generic titles): `apps/web/src/lib/services/decomposer.ts`
 - Authority evaluator: `apps/web/src/lib/services/authority.ts`
-- Capability router extension: `apps/web/src/lib/services/capability-router.ts`
+- Capability router + operator handle: `apps/web/src/lib/services/capability-router.ts`
 
 ## Continuity contract behavior
 

@@ -1,5 +1,6 @@
 import type { Capability } from "@/lib/schemas/policy";
 import { evaluateAuthorityDecision } from "@/lib/services/authority";
+import type { AuthorityDecision } from "@/lib/schemas/contracts";
 
 export type RoutingDecision = {
   task: string;
@@ -8,8 +9,21 @@ export type RoutingDecision = {
   primary: string;
   support: string[];
   tools: string[];
-  authority: ReturnType<typeof evaluateAuthorityDecision>;
+  authority: AuthorityDecision;
   output: "ROUTED" | "UNMET_CAPABILITY" | "HUMAN";
+};
+
+/**
+ * Operator abstraction — workers expose a uniform handle.
+ * Supervisor routes tasks to operators; operators never own consequential approval.
+ */
+export type OperatorHandle = {
+  id: string;
+  dispatch: (payload: Record<string, unknown>) => Promise<{ run_id: string; status: "QUEUED" }>;
+  status: (runId: string) => Promise<"QUEUED" | "RUNNING" | "PASSED" | "FAILED" | "BLOCKED">;
+  result: (runId: string) => Promise<Record<string, unknown> | null>;
+  evidence: (runId: string) => Promise<string[]>;
+  error: (runId: string) => Promise<string | null>;
 };
 
 function operatorsForCapability(capability: Capability): string[] {
@@ -21,6 +35,10 @@ function operatorsForCapability(capability: Capability): string[] {
     .filter((row): row is string => Boolean(row));
 }
 
+/**
+ * Route TASK → REQUIRED CAPABILITIES → ELIGIBLE OPERATORS → PRIMARY/SUPPORT/TOOLS → AUTHORITY → OUTPUT.
+ * Do not distort task to fit available operator.
+ */
 export function routeCapabilities(input: {
   task: string;
   required_capabilities: string[];
@@ -29,9 +47,15 @@ export function routeCapabilities(input: {
   reversible?: boolean;
   delegated?: boolean;
 }): RoutingDecision {
-  const matched = input.capabilities.filter((cap) =>
-    input.required_capabilities.includes(cap.family),
+  const matched = input.capabilities.filter(
+    (cap) =>
+      cap.enabled !== false &&
+      input.required_capabilities.some(
+        (req) =>
+          req === cap.family || req.startsWith(`${cap.family}.`) || cap.family.startsWith(req),
+      ),
   );
+
   if (matched.length === 0) {
     return {
       task: input.task,
@@ -70,5 +94,43 @@ export function routeCapabilities(input: {
     tools,
     authority,
     output: primary === "HUMAN" ? "HUMAN" : "ROUTED",
+  };
+}
+
+export function createStubOperator(id: string): OperatorHandle {
+  const runs = new Map<
+    string,
+    {
+      status: "QUEUED" | "RUNNING" | "PASSED" | "FAILED" | "BLOCKED";
+      result: Record<string, unknown> | null;
+      evidence: string[];
+      error: string | null;
+    }
+  >();
+
+  return {
+    id,
+    async dispatch(payload) {
+      const run_id = `RUN-${id}-${runs.size + 1}`;
+      runs.set(run_id, {
+        status: "QUEUED",
+        result: payload,
+        evidence: [],
+        error: null,
+      });
+      return { run_id, status: "QUEUED" };
+    },
+    async status(runId) {
+      return runs.get(runId)?.status ?? "FAILED";
+    },
+    async result(runId) {
+      return runs.get(runId)?.result ?? null;
+    },
+    async evidence(runId) {
+      return runs.get(runId)?.evidence ?? [];
+    },
+    async error(runId) {
+      return runs.get(runId)?.error ?? (runs.has(runId) ? null : "RUN_NOT_FOUND");
+    },
   };
 }

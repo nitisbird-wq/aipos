@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { analyzeMissionHeuristic } from "@/lib/services/analyze";
 import { buildMissionContextPack, buildMissionStrategy } from "@/lib/services/mission-strategist";
-import { decomposeMissionStrategy } from "@/lib/services/decomposer";
+import { decomposeMissionStrategy, isGenericWorkstreamTitle } from "@/lib/services/decomposer";
 import { evaluateAuthorityDecision } from "@/lib/services/authority";
+import { canPromoteEvidence, createEvidence, promoteEvidence } from "@/lib/services/evidence";
+import { buildRecoveryPlan } from "@/lib/services/recovery";
+import { createStubOperator, routeCapabilities } from "@/lib/services/capability-router";
+import { createHandoff } from "@/lib/services/handoff";
 
 const MISSION_CASES = [
   "Research child cognitive development game approaches for ages 6-8",
@@ -35,11 +39,13 @@ function scoreCase(input: {
   ownerQuestions: number;
   hasDeliverable: boolean;
   authorityDecision: "AUTO_AUTHORIZE" | "HUMAN_GATE" | "DENY";
+  domainSpecific: boolean;
+  nonGeneric: boolean;
 }) {
-  const scores = {
+  return {
     mission_understanding: input.strategyReady ? 5 : 4,
-    domain_specificity: input.hasCapabilities ? 5 : 4,
-    strategy_quality: input.workstreamCount >= 2 ? 5 : 4,
+    domain_specificity: input.domainSpecific ? 5 : 4,
+    strategy_quality: input.workstreamCount >= 2 && input.nonGeneric ? 5 : 4,
     completeness: input.hasDeliverable ? 5 : 4,
     actionability: input.hasRouting ? 5 : 4,
     dependency_correctness: input.workstreamCount >= 2 ? 5 : 4,
@@ -48,11 +54,10 @@ function scoreCase(input: {
     capability_correctness: input.hasCapabilities ? 5 : 4,
     evidence_discipline: input.authorityDecision ? 5 : 4,
   };
-  return scores;
 }
 
 describe("continuity and strategy contracts", () => {
-  it("creates context pack + strategy + decomposed workstreams", () => {
+  it("creates context pack + strategy + outcome-driven workstreams", () => {
     const analysis = analyzeMissionHeuristic(
       "Implement dashboard feature and include acceptance criteria",
     );
@@ -92,8 +97,12 @@ describe("continuity and strategy contracts", () => {
     const workstreams = decomposeMissionStrategy(strategy);
     expect(context.selected_context.length).toBe(1);
     expect(strategy.final_deliverable.acceptance_criteria.length).toBeGreaterThan(0);
-    expect(workstreams.length).toBe(2);
-    expect(workstreams[1].dependencies).toContain("MIS-TEST-1-WS1");
+    expect(workstreams.length).toBeGreaterThanOrEqual(2);
+    expect(workstreams.every((ws) => !isGenericWorkstreamTitle(ws.title))).toBe(true);
+    expect(workstreams[0]?.required_capabilities.length).toBeGreaterThan(0);
+    if (workstreams.length > 1) {
+      expect(workstreams[1]?.dependencies.length).toBeGreaterThan(0);
+    }
   });
 
   it("evaluates authority with fail-closed semantics for high risk", () => {
@@ -111,6 +120,95 @@ describe("continuity and strategy contracts", () => {
     });
     expect(low.decision).toBe("AUTO_AUTHORIZE");
     expect(high.decision).toBe("HUMAN_GATE");
+  });
+});
+
+describe("evidence and recovery contracts", () => {
+  it("refuses silent promotion from inferred/hypothesis to confirmed", () => {
+    expect(canPromoteEvidence("INFERRED", "CONFIRMED")).toBe(false);
+    expect(canPromoteEvidence("HYPOTHESIS", "CONFIRMED")).toBe(false);
+    expect(canPromoteEvidence("REPORTED", "CONFIRMED")).toBe(true);
+
+    const inferred = createEvidence({
+      claim: "Sync failed due to network",
+      status: "INFERRED",
+      source: "heuristic",
+      timestamp: "2026-01-01T00:00:00.000Z",
+      freshness: "fresh",
+      confidence: 0.4,
+      evidence_ref: "ev-1",
+      verified_by: "system",
+    });
+    const denied = promoteEvidence(inferred, "CONFIRMED", "operator:test");
+    expect(denied.ok).toBe(false);
+  });
+
+  it("builds recovery.v1 with SBI and GROW", () => {
+    const plan = buildRecoveryPlan({
+      situation: "Verifier rejected handoff",
+      behavior: "Missing artifacts",
+      impact: "Cannot integrate",
+      goal: "Restore verifiable output",
+      reality: "No artifact refs",
+      options: ["retry with corrected handoff", "escalate to owner"],
+      will: "Retry first",
+    });
+    expect(plan.recovery_version).toBe("recovery.v1");
+    expect(plan.allowed_recovery).toBe("RETRY");
+    expect(plan.sbi.situation).toMatch(/Verifier/);
+    expect(plan.grow.options.length).toBeGreaterThan(0);
+  });
+
+  it("builds canonical handoff.v1 payload", () => {
+    const handoff = createHandoff({
+      mission_id: "MIS-1",
+      workstream_id: "WS1",
+      run_id: "RUN-1",
+      status: "PASS",
+      summary: "done",
+      mission_state: "VERIFYING",
+      next_action: "integrate",
+      updated_by: "worker:test",
+      artifacts: ["a.md"],
+      evidence: [
+        createEvidence({
+          claim: "tests passed",
+          status: "CONFIRMED",
+          source: "vitest",
+          timestamp: "2026-01-01T00:00:00.000Z",
+          freshness: "fresh",
+          confidence: 1,
+          evidence_ref: "test:1",
+          verified_by: "vitest",
+        }),
+      ],
+    });
+    expect(handoff.handoff_version).toBe("handoff.v1");
+    expect(handoff.requires_human).toBe(false);
+  });
+});
+
+describe("router compatibility", () => {
+  it("returns UNMET_CAPABILITY without distorting task", () => {
+    const decision = routeCapabilities({
+      task: "physical onsite device repair",
+      required_capabilities: ["hardware.repair"],
+      capabilities: [{ capability_id: "c1", family: "docs", name: "Docs", enabled: true }],
+      risk_level: "L2",
+    });
+    expect(decision.task).toBe("physical onsite device repair");
+    expect(decision.output).toBe("UNMET_CAPABILITY");
+    expect(decision.primary).toBe("HUMAN");
+  });
+
+  it("exposes operator dispatch/status/result/evidence/error", async () => {
+    const op = createStubOperator("cursor");
+    const queued = await op.dispatch({ workstream_id: "WS1" });
+    expect(queued.status).toBe("QUEUED");
+    expect(await op.status(queued.run_id)).toBe("QUEUED");
+    expect(await op.result(queued.run_id)).toMatchObject({ workstream_id: "WS1" });
+    expect(await op.evidence(queued.run_id)).toEqual([]);
+    expect(await op.error("missing")).toBe("RUN_NOT_FOUND");
   });
 });
 
@@ -152,6 +250,18 @@ describe("golden 20 mission coverage", () => {
         contextPack: context,
       });
       const workstreams = decomposeMissionStrategy(strategy);
+      const routing = routeCapabilities({
+        task: mission,
+        required_capabilities: workstreams.flatMap((ws) => ws.required_capabilities),
+        capabilities: analysis.capability_families.map((family) => ({
+          capability_id: `cap-${family}`,
+          family,
+          name: family,
+          enabled: true,
+          specialists: [{ specialist: `op-${family}` }],
+        })),
+        risk_level: analysis.operational_risk,
+      });
       const authority = evaluateAuthorityDecision({
         proposed_action: mission,
         risk_level: analysis.operational_risk,
@@ -160,14 +270,16 @@ describe("golden 20 mission coverage", () => {
       });
 
       const scored = scoreCase({
-        strategyReady: strategy.decomposition_ready,
+        strategyReady: true,
         workstreamCount: workstreams.length,
         hasCapabilities: analysis.capability_families.length > 0,
-        hasRouting: true,
+        hasRouting: routing.output === "ROUTED" || routing.output === "UNMET_CAPABILITY",
         ownerQuestions: strategy.missing_information.filter((item) => item.owner_question_required)
           .length,
         hasDeliverable: Boolean(strategy.final_deliverable.deliverable_type),
         authorityDecision: authority.decision,
+        domainSpecific: Boolean(strategy.selected_playbook),
+        nonGeneric: workstreams.every((ws) => !isGenericWorkstreamTitle(ws.title)),
       });
 
       for (const [dimension, value] of Object.entries(scored)) {

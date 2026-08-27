@@ -1,5 +1,5 @@
 import { nowIso } from "@/lib/ids";
-import type { OutcomeWorkstream } from "@/lib/schemas/contracts";
+import type { OutcomeWorkstream, WorkstreamState } from "@/lib/schemas/contracts";
 import {
   getMissionControlState,
   upsertMissionControlState,
@@ -16,11 +16,19 @@ export type LinearDispatchAdapter = {
 
 export type DispatchResult = {
   mission_id: string;
-  dispatched: Array<{ workstream_id: string; linear_issue_id: string }>;
+  dispatched: Array<{ workstream_id: string; linear_issue_id: string; reused: boolean }>;
   repaired: Array<{ workstream_id: string; linear_issue_id: string; reason: string }>;
   blocked: Array<{ workstream_id: string; reason: string }>;
 };
 
+function correlationIdFor(missionId: string, workstreamId: string): string {
+  return `DSP-${missionId}-${workstreamId}`;
+}
+
+/**
+ * Idempotent dispatcher: search by exact correlation ID before create.
+ * Fail closed when search fails. Repair write-back when external create succeeds.
+ */
 export async function dispatchWorkstreams(input: {
   missionId: string;
   workstreams: OutcomeWorkstream[];
@@ -31,10 +39,10 @@ export async function dispatchWorkstreams(input: {
   const dispatched: DispatchResult["dispatched"] = [];
   const repaired: DispatchResult["repaired"] = [];
   const blocked: DispatchResult["blocked"] = [];
-  const nextRows = [...state.workstreams];
+  const nextRows: WorkstreamState[] = [...state.workstreams];
 
   for (const stream of input.workstreams) {
-    const correlationId = `DSP-${input.missionId}-${stream.workstream_id}`;
+    const correlationId = correlationIdFor(input.missionId, stream.workstream_id);
     let existing = nextRows.find((row) => row.workstream_id === stream.workstream_id);
     if (!existing) {
       nextRows.push({
@@ -53,7 +61,16 @@ export async function dispatchWorkstreams(input: {
         approval_required: stream.approval_required,
         updated_at: nowIso(),
       });
-      existing = nextRows[nextRows.length - 1];
+      existing = nextRows[nextRows.length - 1]!;
+    }
+
+    if (existing.linear_issue_id && existing.status === "DISPATCHED") {
+      dispatched.push({
+        workstream_id: stream.workstream_id,
+        linear_issue_id: existing.linear_issue_id,
+        reused: true,
+      });
+      continue;
     }
 
     let found: { id: string; title: string } | null = null;
@@ -64,23 +81,38 @@ export async function dispatchWorkstreams(input: {
         workstream_id: stream.workstream_id,
         reason: "Search failed; dispatcher fail-closed before create",
       });
+      existing.status = "BLOCKED";
+      existing.updated_at = nowIso();
       continue;
     }
 
     if (!found) {
-      const created = await input.adapter.createWorkstreamIssue({
-        correlationId,
-        title: stream.title,
-        body: stream.objective,
-      });
-      found = created;
+      try {
+        found = await input.adapter.createWorkstreamIssue({
+          correlationId,
+          title: stream.title,
+          body: `${stream.objective}\n\ncorrelation_id=${correlationId}`,
+        });
+      } catch (err) {
+        blocked.push({
+          workstream_id: stream.workstream_id,
+          reason: `Create failed: ${err instanceof Error ? err.message : "unknown"}`,
+        });
+        existing.status = "BLOCKED";
+        existing.updated_at = nowIso();
+        continue;
+      }
     }
 
     try {
       existing.linear_issue_id = found.id;
       existing.status = "DISPATCHED";
       existing.updated_at = nowIso();
-      dispatched.push({ workstream_id: stream.workstream_id, linear_issue_id: found.id });
+      dispatched.push({
+        workstream_id: stream.workstream_id,
+        linear_issue_id: found.id,
+        reused: false,
+      });
     } catch {
       repaired.push({
         workstream_id: stream.workstream_id,
@@ -91,7 +123,7 @@ export async function dispatchWorkstreams(input: {
   }
 
   const blockers = [
-    ...state.blockers,
+    ...state.blockers.filter((b) => b.code !== "DISPATCH_SEARCH_FAILED" || b.resolved),
     ...blocked.map((entry) => ({
       mission_id: input.missionId,
       workstream_id: entry.workstream_id,
@@ -119,4 +151,34 @@ export async function dispatchWorkstreams(input: {
     repaired,
     blocked,
   };
+}
+
+/**
+ * Repair state when external create succeeded but local write-back failed.
+ */
+export async function repairDispatchWriteback(input: {
+  missionId: string;
+  workstreamId: string;
+  linearIssueId: string;
+  actor: string;
+}): Promise<WorkstreamState | null> {
+  const state = await getMissionControlState(input.missionId);
+  const nextRows = state.workstreams.map((row) =>
+    row.workstream_id === input.workstreamId
+      ? {
+          ...row,
+          linear_issue_id: input.linearIssueId,
+          status: "DISPATCHED" as const,
+          updated_at: nowIso(),
+        }
+      : row,
+  );
+  await upsertMissionControlState(input.missionId, input.actor, {
+    workstreams: nextRows,
+    mission_state: "DISPATCHED",
+    next_action: "Prepare worker-ready packages",
+    responsible: "supervisor",
+    updated_at: nowIso(),
+  });
+  return nextRows.find((row) => row.workstream_id === input.workstreamId) ?? null;
 }

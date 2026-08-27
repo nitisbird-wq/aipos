@@ -10,35 +10,111 @@ import {
   type MissionContextPack,
   type MissionStrategy,
 } from "@/lib/schemas/contracts";
+import type { Playbook } from "@/lib/services/playbook-engine";
 
-function inferPlaybook(capabilities: string[]): string {
-  if (capabilities.some((c) => c.includes("debug"))) return "debug";
-  if (capabilities.some((c) => c.includes("automation"))) return "automation";
-  if (capabilities.some((c) => c.includes("research"))) return "research";
-  if (capabilities.some((c) => c.includes("knowledge"))) return "knowledge_organization";
-  if (capabilities.some((c) => c.includes("business"))) return "business_launch";
-  if (capabilities.some((c) => c.includes("code"))) return "software_build";
-  if (capabilities.some((c) => c.includes("strategy"))) return "decision";
+function inferPlaybook(analysis: AnalyzeResult): Playbook["id"] {
+  const caps = analysis.capability_families.join(" ");
+  const text = `${analysis.mission_summary} ${analysis.desired_outcome}`.toLowerCase();
+
+  if (
+    /\b(bug|debug|reproduc|incident|fail(ing|ure)?|error)\b/.test(text) ||
+    caps.includes("code")
+  ) {
+    if (/\b(bug|debug|reproduc|incident|fail)\b/.test(text)) return "debug";
+  }
+  if (/\b(automat|n8n|workflow|recurring)\b/.test(text) || caps.includes("automation")) {
+    return "automation";
+  }
+  if (/\b(competitor|research|literature|survey)\b/.test(text) || caps.includes("research")) {
+    return "research";
+  }
+  if (/\b(notion|knowledge|taxonomy|organiz)\b/.test(text) || caps.includes("knowledge")) {
+    return "knowledge_organization";
+  }
+  if (/\b(launch|go-to-market|pricing|offer)\b/.test(text) || caps.includes("business")) {
+    return "business_launch";
+  }
+  if (/\b(decision|brief|executive|recommend)\b/.test(text) || caps.includes("strategy")) {
+    return "decision";
+  }
+  if (/\b(design|prototype|creative|visual)\b/.test(text) || caps.includes("design")) {
+    return "creative_synthesis";
+  }
+  if (caps.includes("code") || /\b(implement|feature|build|software)\b/.test(text)) {
+    return "software_build";
+  }
   return "investigation";
 }
 
-function buildDeliverable(analysis: AnalyzeResult): DeliverableContract {
+function deliverableTypeFor(playbook: Playbook["id"], analysis: AnalyzeResult): string {
+  switch (playbook) {
+    case "software_build":
+    case "debug":
+      return "software_change";
+    case "automation":
+      return "workflow_definition";
+    case "decision":
+      return "decision_brief";
+    case "business_launch":
+      return "launch_plan";
+    case "knowledge_organization":
+      return "knowledge_structure";
+    case "creative_synthesis":
+      return analysis.capability_families.includes("design") ? "creative_package" : "document";
+    case "research":
+      return "research_report";
+    default:
+      return "investigation_report";
+  }
+}
+
+function buildDeliverable(analysis: AnalyzeResult, playbook: Playbook["id"]): DeliverableContract {
+  const deliverable_type = deliverableTypeFor(playbook, analysis);
   const contract = {
-    deliverable_type: analysis.capability_families.includes("code")
-      ? "software_change"
-      : "document",
+    deliverable_type,
     audience: "mission_owner",
-    purpose: "Deliver mission objective with verifiable evidence",
+    purpose: `Deliver ${deliverable_type} for: ${analysis.desired_outcome}`,
     required_sections: ["Objective", "Approach", "Output", "Verification", "Risks"],
     required_artifacts: ["audit_trail", "verification_evidence"],
-    quality_standard: "Clear, actionable, and evidence-backed",
+    quality_standard: "Clear, actionable, domain-specific, and evidence-backed",
     acceptance_criteria: analysis.success_criteria,
-    evidence_requirement: "Claims must include evidence status and references",
+    evidence_requirement: "Claims must include evidence status and references; no silent promotion",
     format: analysis.capability_families.includes("design") ? "mixed" : "markdown",
     completion_definition:
       "All acceptance criteria satisfied with evidence; unresolved blockers are absent or explicitly escalated",
   } satisfies DeliverableContract;
   return DeliverableContractSchema.parse(contract);
+}
+
+function classifyMissing(analysis: AnalyzeResult): MissionStrategy["missing_information"] {
+  return analysis.missing_blockers.map((item) => {
+    if (item.blocking) {
+      return {
+        kind: "BLOCKER" as const,
+        detail: item.question,
+        owner_question_required: true,
+      };
+    }
+    if (item.resolved && item.code.includes("CLARIFY")) {
+      return {
+        kind: "SAFE_ASSUMPTION" as const,
+        detail: item.question,
+        owner_question_required: false,
+      };
+    }
+    if (item.code.includes("CLARIFY") || item.code.includes("FORMAT")) {
+      return {
+        kind: "DISCOVERABLE" as const,
+        detail: item.question,
+        owner_question_required: false,
+      };
+    }
+    return {
+      kind: "OPTIONAL_REFINEMENT" as const,
+      detail: item.question,
+      owner_question_required: false,
+    };
+  });
 }
 
 export function buildMissionContextPack(input: {
@@ -69,17 +145,9 @@ export function buildMissionStrategy(input: {
   analysis: AnalyzeResult;
   contextPack: MissionContextPack;
 }): MissionStrategy {
-  const playbook = inferPlaybook(input.analysis.capability_families);
-  const deliverable = buildDeliverable(input.analysis);
-  const missingInfo = input.analysis.missing_blockers.map((item) => ({
-    kind: item.blocking
-      ? ("BLOCKER" as const)
-      : item.code.includes("CLARIFY")
-        ? ("DISCOVERABLE" as const)
-        : ("SAFE_ASSUMPTION" as const),
-    detail: item.question,
-    owner_question_required: item.blocking,
-  }));
+  const playbook = inferPlaybook(input.analysis);
+  const deliverable = buildDeliverable(input.analysis, playbook);
+  const missingInfo = classifyMissing(input.analysis);
 
   return MissionStrategySchema.parse({
     strategy_id: `STRAT-${input.missionId}`,
@@ -90,9 +158,10 @@ export function buildMissionStrategy(input: {
     selected_playbook: playbook,
     strategy_reasoning: [
       "Owner intent captured from intake request",
-      "Relevant context pack selected by confidence and freshness",
-      "Strategy selected from capability-family to playbook mapping",
+      `Playbook selected: ${playbook}`,
+      `Context pack size: ${input.contextPack.selected_context.length} (excluded ${input.contextPack.excluded_context_ids.length})`,
       "Backward planning prepared from deliverable acceptance criteria",
+      "Only BLOCKER missing-info interrupts owner",
     ],
     missing_information: missingInfo,
     backward_plan_summary: deliverable.acceptance_criteria.map(

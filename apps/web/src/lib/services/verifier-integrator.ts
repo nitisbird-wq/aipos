@@ -6,6 +6,8 @@ import {
   getMissionControlState,
   upsertMissionControlState,
 } from "@/lib/services/control-plane-state";
+import { assertNoSilentPromotion } from "@/lib/services/evidence";
+import { buildRecoveryPlan, recoveryToWorkstreamObjective } from "@/lib/services/recovery";
 
 export type VerificationOutcome = {
   mission_id: string;
@@ -13,6 +15,7 @@ export type VerificationOutcome = {
   run_id: string;
   status: "PASS" | "FAIL";
   recovery_task_created: boolean;
+  recovery_plan?: ReturnType<typeof buildRecoveryPlan>;
 };
 
 export async function verifyAndIntegrateHandoff(input: {
@@ -23,14 +26,34 @@ export async function verifyAndIntegrateHandoff(input: {
   const handoff = HandoffSchema.parse(input.handoff);
   await appendHandoff(input.missionId, input.actor, handoff);
 
+  const evidenceCheck = assertNoSilentPromotion(handoff.evidence);
   const pass =
     handoff.status === "PASS" &&
     handoff.artifacts.length > 0 &&
     handoff.evidence.length > 0 &&
+    evidenceCheck.ok &&
     !handoff.requires_human;
   const state = await getMissionControlState(input.missionId);
 
   if (!pass) {
+    const recoveryPlan = buildRecoveryPlan({
+      situation: `Verification failed for workstream ${handoff.workstream_id}`,
+      behavior:
+        handoff.failures.join("; ") || "Missing artifact/evidence or invalid evidence promotion",
+      impact: "Mission cannot integrate results safely",
+      goal: "Restore verifiable deliverable for workstream",
+      reality: evidenceCheck.ok
+        ? "Artifact or evidence contract unmet"
+        : evidenceCheck.violations.join("; "),
+      options: [
+        "retry with corrected handoff",
+        "reroute to another operator",
+        "reconcile state",
+        "escalate to owner",
+      ],
+      will: "Create recovery workstream and re-verify before integration",
+      preferred: "RETRY",
+    });
     const recoveryId = `${handoff.workstream_id}-RECOVERY`;
     const nextWorkstreams: WorkstreamState[] = [
       ...state.workstreams,
@@ -39,7 +62,7 @@ export async function verifyAndIntegrateHandoff(input: {
         workstream_id: recoveryId,
         correlation_id: `REC-${input.missionId}-${handoff.workstream_id}`,
         title: `Recovery for ${handoff.workstream_id}`,
-        objective: "Correct failed output and resubmit for verification",
+        objective: recoveryToWorkstreamObjective(recoveryPlan),
         status: "PENDING",
         owner: "recovery",
         linear_issue_id: null,
@@ -47,7 +70,7 @@ export async function verifyAndIntegrateHandoff(input: {
         expected_output: ["corrected_output", "new_evidence"],
         required_capabilities: ["debug", "verification"],
         risk_level: "L1" as const,
-        approval_required: false,
+        approval_required: recoveryPlan.allowed_recovery === "ESCALATE",
         updated_at: nowIso(),
       },
     ];
@@ -61,7 +84,11 @@ export async function verifyAndIntegrateHandoff(input: {
           run_id: handoff.run_id,
           status: "FAIL",
           verifier: input.actor,
-          notes: ["Missing artifact/evidence or handoff marked fail"],
+          notes: [
+            "Missing artifact/evidence or handoff marked fail",
+            ...evidenceCheck.violations,
+            `recovery=${recoveryPlan.allowed_recovery}`,
+          ],
           recovery_required: true,
           verified_at: nowIso(),
         },
@@ -77,6 +104,7 @@ export async function verifyAndIntegrateHandoff(input: {
       run_id: handoff.run_id,
       status: "FAIL",
       recovery_task_created: true,
+      recovery_plan: recoveryPlan,
     };
   }
 
