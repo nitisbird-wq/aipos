@@ -157,3 +157,14 @@ export function getLinearDispatchClient(): LinearDispatchClient {
   }
   return createMockLinearClient();
 }
+
+/** Expose LinearDispatchClient as the dispatcher adapter without replacing the abstraction. */
+export function asLinearDispatchAdapter(client: LinearDispatchClient): {
+  searchByCorrelationId: LinearDispatchClient["searchByCorrelationId"];
+  createWorkstreamIssue: LinearDispatchClient["createWorkstreamIssue"];
+} {
+  return {
+    searchByCorrelationId: (correlationId) => client.searchByCorrelationId(correlationId),
+    createWorkstreamIssue: (input) => client.createWorkstreamIssue(input),
+  };
+}

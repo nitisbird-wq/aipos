@@ -8,7 +8,7 @@ import {
   runSupervisorAssessment,
 } from "@/lib/services/aipos-supervisor";
 import { dispatchWorkstreams } from "@/lib/services/workstream-dispatcher";
-import { getLinearDispatchClient } from "@/lib/linear/client";
+import { asLinearDispatchAdapter, getLinearDispatchClient } from "@/lib/linear/client";
 import { buildWorkerAssignmentPackages } from "@/lib/services/operator-contract";
 import {
   integrateMissionResults,
@@ -102,7 +102,7 @@ export async function runControlPlanePipeline(input: {
     delegated: analysis.operational_risk <= "L2",
   });
 
-  const linear = getLinearDispatchClient();
+  const linear = asLinearDispatchAdapter(getLinearDispatchClient());
   const dispatch = await dispatchWorkstreams({
     missionId: input.missionId,
     workstreams,

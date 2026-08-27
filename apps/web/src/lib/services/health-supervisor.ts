@@ -10,13 +10,25 @@ export type HealthCheckResult = {
   remediation: string[];
 };
 
+/** Waiting-human SLA before escalating WARNING → BLOCKED (ms). */
+export const WAITING_HUMAN_SLA_MS = 1000 * 60 * 60 * 4;
+
+/** Evidence/context considered stale after this age (ms). */
+export const STALE_EVIDENCE_MS = 1000 * 60 * 60 * 24;
+
+function ageMs(iso: string): number {
+  const t = Date.parse(iso);
+  if (Number.isNaN(t)) return Number.POSITIVE_INFINITY;
+  return Date.now() - t;
+}
+
 export async function evaluateMissionHealth(missionId: string): Promise<HealthCheckResult> {
   const repo = getRepository();
   const state = await getMissionControlState(missionId);
   const findings: string[] = [];
   const remediation: string[] = [];
 
-  const staleMs = Date.now() - Date.parse(state.updated_at);
+  const staleMs = ageMs(state.updated_at);
   if (staleMs > 1000 * 60 * 60) {
     findings.push("stale mission state");
     remediation.push("Trigger supervisor reassessment and refresh handoff");
@@ -59,10 +71,37 @@ export async function evaluateMissionHealth(missionId: string): Promise<HealthCh
     remediation.push("Run dispatcher reconcile to repair external mapping");
   }
 
-  const waitingHumanAged = state.blockers.filter((row) => row.requires_human && !row.resolved);
-  if (waitingHumanAged.length > 0) {
+  const divergentMapping = state.workstreams.filter(
+    (row) => row.linear_issue_id && row.status === "PENDING",
+  );
+  if (divergentMapping.length > 0) {
+    findings.push("state divergence: linear mapping present while workstream still PENDING");
+    remediation.push("Reconcile workstream status to DISPATCHED or clear stale linear_issue_id");
+  }
+
+  const waitingHuman = state.blockers.filter((row) => row.requires_human && !row.resolved);
+  const waitingHumanOverSla = waitingHuman.filter(
+    (row) => ageMs(row.opened_at) > WAITING_HUMAN_SLA_MS,
+  );
+  if (waitingHuman.length > 0 && waitingHumanOverSla.length === 0) {
+    findings.push("waiting-human blocker within SLA");
+    remediation.push("Prepare owner approval package before SLA breach");
+  }
+  if (waitingHumanOverSla.length > 0) {
     findings.push("waiting-human blockers over SLA");
     remediation.push("Escalate to owner with explicit approval package");
+  }
+
+  const staleEvidence = state.handoffs.some((handoff) =>
+    handoff.evidence.some(
+      (ev) =>
+        ev.freshness === "stale" ||
+        (typeof ev.timestamp === "string" && ageMs(ev.timestamp) > STALE_EVIDENCE_MS),
+    ),
+  );
+  if (staleEvidence) {
+    findings.push("stale evidence attached to handoff");
+    remediation.push("Re-collect evidence and re-verify before treating claims as current");
   }
 
   const completedNoArtifact = state.workstreams
@@ -82,8 +121,12 @@ export async function evaluateMissionHealth(missionId: string): Promise<HealthCh
 
   let status: HealthStatus = "HEALTHY";
   if (findings.length > 0) status = "WARNING";
-  if (failedExecution.length > 0 || waitingHumanAged.length > 0) status = "BLOCKED";
-  if (duplicates.length > 0 || completedNoArtifact.length > 0) status = "CRITICAL";
+  if (failedExecution.length > 0 || waitingHumanOverSla.length > 0 || orphanLinear.length > 0) {
+    status = "BLOCKED";
+  }
+  if (duplicates.length > 0 || completedNoArtifact.length > 0 || divergentMapping.length > 0) {
+    status = "CRITICAL";
+  }
 
   return {
     mission_id: missionId,
@@ -91,4 +134,15 @@ export async function evaluateMissionHealth(missionId: string): Promise<HealthCh
     findings,
     remediation,
   };
+}
+
+/** Continuous health scan across missions in the runtime store. */
+export async function evaluateAllMissionsHealth(): Promise<HealthCheckResult[]> {
+  const repo = getRepository();
+  const missions = await repo.listMissions();
+  const results: HealthCheckResult[] = [];
+  for (const mission of missions) {
+    results.push(await evaluateMissionHealth(mission.mission_id));
+  }
+  return results;
 }

@@ -38,6 +38,10 @@
 - Capability router + operator handle: `apps/web/src/lib/services/capability-router.ts`
 - Control Plane pipeline orchestrator: `apps/web/src/lib/services/control-plane-pipeline.ts`
 - Mission control-plane API: `apps/web/src/app/api/missions/[id]/control-plane/route.ts`
+- Runtime reconcile after external actions: `apps/web/src/lib/services/runtime-reconcile.ts`
+- Independent Verifier: `apps/web/src/lib/services/verifier.ts`
+- Independent Result Integrator: `apps/web/src/lib/services/result-integrator.ts`
+- Architecture gap audit: `docs/aipos/ARCHITECTURE_GAP_AUDIT.md`
 
 ## Continuity contract behavior
 
@@ -65,3 +69,9 @@ Current tracked counters:
 - Git/GitHub remain code/contracts/ADR source.
 - n8n remains execution truth.
 - App DB remains runtime transaction system.
+
+## Health Supervisor states
+
+- `HEALTHY` / `WARNING` / `BLOCKED` / `CRITICAL` with findings + remediation
+- Continuous scan: `evaluateAllMissionsHealth()`
+- Detects stale missions, failed executions, duplicate workstreams, missing handoffs, orphan Linear mappings, state divergence, stale evidence, waiting-human SLA breaches, completed work without artifacts

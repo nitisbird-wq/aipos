@@ -4,6 +4,7 @@ import {
   getMissionControlState,
   upsertMissionControlState,
 } from "@/lib/services/control-plane-state";
+import { reconcileRuntimeAfterExternalAction } from "@/lib/services/runtime-reconcile";
 
 export type LinearDispatchAdapter = {
   searchByCorrelationId: (correlationId: string) => Promise<{ id: string; title: string } | null>;
@@ -83,6 +84,21 @@ export async function dispatchWorkstreams(input: {
       });
       existing.status = "BLOCKED";
       existing.updated_at = nowIso();
+      await reconcileRuntimeAfterExternalAction({
+        missionId: input.missionId,
+        actor: input.actor,
+        evidence: {
+          action: "linear.search",
+          correlation_id: correlationId,
+          workstream_id: stream.workstream_id,
+          ok: false,
+          detail: "Search failed; fail-closed before create",
+        },
+        workstreamPatch: {
+          workstream_id: stream.workstream_id,
+          status: "BLOCKED",
+        },
+      });
       continue;
     }
 
@@ -112,6 +128,23 @@ export async function dispatchWorkstreams(input: {
         workstream_id: stream.workstream_id,
         linear_issue_id: found.id,
         reused: false,
+      });
+      await reconcileRuntimeAfterExternalAction({
+        missionId: input.missionId,
+        actor: input.actor,
+        evidence: {
+          action: "linear.create",
+          correlation_id: correlationId,
+          external_id: found.id,
+          workstream_id: stream.workstream_id,
+          ok: true,
+          detail: "External issue mapped and write-back applied",
+        },
+        workstreamPatch: {
+          workstream_id: stream.workstream_id,
+          linear_issue_id: found.id,
+          status: "DISPATCHED",
+        },
       });
     } catch {
       repaired.push({
@@ -179,6 +212,22 @@ export async function repairDispatchWriteback(input: {
     next_action: "Prepare worker-ready packages",
     responsible: "supervisor",
     updated_at: nowIso(),
+  });
+  await reconcileRuntimeAfterExternalAction({
+    missionId: input.missionId,
+    actor: input.actor,
+    evidence: {
+      action: "linear.repair",
+      external_id: input.linearIssueId,
+      workstream_id: input.workstreamId,
+      ok: true,
+      detail: "Repaired local write-back after external create",
+    },
+    workstreamPatch: {
+      workstream_id: input.workstreamId,
+      linear_issue_id: input.linearIssueId,
+      status: "DISPATCHED",
+    },
   });
   return nextRows.find((row) => row.workstream_id === input.workstreamId) ?? null;
 }
