@@ -80,10 +80,12 @@ Current tracked counters:
 ## Owner Mission Standard implementation status
 
 - Stage 0 PR verification gate: COMPLETE; evidence in `docs/aipos/PR21_STAGE0_VERIFICATION.md`.
-- Stage 1 Mission Blueprint backend/API: IN PROGRESS.
+- Stage 1 Mission Blueprint & Stage Map: COMPLETE; evidence in `docs/aipos/STAGE1_BLUEPRINT_VERIFICATION.md`.
   - Implemented `mission-blueprint.v1`, numbered stages, dependencies, entry/exit criteria, critical path, immutable audit-backed revisions, explicit approval event, and evidence-only completion progress.
-  - Control-plane dispatch now reads the persisted latest approved Blueprint; request-body assertions cannot approve.
+  - Control-plane dispatch reads the persisted latest approved Blueprint; request-body assertions cannot approve.
+  - Owner mission UI shows stage X/Y, progress, remaining path, critical path, evidence, revision history, and one next action.
+  - Owner can edit stage contracts, add/remove/reorder stages, save a new revision, and explicitly approve the latest revision.
   - API: GET/POST `/api/missions/{id}/blueprint`; POST `/api/missions/{id}/blueprint/approve`.
-  - CI #72: SUCCESS.
-  - Remaining Stage 1 exit gap: Owner-facing Mission UI for stage X/Y, revision editing/review, evidence, remaining path, and one next action.
+  - CI #72, #76, and #77: SUCCESS.
+- Stage 2 Living Capability Registry is the next executable implementation stage.
 - Stages 2–7 remain implementation pending. Real Linear, workers, n8n and production execution are not enabled by this Stage 1 work.
