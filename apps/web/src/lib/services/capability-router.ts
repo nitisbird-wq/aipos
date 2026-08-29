@@ -11,6 +11,9 @@ export type RoutingDecision = {
   tools: string[];
   authority: AuthorityDecision;
   output: "ROUTED" | "UNMET_CAPABILITY" | "HUMAN";
+  routing_mode: "KEEP" | "ASSIST" | "HANDOFF" | "SPLIT" | "HUMAN_REQUIRED";
+  coverage: Array<{ requirement: string; capabilities: string[]; operators: string[] }>;
+  explanation: string[];
 };
 
 /**
@@ -66,17 +69,32 @@ export function routeCapabilities(input: {
   risk_level: "L0" | "L1" | "L2" | "L3" | "L4";
   reversible?: boolean;
   delegated?: boolean;
+  current_operator?: string;
 }): RoutingDecision {
-  const matched = input.capabilities.filter(
-    (cap) =>
-      capabilityIsRoutable(cap) &&
-      input.required_capabilities.some(
-        (req) =>
-          req === cap.family || req.startsWith(`${cap.family}.`) || cap.family.startsWith(req),
-      ),
-  );
+  const coverage = input.required_capabilities.map((requirement) => {
+    const capabilities = input.capabilities.filter(
+      (capability) =>
+        capabilityIsRoutable(capability) &&
+        (requirement === capability.family ||
+          requirement.startsWith(`${capability.family}.`) ||
+          capability.family.startsWith(requirement)),
+    );
+    return {
+      requirement,
+      capabilities: capabilities.map((capability) => capability.name),
+      operators: Array.from(new Set(capabilities.flatMap(operatorsForCapability))),
+      rows: capabilities,
+    };
+  });
+  const missing = coverage.filter((row) => row.capabilities.length === 0 || row.operators.length === 0);
+  const authority = evaluateAuthorityDecision({
+    proposed_action: input.task,
+    risk_level: input.risk_level,
+    reversible: input.reversible ?? true,
+    delegated: input.delegated ?? missing.length === 0,
+  });
 
-  if (matched.length === 0) {
+  if (missing.length > 0) {
     return {
       task: input.task,
       required_capabilities: input.required_capabilities,
@@ -84,26 +102,41 @@ export function routeCapabilities(input: {
       primary: "HUMAN",
       support: [],
       tools: [],
-      authority: evaluateAuthorityDecision({
-        proposed_action: input.task,
-        risk_level: input.risk_level,
-        reversible: input.reversible ?? true,
-        delegated: input.delegated ?? false,
-      }),
+      authority,
       output: "UNMET_CAPABILITY",
+      routing_mode: "HUMAN_REQUIRED",
+      coverage: coverage.map(({ requirement, capabilities, operators }) => ({
+        requirement,
+        capabilities,
+        operators,
+      })),
+      explanation: missing.map(
+        (row) => `No verified routable operator covers ${row.requirement}`,
+      ),
     };
   }
 
-  const eligible = Array.from(new Set(matched.flatMap(operatorsForCapability)));
-  const primary = eligible[0] ?? "HUMAN";
-  const support = eligible.slice(1, 3);
-  const tools = matched.map((m) => m.name);
-  const authority = evaluateAuthorityDecision({
-    proposed_action: input.task,
-    risk_level: input.risk_level,
-    reversible: input.reversible ?? true,
-    delegated: input.delegated ?? true,
-  });
+  const matched = Array.from(new Set(coverage.flatMap((row) => row.rows)));
+  const eligible = Array.from(new Set(coverage.flatMap((row) => row.operators)));
+  const common = eligible.filter((operator) =>
+    coverage.every((row) => row.operators.includes(operator)),
+  );
+  const primary = common[0] ?? eligible[0] ?? "HUMAN";
+  const support = eligible.filter((operator) => operator !== primary).slice(0, 3);
+  const hasPartial = matched.some(
+    (capability) => capability.status?.trim().toUpperCase() === "PARTIAL",
+  );
+
+  let routingMode: RoutingDecision["routing_mode"];
+  if (input.current_operator && !eligible.includes(input.current_operator)) {
+    routingMode = "HANDOFF";
+  } else if (common.length === 0 && coverage.length > 1) {
+    routingMode = "SPLIT";
+  } else if (hasPartial || support.length > 0) {
+    routingMode = "ASSIST";
+  } else {
+    routingMode = "KEEP";
+  }
 
   return {
     task: input.task,
@@ -111,9 +144,22 @@ export function routeCapabilities(input: {
     eligible_operators: eligible,
     primary,
     support,
-    tools,
+    tools: matched.map((capability) => capability.name),
     authority,
     output: primary === "HUMAN" ? "HUMAN" : "ROUTED",
+    routing_mode: routingMode,
+    coverage: coverage.map(({ requirement, capabilities, operators }) => ({
+      requirement,
+      capabilities,
+      operators,
+    })),
+    explanation: [
+      `All ${coverage.length} required capability families have routable coverage`,
+      `Selected ${primary} as primary`,
+      routingMode === "SPLIT"
+        ? "No single operator covers every requirement; split by capability"
+        : `Routing mode ${routingMode} is the least disruptive verified fit`,
+    ],
   };
 }
 
