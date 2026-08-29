@@ -75,3 +75,15 @@ Current tracked counters:
 - `HEALTHY` / `WARNING` / `BLOCKED` / `CRITICAL` with findings + remediation
 - Continuous scan: `evaluateAllMissionsHealth()`
 - Detects stale missions, failed executions, duplicate workstreams, missing handoffs, orphan Linear mappings, state divergence, stale evidence, waiting-human SLA breaches, completed work without artifacts
+
+
+## Owner Mission Standard implementation status
+
+- Stage 0 PR verification gate: COMPLETE; evidence in `docs/aipos/PR21_STAGE0_VERIFICATION.md`.
+- Stage 1 Mission Blueprint backend/API: IN PROGRESS.
+  - Implemented `mission-blueprint.v1`, numbered stages, dependencies, entry/exit criteria, critical path, immutable audit-backed revisions, explicit approval event, and evidence-only completion progress.
+  - Control-plane dispatch now reads the persisted latest approved Blueprint; request-body assertions cannot approve.
+  - API: GET/POST `/api/missions/{id}/blueprint`; POST `/api/missions/{id}/blueprint/approve`.
+  - CI #72: SUCCESS.
+  - Remaining Stage 1 exit gap: Owner-facing Mission UI for stage X/Y, revision editing/review, evidence, remaining path, and one next action.
+- Stages 2–7 remain implementation pending. Real Linear, workers, n8n and production execution are not enabled by this Stage 1 work.
