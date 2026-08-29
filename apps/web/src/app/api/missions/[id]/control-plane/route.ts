@@ -32,13 +32,11 @@ export async function POST(req: NextRequest, ctx: Ctx) {
     const { id } = await ctx.params;
     const body = (await req.json().catch(() => ({}))) as {
       simulate_worker_pass?: boolean;
-      blueprint_approved?: boolean;
     };
     const result = await runControlPlanePipeline({
       missionId: id,
       actor: session.actor,
       simulateWorkerPass: body.simulate_worker_pass !== false,
-      blueprintApproved: body.blueprint_approved === true,
     });
     return jsonOk({ ok: true, ...result });
   } catch (err) {
@@ -48,7 +46,7 @@ export async function POST(req: NextRequest, ctx: Ctx) {
     if (err instanceof Error && err.message === "BLUEPRINT_APPROVAL_REQUIRED") {
       return jsonError(
         "BLUEPRINT_APPROVAL_REQUIRED",
-        "Explicit Blueprint approval is required before dispatch",
+        "A persisted, explicitly approved Blueprint revision is required before dispatch",
         409,
       );
     }
