@@ -26,12 +26,32 @@ export type OperatorHandle = {
   error: (runId: string) => Promise<string | null>;
 };
 
+const NON_ROUTABLE_CAPABILITY_STATES = new Set([
+  "UNVALIDATED",
+  "UNVERIFIED",
+  "UNAVAILABLE",
+  "REVERIFY_REQUIRED",
+  "DEGRADED",
+]);
+
+function capabilityIsRoutable(capability: Capability): boolean {
+  const state = capability.status?.trim().toUpperCase();
+  return capability.enabled !== false && (!state || !NON_ROUTABLE_CAPABILITY_STATES.has(state));
+}
+
 function operatorsForCapability(capability: Capability): string[] {
   const rows = capability.specialists ?? [];
   return rows
-    .map((row) =>
-      typeof row === "object" && row ? (row as { specialist?: string }).specialist : "",
-    )
+    .map((row) => {
+      if (typeof row !== "object" || !row) return "";
+      const specialist = row as {
+        specialist?: string;
+        specialist_id?: string;
+        enabled?: boolean;
+      };
+      if (specialist.enabled === false) return "";
+      return specialist.specialist ?? specialist.specialist_id ?? "";
+    })
     .filter((row): row is string => Boolean(row));
 }
 
@@ -49,7 +69,7 @@ export function routeCapabilities(input: {
 }): RoutingDecision {
   const matched = input.capabilities.filter(
     (cap) =>
-      cap.enabled !== false &&
+      capabilityIsRoutable(cap) &&
       input.required_capabilities.some(
         (req) =>
           req === cap.family || req.startsWith(`${cap.family}.`) || cap.family.startsWith(req),
