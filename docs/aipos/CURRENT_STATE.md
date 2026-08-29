@@ -94,5 +94,12 @@ Current tracked counters:
   - Control Plane consumes Living Registry truth when populated and fails closed on any uncovered requirement.
   - API: GET/POST `/api/capabilities/registry`; POST `/api/capabilities/registry/{id}/retest`.
   - CI #90: SUCCESS.
-- Stage 3 Stage Artifact Pipeline is the next executable implementation stage.
-- Stages 3–7 remain implementation pending. Real Linear, workers, n8n and production execution are not enabled by Stage 1–2 work.
+- Stage 3 Stage Artifact Pipeline: COMPLETE; evidence in `docs/aipos/STAGE3_ARTIFACT_VERIFICATION.md`.
+  - Immutable audit-backed `stage-artifact.v1` snapshots preserve revision/parent/rollback lineage and checksums.
+  - Artifact promotion requires editable/final/preview URIs plus artifact-specific QA evidence.
+  - Acceptance emits canonical handoff and advances the next action while keeping accepted artifacts accessible.
+  - Owner UI supports stage selection, draft/final save, compare, download/preview, rollback, QA evidence, and acceptance.
+  - API: stage artifact list/save/compare, rollback, and accept.
+  - CI #96 and #104: SUCCESS.
+- Stage 4 Policy Intelligence is the next executable implementation stage.
+- Stages 4–7 remain implementation pending. Real Linear, workers, n8n and production execution are not enabled by Stage 1–3 work.
