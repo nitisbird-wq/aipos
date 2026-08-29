@@ -24,6 +24,7 @@ import { nowIso } from "@/lib/ids";
 export type ControlPlanePipelineResult = {
   mission_id: string;
   supervisor: Awaited<ReturnType<typeof runSupervisorAssessment>>;
+  routing: ReturnType<typeof routeCapabilities>;
   dispatch: Awaited<ReturnType<typeof dispatchWorkstreams>>;
   assignments: Awaited<ReturnType<typeof buildWorkerAssignmentPackages>>;
   verifications: Array<Awaited<ReturnType<typeof verifyAndIntegrateHandoff>>>;
@@ -41,10 +42,14 @@ export async function runControlPlanePipeline(input: {
   missionId: string;
   actor: string;
   simulateWorkerPass?: boolean;
+  blueprintApproved?: boolean;
 }): Promise<ControlPlanePipelineResult> {
   const repo = getRepository();
   const mission = await repo.getMissionById(input.missionId);
   if (!mission) throw new Error("MISSION_NOT_FOUND");
+  if (input.blueprintApproved !== true) {
+    throw new Error("BLUEPRINT_APPROVAL_REQUIRED");
+  }
 
   await initializeMissionControlState(input.missionId);
   const supervisor = await runSupervisorAssessment(input.missionId);
@@ -86,13 +91,16 @@ export async function runControlPlanePipeline(input: {
   });
   const workstreams = decomposeMissionStrategy(strategy);
 
-  // Capability routing (does not distort task); results stored for operator packages.
-  routeCapabilities({
+  // Capability truth gate: dispatch is forbidden when no routable operator is verified.
+  const routing = routeCapabilities({
     task: strategy.objective,
     required_capabilities: workstreams.flatMap((ws) => ws.required_capabilities),
     capabilities: await repo.listCapabilities(),
     risk_level: analysis.operational_risk,
   });
+  if (routing.output !== "ROUTED") {
+    throw new Error(`CAPABILITY_ROUTE_REQUIRED:${routing.output}`);
+  }
 
   const human_gate = await applyHumanGate({
     missionId: input.missionId,
@@ -161,6 +169,7 @@ export async function runControlPlanePipeline(input: {
   return {
     mission_id: input.missionId,
     supervisor,
+    routing,
     dispatch,
     assignments,
     verifications,
