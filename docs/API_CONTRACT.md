@@ -84,6 +84,9 @@ PATCH /missions/{id}/status
 |---|---|
 | GET | `/policies` |
 | GET | `/capabilities` |
+| GET | `/capabilities/registry` | Living capability truth with evidence and effective expiry status |
+| POST | `/capabilities/registry` | Save an immutable capability truth revision |
+| POST | `/capabilities/registry/{id}/retest` | Record PASS/PARTIAL/FAIL retest evidence and downgrade when needed |
 
 ## Idempotency (required behavior)
 
