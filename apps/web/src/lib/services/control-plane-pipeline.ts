@@ -21,6 +21,10 @@ import { applyHumanGate } from "@/lib/services/human-gate";
 import { getMissionControlState } from "@/lib/services/control-plane-state";
 import { nowIso } from "@/lib/ids";
 import { getApprovedMissionBlueprint } from "@/lib/services/mission-blueprint";
+import {
+  listCapabilityRegistry,
+  registryEntriesToCapabilities,
+} from "@/lib/services/capability-registry";
 
 export type ControlPlanePipelineResult = {
   mission_id: string;
@@ -92,10 +96,13 @@ export async function runControlPlanePipeline(input: {
   const workstreams = decomposeMissionStrategy(strategy);
 
   // Capability truth gate: dispatch is forbidden when no routable operator is verified.
+  const registry = await listCapabilityRegistry();
+  const capabilities =
+    registry.length > 0 ? registryEntriesToCapabilities(registry) : await repo.listCapabilities();
   const routing = routeCapabilities({
     task: strategy.objective,
     required_capabilities: workstreams.flatMap((ws) => ws.required_capabilities),
-    capabilities: await repo.listCapabilities(),
+    capabilities,
     risk_level: analysis.operational_risk,
   });
   if (routing.output !== "ROUTED") {
