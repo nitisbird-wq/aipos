@@ -74,6 +74,7 @@ function stages(firstStatus: MissionStage["status"] = "PLANNED"): MissionStage[]
   ];
 }
 
+// prettier-ignore
 describe("Mission Blueprint revisions and approval", () => {
   it("creates an editable revision, records approval, and exposes evidence progress", async () => {
     const missionId = await seedMission();
