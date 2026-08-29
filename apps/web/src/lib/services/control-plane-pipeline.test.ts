@@ -5,6 +5,7 @@ import { DevFileRepository } from "@/lib/repositories/dev-file-store";
 import { analyzeIntake, confirmIntake, createIntake } from "@/lib/services/intake-service";
 import { runControlPlanePipeline } from "@/lib/services/control-plane-pipeline";
 import { approveMissionBlueprint, saveMissionBlueprint } from "@/lib/services/mission-blueprint";
+import { saveCapabilityRegistryEntry } from "@/lib/services/capability-registry";
 
 const tmpRoot = path.join(process.cwd(), ".data-test-cp-pipeline");
 
@@ -67,6 +68,32 @@ describe("control plane pipeline", () => {
       revision: blueprint.revision,
       actor: "operator:test",
     });
+
+    for (const family of ["docs", "code", "testing", "verification"]) {
+      await saveCapabilityRegistryEntry({
+        capability_id: `CAP-${family.toUpperCase()}`,
+        family,
+        name: `Verified ${family}`,
+        description: `Runtime-tested ${family} capability`,
+        status: "VERIFIED",
+        enabled: true,
+        operators: [
+          {
+            operator_id: "cursor",
+            role: "PRIMARY",
+            enabled: true,
+            evidence_refs: [`evidence:${family}:operator`],
+          },
+        ],
+        tools: [family],
+        evidence_refs: [`evidence:${family}:pass`],
+        verified_at: "2026-08-29T00:00:00.000Z",
+        expires_at: "2027-08-29T00:00:00.000Z",
+        retest_due_at: "2027-07-29T00:00:00.000Z",
+        last_test_outcome: "PASS",
+        actor: "operator:test",
+      });
+    }
 
     const result = await runControlPlanePipeline({
       missionId: confirmed.mission_id,
