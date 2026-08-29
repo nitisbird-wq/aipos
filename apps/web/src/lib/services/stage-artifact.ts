@@ -240,7 +240,7 @@ export async function acceptStageArtifact(input: {
     run_id: `ARTIFACT-ACCEPT-${artifact.artifact_id}-R${artifact.revision}`,
     status: "PASS",
     summary: `Accepted ${input.stageId} artifact revision ${artifact.revision}`,
-    mission_state: nextStage ? "EXECUTING" : "READY_FOR_REVIEW",
+    mission_state: nextStage ? "EXECUTING" : "INTEGRATING",
     completed_work: [artifact.final_uri!],
     verification: artifact.qa_evidence.map(
       (evidence) => `${evidence.check}:${evidence.status}`,
@@ -253,7 +253,7 @@ export async function acceptStageArtifact(input: {
   });
   await appendHandoff(input.missionId, input.actor, handoff);
   await upsertMissionControlState(input.missionId, input.actor, {
-    mission_state: nextStage ? "EXECUTING" : "READY_FOR_REVIEW",
+    mission_state: nextStage ? "EXECUTING" : "INTEGRATING",
     next_action: nextAction,
     responsible: nextStage?.owner ?? "aipos_supervisor",
   });
