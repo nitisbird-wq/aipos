@@ -28,6 +28,9 @@ Chat-first aliases may wrap the same services (`/api/chat`, `/api/chat/confirm`)
 | POST | `/missions/{id}/transitions` | Allowed transition commands only |
 | GET | `/missions/{id}/audit` | Audit events (append-only) |
 | POST | `/missions/{id}/notion/retry` | Retry Notion sync when `sync_status=failed` |
+| GET | `/missions/{id}/blueprint` | Latest Blueprint and immutable revision history |
+| POST | `/missions/{id}/blueprint` | Save a new editable Blueprint revision |
+| POST | `/missions/{id}/blueprint/approve` | Approve the latest Blueprint revision |
 | GET | `/missions/{id}/control-plane` | Control Plane snapshot: state, health, supervisor assessment |
 | POST | `/missions/{id}/control-plane` | Run Control Plane v1 pipeline (Supervisor → dispatch → verify → integrate) |
 
@@ -49,14 +52,14 @@ Chat-first aliases may wrap the same services (`/api/chat`, `/api/chat/confirm`)
 Request body:
 
 ```json
-{ "blueprint_approved": true, "simulate_worker_pass": true }
+{ "simulate_worker_pass": true }
 ```
 
-- `blueprint_approved=true` is required. Mission confirmation alone is not Blueprint approval and cannot dispatch.
+- A persisted `mission_blueprint:approved` event for the latest revision is required. Mission confirmation or a request-body assertion is not Blueprint approval and cannot dispatch.
 - Default `simulate_worker_pass=true` runs the pipeline with simulated worker handoff success (no external worker).
 - Set `simulate_worker_pass=false` to require real worker handoff evidence (pipeline may stall at verification).
 
-Response includes `supervisor`, `routing`, `dispatch`, `assignments`, `verifications`, `integration`, `health`, `human_gate`, and `state`.
+Response includes the approved `blueprint`, `supervisor`, `routing`, `dispatch`, `assignments`, `verifications`, `integration`, `health`, `human_gate`, and `state`.
 
 Errors:
 
