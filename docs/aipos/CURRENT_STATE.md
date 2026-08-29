@@ -87,5 +87,12 @@ Current tracked counters:
   - Owner can edit stage contracts, add/remove/reorder stages, save a new revision, and explicitly approve the latest revision.
   - API: GET/POST `/api/missions/{id}/blueprint`; POST `/api/missions/{id}/blueprint/approve`.
   - CI #72, #76, and #77: SUCCESS.
-- Stage 2 Living Capability Registry is the next executable implementation stage.
-- Stages 2–7 remain implementation pending. Real Linear, workers, n8n and production execution are not enabled by this Stage 1 work.
+- Stage 2 Capability & Team Intelligence: COMPLETE; evidence in `docs/aipos/STAGE2_CAPABILITY_VERIFICATION.md`.
+  - Living `capability-registry.v1` records immutable audit-backed truth revisions.
+  - VERIFIED/PARTIAL/UNVERIFIED/UNAVAILABLE/REVERIFY_REQUIRED/DEGRADED states include evidence, expiry, retest, and downgrade behavior.
+  - Routing reports requirement coverage and explainable KEEP/ASSIST/HANDOFF/SPLIT/HUMAN_REQUIRED decisions.
+  - Control Plane consumes Living Registry truth when populated and fails closed on any uncovered requirement.
+  - API: GET/POST `/api/capabilities/registry`; POST `/api/capabilities/registry/{id}/retest`.
+  - CI #90: SUCCESS.
+- Stage 3 Stage Artifact Pipeline is the next executable implementation stage.
+- Stages 3–7 remain implementation pending. Real Linear, workers, n8n and production execution are not enabled by Stage 1–2 work.
