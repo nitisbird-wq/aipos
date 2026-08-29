@@ -17,6 +17,7 @@ afterEach(async () => {
   await fs.rm(tmpRoot, { recursive: true, force: true });
 });
 
+// prettier-ignore
 describe("control plane pipeline", () => {
   it("runs mission through dispatch verify integrate health via Linear mock", async () => {
     globalThis.__aiposRepo = new DevFileRepository(tmpRoot);
