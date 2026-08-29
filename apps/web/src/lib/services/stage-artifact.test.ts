@@ -5,6 +5,7 @@ import { DevFileRepository } from "@/lib/repositories/dev-file-store";
 import { analyzeIntake, confirmIntake, createIntake } from "@/lib/services/intake-service";
 import { saveMissionBlueprint } from "@/lib/services/mission-blueprint";
 import {
+  acceptStageArtifact,
   compareStageArtifactSnapshots,
   listStageArtifactSnapshots,
   rollbackStageArtifact,
@@ -107,6 +108,15 @@ describe("Stage Artifact Pipeline", () => {
     expect((await getMissionControlState(missionId)).artifacts[0]?.uri).toBe(
       "artifact://final/r2.pdf",
     );
+    const accepted = await acceptStageArtifact({
+      missionId,
+      stageId: "STAGE-1",
+      actor: "operator:test",
+    });
+    expect(accepted.handoff.status).toBe("PASS");
+    const acceptedState = await getMissionControlState(missionId);
+    expect(acceptedState.handoffs).toHaveLength(1);
+    expect(acceptedState.next_action).toBe("Present completed mission artifacts for Owner review");
   });
 
   it("refuses final promotion without render playbook evidence", async () => {
