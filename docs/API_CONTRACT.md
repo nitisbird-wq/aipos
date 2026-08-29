@@ -46,22 +46,25 @@ Chat-first aliases may wrap the same services (`/api/chat`, `/api/chat/confirm`)
 
 **POST** `/missions/{id}/control-plane`
 
-Request body (optional):
+Request body:
 
 ```json
-{ "simulate_worker_pass": true }
+{ "blueprint_approved": true, "simulate_worker_pass": true }
 ```
 
+- `blueprint_approved=true` is required. Mission confirmation alone is not Blueprint approval and cannot dispatch.
 - Default `simulate_worker_pass=true` runs the pipeline with simulated worker handoff success (no external worker).
 - Set `simulate_worker_pass=false` to require real worker handoff evidence (pipeline may stall at verification).
 
-Response includes `supervisor`, `dispatch`, `assignments`, `verifications`, `integration`, `health`, `human_gate`, and `state`.
+Response includes `supervisor`, `routing`, `dispatch`, `assignments`, `verifications`, `integration`, `health`, `human_gate`, and `state`.
 
 Errors:
 
 | Code | When |
 |---|---|
 | `MISSION_NOT_FOUND` | Unknown mission id |
+| `BLUEPRINT_APPROVAL_REQUIRED` | Explicit Blueprint approval was not supplied |
+| `CAPABILITY_ROUTE_REQUIRED` | No verified/routable capability path exists; dispatch fails closed |
 | `LINEAR_LIVE_MISCONFIGURED` | `LINEAR_ADAPTER=live` without `LINEAR_API_KEY` / `LINEAR_TEAM_ID` |
 
 Linear dispatch uses `LINEAR_ADAPTER=mock` by default (no external writes). Live dispatch requires explicit env configuration.
