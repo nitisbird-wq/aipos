@@ -2,14 +2,16 @@
 
 - **Verification ID:** AIPOS-PR21-STAGE0
 - **Date:** 2026-08-29
-- **Head verified:** `9d2c630798e76a5305b30e7f830904012e0275b6`
+- **Head verified:** `51542d5d546ef2d66e547aa6016420d27f1fb1d1`
 - **PR:** #21 — `cursor/master-continuity-strategy-169c`
-- **Status:** NOT READY — contract gaps remain
+- **Status:** PASS — Stage 0 contract gate; follow-up runtime stages remain pending
 - **Scope:** Read-first verification only. Phase 1–2 production baseline remains frozen.
 
 ## Evidence
 
-- GitHub Actions CI run #51 completed successfully.
+- GitHub Actions CI run #51 completed successfully for the initial canonical requirement commit.
+- GitHub Actions CI run #58 completed successfully for Blueprint/capability corrective gates.
+- GitHub Actions CI run #61 completed successfully for the final Stage 0 head, including interruption checkpoint contract.
 - Secret scan: PASS.
 - Verify job: PASS for install, test DB migration, format, lint, unit tests, build, AIPOS Doctor, critical dependency audit, and advisory high dependency report.
 - PR remains Draft/Open and mergeable.
@@ -50,9 +52,9 @@ Semantic locks remain unchanged:
 | ID | Acceptance case | Current evidence | Result |
 |---|---|---|---|
 | S0-01 | Frozen Phase 1–2 baseline unchanged | PR changed-file inventory; no frozen workflow artifact changed | PASS |
-| S0-02 | Blueprint approval exists before dispatch | `runControlPlanePipeline()` builds strategy and dispatches immediately after confirmed Mission; no explicit Blueprint approval input/event | FAIL |
-| S0-03 | Unverified capability fails closed | `routeCapabilities()` returns HUMAN/UNMET for missing operators, but pipeline discards the routing decision and continues dispatch | FAIL |
-| S0-04 | Primary Mission survives interruption | No primary mission anchor, interruption stack, checkpoint/return event, or resume test exists | UNSUPPORTED |
+| S0-02 | Blueprint approval exists before dispatch | Pipeline/API now require explicit `blueprintApproved` / `blueprint_approved=true`; missing approval fails before dispatch | PASS |
+| S0-03 | Unverified capability fails closed | Explicit non-routable capability states are excluded; pipeline carries routing result and refuses dispatch unless output is `ROUTED` | PASS |
+| S0-04 | Primary Mission survives interruption | `interruption-checkpoint.v1` preserves the primary mission checkpoint and exact return action; persistence/nested stack/automatic resume remain Stage 5 | PASS (contract only) |
 | S0-05 | Evidence-based completion language | Evidence and verifier contracts exist; Owner-visible completion/progress contract is not implemented | PARTIAL |
 | S0-06 | Handoff supports stage continuity | `handoff.v1` preserves mission/workstream/run, completed/remaining work, artifacts, evidence, blockers and next action | PASS |
 | S0-07 | Follow-up requirements are not falsely marked shipped | AIPOS-STD-003 and Issue #22 label them implementation pending | PASS |
@@ -69,14 +71,14 @@ The following are requirements, not shipped runtime capabilities:
 - Scope Guard, WIP limit, forecast and material scope-change re-approval;
 - real Linear E2E, real worker execution, n8n integration, Full Mission E2E and Production Gate.
 
-## Required fixes before PR Ready
+## Stage 0 closeout
 
-1. Add an explicit Blueprint approval gate before `dispatchWorkstreams()`.
-2. Carry capability routing result into the pipeline and block dispatch unless an eligible, verified route or explicit HUMAN path exists.
-3. Add executable acceptance tests for S0-02 and S0-03.
-4. Keep S0-04 as an explicit unsupported Stage 5 requirement unless a bounded continuity contract/test is implemented without claiming the full runtime.
-5. Update PR test evidence after CI on the corrective commit.
+- Blueprint-before-dispatch gate: implemented and tested.
+- Capability truth gate: implemented and tested for explicit unverified states.
+- Primary mission interruption: bounded checkpoint contract and tests added; persistent runtime remains explicitly unsupported.
+- Final terminal evidence: CI run #61 SUCCESS.
+- PR remains Draft; no merge or deployment was performed.
 
 ## Next executable action
 
-Implement the Blueprint approval and capability fail-closed gates on the PR branch, add tests, and require terminal CI evidence. Do not merge or deploy.
+Proceed to Issue #22 Stage 1 — Mission Blueprint & Stage Map. Keep follow-up runtime features labeled pending until representative evidence and Owner-visible behavior exist.
