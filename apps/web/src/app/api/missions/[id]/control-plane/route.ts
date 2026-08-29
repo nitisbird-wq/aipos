@@ -30,16 +30,34 @@ export async function POST(req: NextRequest, ctx: Ctx) {
   try {
     const session = await requireSession();
     const { id } = await ctx.params;
-    const body = (await req.json().catch(() => ({}))) as { simulate_worker_pass?: boolean };
+    const body = (await req.json().catch(() => ({}))) as {
+      simulate_worker_pass?: boolean;
+      blueprint_approved?: boolean;
+    };
     const result = await runControlPlanePipeline({
       missionId: id,
       actor: session.actor,
       simulateWorkerPass: body.simulate_worker_pass !== false,
+      blueprintApproved: body.blueprint_approved === true,
     });
     return jsonOk({ ok: true, ...result });
   } catch (err) {
     if (err instanceof Error && err.message === "MISSION_NOT_FOUND") {
       return jsonError("MISSION_NOT_FOUND", "Mission not found", 404);
+    }
+    if (err instanceof Error && err.message === "BLUEPRINT_APPROVAL_REQUIRED") {
+      return jsonError(
+        "BLUEPRINT_APPROVAL_REQUIRED",
+        "Explicit Blueprint approval is required before dispatch",
+        409,
+      );
+    }
+    if (err instanceof Error && err.message.startsWith("CAPABILITY_ROUTE_REQUIRED")) {
+      return jsonError(
+        "CAPABILITY_ROUTE_REQUIRED",
+        "No verified capability route is available; dispatch failed closed",
+        422,
+      );
     }
     if (err instanceof Error && err.message.includes("LINEAR_LIVE_MISCONFIGURED")) {
       return jsonError(
