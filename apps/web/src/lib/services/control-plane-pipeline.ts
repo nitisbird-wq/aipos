@@ -20,9 +20,11 @@ import { createEvidence } from "@/lib/services/evidence";
 import { applyHumanGate } from "@/lib/services/human-gate";
 import { getMissionControlState } from "@/lib/services/control-plane-state";
 import { nowIso } from "@/lib/ids";
+import { getApprovedMissionBlueprint } from "@/lib/services/mission-blueprint";
 
 export type ControlPlanePipelineResult = {
   mission_id: string;
+  blueprint: NonNullable<Awaited<ReturnType<typeof getApprovedMissionBlueprint>>>;
   supervisor: Awaited<ReturnType<typeof runSupervisorAssessment>>;
   routing: ReturnType<typeof routeCapabilities>;
   dispatch: Awaited<ReturnType<typeof dispatchWorkstreams>>;
@@ -42,14 +44,12 @@ export async function runControlPlanePipeline(input: {
   missionId: string;
   actor: string;
   simulateWorkerPass?: boolean;
-  blueprintApproved?: boolean;
 }): Promise<ControlPlanePipelineResult> {
   const repo = getRepository();
   const mission = await repo.getMissionById(input.missionId);
   if (!mission) throw new Error("MISSION_NOT_FOUND");
-  if (input.blueprintApproved !== true) {
-    throw new Error("BLUEPRINT_APPROVAL_REQUIRED");
-  }
+  const blueprint = await getApprovedMissionBlueprint(input.missionId);
+  if (!blueprint) throw new Error("BLUEPRINT_APPROVAL_REQUIRED");
 
   await initializeMissionControlState(input.missionId);
   const supervisor = await runSupervisorAssessment(input.missionId);
@@ -168,6 +168,7 @@ export async function runControlPlanePipeline(input: {
 
   return {
     mission_id: input.missionId,
+    blueprint,
     supervisor,
     routing,
     dispatch,
