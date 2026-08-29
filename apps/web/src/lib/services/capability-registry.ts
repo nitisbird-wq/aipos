@@ -9,6 +9,7 @@ import type { Capability } from "@/lib/schemas/policy";
 
 const REGISTRY_ACTION = "capability_registry:revision";
 
+// prettier-ignore
 function entryFromEvent(event: { action: string; policy_result: unknown }) {
   if (event.action !== REGISTRY_ACTION) return null;
   const row = (event.policy_result as { capability_registry_entry?: unknown })
@@ -17,6 +18,7 @@ function entryFromEvent(event: { action: string; policy_result: unknown }) {
   return CapabilityRegistryEntrySchema.parse(row);
 }
 
+// prettier-ignore
 export function effectiveCapabilityStatus(
   entry: CapabilityRegistryEntry,
   at = new Date(),
@@ -34,6 +36,7 @@ export function effectiveCapabilityStatus(
   return entry.status;
 }
 
+// prettier-ignore
 export async function listCapabilityRegistry(): Promise<CapabilityRegistryEntry[]> {
   const audit = await getRepository().listAudit({});
   const latest = new Map<string, CapabilityRegistryEntry>();
@@ -53,10 +56,12 @@ export async function listCapabilityRegistry(): Promise<CapabilityRegistryEntry[
     .sort((a, b) => a.family.localeCompare(b.family));
 }
 
+// prettier-ignore
 export async function getCapabilityRegistryEntry(capabilityId: string) {
   return (await listCapabilityRegistry()).find((entry) => entry.capability_id === capabilityId) ?? null;
 }
 
+// prettier-ignore
 export async function saveCapabilityRegistryEntry(input: {
   capability_id: string;
   family: string;
@@ -131,6 +136,7 @@ export async function saveCapabilityRegistryEntry(input: {
   return normalized;
 }
 
+// prettier-ignore
 export async function recordCapabilityRetest(input: {
   capabilityId: string;
   outcome: "PASS" | "PARTIAL" | "FAIL";
@@ -163,6 +169,7 @@ export async function recordCapabilityRetest(input: {
   });
 }
 
+// prettier-ignore
 export function registryEntriesToCapabilities(entries: CapabilityRegistryEntry[]): Capability[] {
   return entries.map((entry) => ({
     capability_id: entry.capability_id,
