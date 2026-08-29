@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { SyncBadge, SyncStatusMessage } from "@/components/SyncBadge";
 import { TransitionControls } from "@/components/TransitionControls";
 import { MissionBlueprintPanel } from "@/components/MissionBlueprintPanel";
+import { MissionArtifactsPanel } from "@/components/MissionArtifactsPanel";
 import type { MissionStatus, CanonicalTransitionCommand } from "@/lib/schemas/mission";
 
 type MissionDetail = {
@@ -239,6 +240,8 @@ export default function MissionDetailPage() {
         desiredOutcome={m.desired_outcome}
         successCriteria={m.success_criteria}
       />
+
+      <MissionArtifactsPanel missionId={m.mission_id} />
 
       <section className="panel p-4">
         <h2 className="text-xl font-bold">Audit log</h2>
