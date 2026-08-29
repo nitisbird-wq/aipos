@@ -62,6 +62,7 @@ function operatorsForCapability(capability: Capability): string[] {
  * Route TASK → REQUIRED CAPABILITIES → ELIGIBLE OPERATORS → PRIMARY/SUPPORT/TOOLS → AUTHORITY → OUTPUT.
  * Do not distort task to fit available operator.
  */
+// prettier-ignore
 export function routeCapabilities(input: {
   task: string;
   required_capabilities: string[];
