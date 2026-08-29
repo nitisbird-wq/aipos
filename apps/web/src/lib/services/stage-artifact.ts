@@ -8,9 +8,11 @@ import {
 } from "@/lib/schemas/stage-artifact";
 import { getLatestMissionBlueprint } from "@/lib/services/mission-blueprint";
 import {
+  appendHandoff,
   getMissionControlState,
   upsertMissionControlState,
 } from "@/lib/services/control-plane-state";
+import { createHandoff } from "@/lib/services/handoff";
 
 const ARTIFACT_ACTION = "stage_artifact:snapshot";
 
@@ -204,6 +206,58 @@ export async function rollbackStageArtifact(input: {
     qa_evidence: target.qa_evidence,
     rollback_of_revision: target.revision,
   });
+}
+
+// prettier-ignore
+export async function acceptStageArtifact(input: {
+  missionId: string;
+  stageId: string;
+  actor: string;
+}) {
+  assertOperatorActor(input.actor);
+  const artifact = await getLatestStageArtifact(input.missionId, input.stageId);
+  if (!artifact || !["FINAL", "ROLLED_BACK"].includes(artifact.status)) {
+    throw new Error("FINAL_STAGE_ARTIFACT_REQUIRED");
+  }
+  verifyFinalSnapshot({
+    kind: artifact.kind,
+    final_uri: artifact.final_uri,
+    preview_uri: artifact.preview_uri,
+    qa_evidence: artifact.qa_evidence,
+  });
+  const blueprint = await getLatestMissionBlueprint(input.missionId);
+  const currentIndex = blueprint?.stages.findIndex((stage) => stage.stage_id === input.stageId) ?? -1;
+  if (!blueprint || currentIndex < 0) throw new Error("BLUEPRINT_STAGE_NOT_FOUND");
+  const nextStage = blueprint.stages
+    .slice(currentIndex + 1)
+    .find((stage) => !["COMPLETED", "CANCELLED"].includes(stage.status));
+  const nextAction = nextStage
+    ? `Continue ${nextStage.stage_id}: ${nextStage.title}`
+    : "Present completed mission artifacts for Owner review";
+  const handoff = createHandoff({
+    mission_id: input.missionId,
+    workstream_id: input.stageId,
+    run_id: `ARTIFACT-ACCEPT-${artifact.artifact_id}-R${artifact.revision}`,
+    status: "PASS",
+    summary: `Accepted ${input.stageId} artifact revision ${artifact.revision}`,
+    mission_state: nextStage ? "EXECUTING" : "READY_FOR_REVIEW",
+    completed_work: [artifact.final_uri!],
+    verification: artifact.qa_evidence.map(
+      (evidence) => `${evidence.check}:${evidence.status}`,
+    ),
+    evidence_refs: artifact.qa_evidence.map((evidence) => evidence.evidence_ref),
+    artifacts: [artifact.editable_uri, artifact.final_uri!, artifact.preview_uri!],
+    next_action: nextAction,
+    requires_human: false,
+    updated_by: input.actor,
+  });
+  await appendHandoff(input.missionId, input.actor, handoff);
+  await upsertMissionControlState(input.missionId, input.actor, {
+    mission_state: nextStage ? "EXECUTING" : "READY_FOR_REVIEW",
+    next_action: nextAction,
+    responsible: nextStage?.owner ?? "aipos_supervisor",
+  });
+  return { artifact, handoff, next_stage: nextStage ?? null };
 }
 
 export function compareStageArtifactSnapshots(
