@@ -1,3 +1,4 @@
+// prettier-ignore
 export type InterruptionKind =
   | "RELATED_IDEA"
   | "SUBTASK"
