@@ -201,6 +201,27 @@ describe("router compatibility", () => {
     expect(decision.primary).toBe("HUMAN");
   });
 
+  it("fails closed for an explicitly unverified capability even when an operator is listed", () => {
+    const decision = routeCapabilities({
+      task: "prepare a regulated-domain recommendation",
+      required_capabilities: ["domain.legal"],
+      capabilities: [
+        {
+          capability_id: "domain.legal.unverified",
+          family: "domain.legal",
+          name: "Legal capability without current evidence",
+          enabled: true,
+          status: "UNVERIFIED",
+          specialists: [{ specialist_id: "agent:legal", enabled: true }],
+        },
+      ],
+      risk_level: "L2",
+    });
+    expect(decision.output).toBe("UNMET_CAPABILITY");
+    expect(decision.eligible_operators).toEqual([]);
+    expect(decision.primary).toBe("HUMAN");
+  });
+
   it("exposes operator dispatch/status/result/evidence/error", async () => {
     const op = createStubOperator("cursor");
     const queued = await op.dispatch({ workstream_id: "WS1" });
