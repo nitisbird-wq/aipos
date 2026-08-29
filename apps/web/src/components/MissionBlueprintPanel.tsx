@@ -35,6 +35,7 @@ type Blueprint = {
   approved_by: string | null;
 };
 
+// prettier-ignore
 export function MissionBlueprintPanel(props: {
   missionId: string;
   desiredOutcome?: string;
