@@ -4,6 +4,10 @@ import { promises as fs } from "fs";
 import { DevFileRepository } from "@/lib/repositories/dev-file-store";
 import { analyzeIntake, confirmIntake, createIntake } from "@/lib/services/intake-service";
 import { runControlPlanePipeline } from "@/lib/services/control-plane-pipeline";
+import {
+  approveMissionBlueprint,
+  saveMissionBlueprint,
+} from "@/lib/services/mission-blueprint";
 
 const tmpRoot = path.join(process.cwd(), ".data-test-cp-pipeline");
 
@@ -37,12 +41,41 @@ describe("control plane pipeline", () => {
     expect(confirmed.ok).toBe(true);
     if (!confirmed.ok) return;
 
+    const blueprint = await saveMissionBlueprint({
+      missionId: confirmed.mission_id,
+      actor: "operator:test",
+      final_outcome: "Verified TypeScript helper",
+      definition_of_done: "Implementation, tests, and evidence pass",
+      stages: [
+        {
+          stage_id: "STAGE-1",
+          order: 1,
+          title: "Implement and verify",
+          objective: "Produce the accepted helper",
+          outputs: ["TypeScript helper", "Test evidence"],
+          dependencies: [],
+          entry_criteria: ["Blueprint approved"],
+          exit_criteria: ["Tests pass"],
+          owner: "worker",
+          status: "PLANNED",
+          evidence_refs: [],
+        },
+      ],
+      critical_path: ["STAGE-1"],
+      next_action: "Dispatch approved work",
+    });
+    await approveMissionBlueprint({
+      missionId: confirmed.mission_id,
+      revision: blueprint.revision,
+      actor: "operator:test",
+    });
+
     const result = await runControlPlanePipeline({
       missionId: confirmed.mission_id,
       actor: "operator:test",
-      blueprintApproved: true,
     });
 
+    expect(result.blueprint.status).toBe("APPROVED");
     expect(result.routing.output).toBe("ROUTED");
     expect(result.dispatch.blocked).toHaveLength(0);
     expect(result.dispatch.dispatched.length).toBeGreaterThan(0);
