@@ -4,10 +4,7 @@ import { promises as fs } from "fs";
 import { DevFileRepository } from "@/lib/repositories/dev-file-store";
 import { analyzeIntake, confirmIntake, createIntake } from "@/lib/services/intake-service";
 import { runControlPlanePipeline } from "@/lib/services/control-plane-pipeline";
-import {
-  approveMissionBlueprint,
-  saveMissionBlueprint,
-} from "@/lib/services/mission-blueprint";
+import { approveMissionBlueprint, saveMissionBlueprint } from "@/lib/services/mission-blueprint";
 
 const tmpRoot = path.join(process.cwd(), ".data-test-cp-pipeline");
 
