@@ -31,6 +31,10 @@ Chat-first aliases may wrap the same services (`/api/chat`, `/api/chat/confirm`)
 | GET | `/missions/{id}/blueprint` | Latest Blueprint and immutable revision history |
 | POST | `/missions/{id}/blueprint` | Save a new editable Blueprint revision |
 | POST | `/missions/{id}/blueprint/approve` | Approve the latest Blueprint revision |
+| GET | `/missions/{id}/stages/{stageId}/artifacts` | List immutable artifact revisions; optional `left`/`right` comparison |
+| POST | `/missions/{id}/stages/{stageId}/artifacts` | Save DRAFT or QA-verified FINAL snapshot |
+| POST | `/missions/{id}/stages/{stageId}/artifacts/rollback` | Create a rollback revision without mutating history |
+| POST | `/missions/{id}/stages/{stageId}/artifacts/accept` | Accept latest final artifact and emit the next canonical handoff |
 | GET | `/missions/{id}/control-plane` | Control Plane snapshot: state, health, supervisor assessment |
 | POST | `/missions/{id}/control-plane` | Run Control Plane v1 pipeline (Supervisor → dispatch → verify → integrate) |
 
