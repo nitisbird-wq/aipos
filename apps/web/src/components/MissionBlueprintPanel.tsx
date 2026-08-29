@@ -16,6 +16,16 @@ type BlueprintStage = {
   evidence_refs: string[];
 };
 
+const STAGE_STATUSES = [
+  "PLANNED",
+  "READY",
+  "IN_PROGRESS",
+  "BLOCKED",
+  "VERIFYING",
+  "COMPLETED",
+  "CANCELLED",
+] as const;
+
 type Blueprint = {
   blueprint_id: string;
   revision: number;
@@ -43,6 +53,7 @@ export function MissionBlueprintPanel(props: {
 }) {
   const [latest, setLatest] = useState<Blueprint | null>(null);
   const [revisions, setRevisions] = useState<Blueprint[]>([]);
+  const [draftStages, setDraftStages] = useState<BlueprintStage[]>([]);
   const [finalOutcome, setFinalOutcome] = useState(props.desiredOutcome || "");
   const [definitionOfDone, setDefinitionOfDone] = useState(
     (props.successCriteria || []).join("; "),
@@ -62,6 +73,9 @@ export function MissionBlueprintPanel(props: {
       setFinalOutcome(body.latest.final_outcome);
       setDefinitionOfDone(body.latest.definition_of_done);
       setNextAction(body.latest.next_action);
+      setDraftStages(body.latest.stages);
+    } else {
+      setDraftStages(initialStages());
     }
   }
 
@@ -91,12 +105,76 @@ export function MissionBlueprintPanel(props: {
     ];
   }
 
+  function updateStage<K extends keyof BlueprintStage>(
+    index: number,
+    key: K,
+    value: BlueprintStage[K],
+  ) {
+    setDraftStages((current) =>
+      current.map((stage, stageIndex) =>
+        stageIndex === index ? { ...stage, [key]: value } : stage,
+      ),
+    );
+  }
+
+  function moveStage(index: number, direction: -1 | 1) {
+    setDraftStages((current) => {
+      const destination = index + direction;
+      if (destination < 0 || destination >= current.length) return current;
+      const reordered = [...current];
+      [reordered[index], reordered[destination]] = [
+        reordered[destination]!,
+        reordered[index]!,
+      ];
+      return reordered.map((stage, stageIndex) => ({ ...stage, order: stageIndex + 1 }));
+    });
+  }
+
+  function addStage() {
+    setDraftStages((current) => {
+      const usedIds = new Set(current.map((stage) => stage.stage_id));
+      let suffix = current.length + 1;
+      while (usedIds.has(`STAGE-${suffix}`)) suffix += 1;
+      const previous = current.at(-1);
+      return [
+        ...current,
+        {
+          stage_id: `STAGE-${suffix}`,
+          order: current.length + 1,
+          title: "New stage",
+          objective: "Define the stage objective",
+          outputs: ["Verified stage output"],
+          dependencies: previous ? [previous.stage_id] : [],
+          entry_criteria: previous ? [`${previous.stage_id} completed`] : ["Blueprint approved"],
+          exit_criteria: ["Exit criteria passes with evidence"],
+          owner: "aipos_supervisor",
+          status: "PLANNED",
+          evidence_refs: [],
+        },
+      ];
+    });
+  }
+
+  function removeStage(index: number) {
+    setDraftStages((current) => {
+      if (current.length <= 1) return current;
+      const removedId = current[index]?.stage_id;
+      return current
+        .filter((_, stageIndex) => stageIndex !== index)
+        .map((stage, stageIndex) => ({
+          ...stage,
+          order: stageIndex + 1,
+          dependencies: stage.dependencies.filter((dependency) => dependency !== removedId),
+        }));
+    });
+  }
+
   async function saveRevision() {
     setBusy(true);
     setMessage(null);
     setError(null);
-    const stages = latest?.stages || initialStages();
-    const criticalPath = latest?.critical_path || stages.map((stage) => stage.stage_id);
+    const stages = draftStages.length > 0 ? draftStages : initialStages();
+    const criticalPath = stages.map((stage) => stage.stage_id);
     const res = await fetch(`/api/missions/${props.missionId}/blueprint`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -235,39 +313,164 @@ export function MissionBlueprintPanel(props: {
         </div>
       </div>
 
-      {latest && (
+      <div className="space-y-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <strong>Editable stage map</strong>
+            <p className="text-xs text-[var(--ink-muted)]">
+              Changes remain a draft until saved as a new revision and explicitly approved.
+            </p>
+          </div>
+          <button className="btn btn-secondary" disabled={busy} type="button" onClick={addStage}>
+            Add stage
+          </button>
+        </div>
         <div className="table-wrap">
           <table className="data">
             <thead>
               <tr>
-                <th>Stage</th>
-                <th>Status</th>
-                <th>Owner</th>
-                <th>Dependencies</th>
-                <th>Exit criteria</th>
+                <th>Order</th>
+                <th>Stage and objective</th>
+                <th>Status and owner</th>
+                <th>Contracts</th>
                 <th>Evidence</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {latest.stages.map((stage) => (
+              {draftStages.map((stage, index) => (
                 <tr key={stage.stage_id}>
                   <td>
                     <strong>
-                      {stage.order}. {stage.title}
+                      {stage.order}. {stage.stage_id}
                     </strong>
-                    <div className="text-xs text-[var(--ink-muted)]">{stage.objective}</div>
                   </td>
-                  <td>{stage.status}</td>
-                  <td>{stage.owner}</td>
-                  <td>{stage.dependencies.join(", ") || "—"}</td>
-                  <td>{stage.exit_criteria.join("; ")}</td>
-                  <td>{stage.evidence_refs.join(", ") || "—"}</td>
+                  <td>
+                    <input
+                      aria-label={`${stage.stage_id} title`}
+                      value={stage.title}
+                      onChange={(event) => updateStage(index, "title", event.target.value)}
+                    />
+                    <textarea
+                      aria-label={`${stage.stage_id} objective`}
+                      value={stage.objective}
+                      onChange={(event) => updateStage(index, "objective", event.target.value)}
+                    />
+                  </td>
+                  <td>
+                    <select
+                      aria-label={`${stage.stage_id} status`}
+                      value={stage.status}
+                      onChange={(event) => updateStage(index, "status", event.target.value)}
+                    >
+                      {STAGE_STATUSES.map((status) => (
+                        <option key={status} value={status}>
+                          {status}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      aria-label={`${stage.stage_id} owner`}
+                      value={stage.owner}
+                      onChange={(event) => updateStage(index, "owner", event.target.value)}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      aria-label={`${stage.stage_id} outputs`}
+                      value={stage.outputs.join(", ")}
+                      onChange={(event) =>
+                        updateStage(
+                          index,
+                          "outputs",
+                          event.target.value.split(",").map((value) => value.trim()).filter(Boolean),
+                        )
+                      }
+                    />
+                    <input
+                      aria-label={`${stage.stage_id} dependencies`}
+                      value={stage.dependencies.join(", ")}
+                      onChange={(event) =>
+                        updateStage(
+                          index,
+                          "dependencies",
+                          event.target.value.split(",").map((value) => value.trim()).filter(Boolean),
+                        )
+                      }
+                    />
+                    <input
+                      aria-label={`${stage.stage_id} entry criteria`}
+                      value={stage.entry_criteria.join("; ")}
+                      onChange={(event) =>
+                        updateStage(
+                          index,
+                          "entry_criteria",
+                          event.target.value.split(";").map((value) => value.trim()).filter(Boolean),
+                        )
+                      }
+                    />
+                    <input
+                      aria-label={`${stage.stage_id} exit criteria`}
+                      value={stage.exit_criteria.join("; ")}
+                      onChange={(event) =>
+                        updateStage(
+                          index,
+                          "exit_criteria",
+                          event.target.value.split(";").map((value) => value.trim()).filter(Boolean),
+                        )
+                      }
+                    />
+                  </td>
+                  <td>
+                    <input
+                      aria-label={`${stage.stage_id} evidence references`}
+                      value={stage.evidence_refs.join(", ")}
+                      onChange={(event) =>
+                        updateStage(
+                          index,
+                          "evidence_refs",
+                          event.target.value.split(",").map((value) => value.trim()).filter(Boolean),
+                        )
+                      }
+                    />
+                  </td>
+                  <td>
+                    <div className="flex flex-wrap gap-1">
+                      <button
+                        aria-label={`Move ${stage.stage_id} up`}
+                        className="btn btn-secondary"
+                        disabled={busy || index === 0}
+                        type="button"
+                        onClick={() => moveStage(index, -1)}
+                      >
+                        ↑
+                      </button>
+                      <button
+                        aria-label={`Move ${stage.stage_id} down`}
+                        className="btn btn-secondary"
+                        disabled={busy || index === draftStages.length - 1}
+                        type="button"
+                        onClick={() => moveStage(index, 1)}
+                      >
+                        ↓
+                      </button>
+                      <button
+                        aria-label={`Remove ${stage.stage_id}`}
+                        className="btn btn-secondary"
+                        disabled={busy || draftStages.length <= 1}
+                        type="button"
+                        onClick={() => removeStage(index)}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      )}
+      </div>
     </section>
   );
 }
