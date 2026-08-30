@@ -38,6 +38,10 @@ Chat-first aliases may wrap the same services (`/api/chat`, `/api/chat/confirm`)
 | GET | `/missions/{id}/blueprint` | Latest Blueprint and immutable revision history |
 | POST | `/missions/{id}/blueprint` | Save a new editable Blueprint revision |
 | POST | `/missions/{id}/blueprint/approve` | Approve the latest Blueprint revision |
+| GET | `/missions/{id}/scope` | List classified scope/idea ledger |
+| POST | `/missions/{id}/scope` | Classify and gate a scope item under WIP policy |
+| POST | `/missions/{id}/scope/{scopeId}/approve` | Approve a material change with explicit trade-off |
+| POST | `/missions/{id}/forecast` | Calculate stage/mission effort range with assumptions |
 | GET | `/missions/{id}/stages/{stageId}/artifacts` | List immutable artifact revisions; optional `left`/`right` comparison |
 | POST | `/missions/{id}/stages/{stageId}/artifacts` | Save DRAFT or QA-verified FINAL snapshot |
 | POST | `/missions/{id}/stages/{stageId}/artifacts/rollback` | Create a rollback revision without mutating history |
