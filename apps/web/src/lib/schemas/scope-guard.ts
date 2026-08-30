@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+// prettier-ignore
 export const ScopeClassificationSchema = z.enum([
   "MUST_NOW",
   "SHOULD_NEXT",
@@ -7,6 +8,7 @@ export const ScopeClassificationSchema = z.enum([
   "REJECT",
 ]);
 
+// prettier-ignore
 export const ScopeLedgerItemSchema = z.object({
   scope_version: z.literal("scope-guard.v1"),
   scope_item_id: z.string().min(1),
@@ -38,6 +40,7 @@ export const ScopeLedgerItemSchema = z.object({
 export type ScopeClassification = z.infer<typeof ScopeClassificationSchema>;
 export type ScopeLedgerItem = z.infer<typeof ScopeLedgerItemSchema>;
 
+// prettier-ignore
 export const MissionForecastSchema = z.object({
   forecast_version: z.literal("mission-forecast.v1"),
   mission_id: z.string().min(1),
