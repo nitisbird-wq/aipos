@@ -9,12 +9,14 @@ import {
 
 const SCOPE_ACTIONS = new Set(["scope_guard:classified", "scope_guard:approved"]);
 
+// prettier-ignore
 function scopeFromEvent(event: { action: string; policy_result: unknown }) {
   if (!SCOPE_ACTIONS.has(event.action)) return null;
   const row = (event.policy_result as { scope_item?: unknown }).scope_item;
   return row ? ScopeLedgerItemSchema.parse(row) : null;
 }
 
+// prettier-ignore
 export async function listScopeLedger(missionId: string): Promise<ScopeLedgerItem[]> {
   const audit = await getRepository().listAudit({ mission_id: missionId });
   const latest = new Map<string, ScopeLedgerItem>();
@@ -27,6 +29,7 @@ export async function listScopeLedger(missionId: string): Promise<ScopeLedgerIte
   return Array.from(latest.values()).sort((a, b) => b.created_at.localeCompare(a.created_at));
 }
 
+// prettier-ignore
 async function appendScope(item: ScopeLedgerItem, actor: string, action: string, reason: string) {
   const mission = await getRepository().getMissionById(item.mission_id);
   if (!mission) throw new Error("MISSION_NOT_FOUND");
@@ -47,6 +50,7 @@ async function appendScope(item: ScopeLedgerItem, actor: string, action: string,
   });
 }
 
+// prettier-ignore
 export async function registerScopeItem(input: {
   missionId: string;
   title: string;
@@ -113,6 +117,7 @@ export async function registerScopeItem(input: {
   return item;
 }
 
+// prettier-ignore
 export async function approveMaterialScopeChange(input: {
   missionId: string;
   scopeItemId: string;
@@ -143,6 +148,7 @@ export async function approveMaterialScopeChange(input: {
   return approved;
 }
 
+// prettier-ignore
 export function calculateMissionForecast(input: {
   missionId: string;
   stages: Array<{
