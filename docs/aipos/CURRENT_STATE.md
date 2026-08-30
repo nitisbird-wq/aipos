@@ -114,5 +114,11 @@ Current tracked counters:
   - Stale evaluation exposes age/threshold and focused reminder data without mutating state.
   - API: GET/POST `/api/mission-navigation`.
   - CI #127: SUCCESS.
-- Stage 6 Scope and WIP Control is the next executable implementation stage.
-- Stages 6–7 remain implementation pending. Real Linear, workers, n8n and production execution are not enabled by Stage 1–5 work.
+- Stage 6 Scope and WIP Control: COMPLETE; evidence in `docs/aipos/STAGE6_SCOPE_VERIFICATION.md`.
+  - Audit-backed `scope-guard.v1` classifies MUST_NOW/SHOULD_NEXT/LATER/REJECT and retains parked ideas.
+  - MUST_NOW requires Definition-of-Done or safety evidence; WIP limit enforces finish-before-expand.
+  - Material time/cost/risk/architecture change is parked until explicit trade-off approval.
+  - Forecast API returns min/max stage and mission ranges with assumptions.
+  - CI #138: SUCCESS.
+- Stage 7 Live Execution is next and credential/production-gated.
+- Real Linear, real workers, Health/Recovery runtime integration, n8n, Full Mission E2E, and Production Gate remain pending.
