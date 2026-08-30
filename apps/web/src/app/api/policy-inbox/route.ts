@@ -12,6 +12,7 @@ import {
   listPolicyCandidates,
 } from "@/lib/services/policy-inbox";
 
+// prettier-ignore
 const CapturePolicyRequestSchema = z.object({
   kind: PolicyCandidateKindSchema,
   title: z.string().min(1),
