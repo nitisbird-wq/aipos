@@ -29,6 +29,7 @@ const CapturePolicyRequestSchema = z.object({
   supersedes: z.array(z.string()).optional(),
 });
 
+// prettier-ignore
 export async function GET() {
   try {
     await requireSession();
@@ -56,6 +57,7 @@ export async function GET() {
   }
 }
 
+// prettier-ignore
 export async function POST(req: NextRequest) {
   try {
     const session = await requireSession();
