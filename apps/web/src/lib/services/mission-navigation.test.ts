@@ -41,11 +41,11 @@ async function seedNavigation() {
   process.env.NOTION_MOCK_SUCCESS = "true";
   const primary = await seedMission(
     "IDEM-NAV-PRIMARY",
-    "Build a persistent mission navigator with checkpoint, resume, and measurable interruption recovery tests",
+    "Build a staged mission dashboard with measurable acceptance criteria",
   );
   const interruption = await seedMission(
     "IDEM-NAV-INT",
-    "Handle an urgent bounded verification and record measurable completion evidence before returning",
+    "Implement a small TypeScript helper with measurable success criteria",
   );
   await setPrimaryMission({
     workspaceId: "owner:nitis",
