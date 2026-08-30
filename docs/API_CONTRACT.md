@@ -88,6 +88,10 @@ PATCH /missions/{id}/status
 |---|---|
 | GET | `/policies` |
 | GET | `/capabilities` |
+| GET | `/policy-inbox` | Policy candidates plus connected-channel coverage/gaps |
+| POST | `/policy-inbox` | Capture a provenance-bearing policy candidate idempotently |
+| POST | `/policy-inbox/{id}/review` | Resolve candidate to ready/rejected/superseded review state |
+| POST | `/policy-inbox/{id}/promote` | Record explicit approval against an existing canonical policy ID |
 | GET | `/capabilities/registry` | Living capability truth with evidence and effective expiry status |
 | POST | `/capabilities/registry` | Save an immutable capability truth revision |
 | POST | `/capabilities/registry/{id}/retest` | Record PASS/PARTIAL/FAIL retest evidence and downgrade when needed |
