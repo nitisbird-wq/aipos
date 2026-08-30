@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   createMockLinearClient,
   getLinearDispatchClient,
@@ -17,6 +17,7 @@ import { decomposeMissionStrategy } from "@/lib/services/decomposer";
 const tmpRoot = path.join(process.cwd(), ".data-test-linear-adapter");
 
 afterEach(async () => {
+  vi.unstubAllGlobals();
   globalThis.__aiposRepo = undefined;
   (globalThis as { __aiposLinearMock?: unknown }).__aiposLinearMock = undefined;
   process.env.LINEAR_ADAPTER = "mock";
