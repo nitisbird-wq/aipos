@@ -120,5 +120,8 @@ Current tracked counters:
   - Material time/cost/risk/architecture change is parked until explicit trade-off approval.
   - Forecast API returns min/max stage and mission ranges with assumptions.
   - CI #138: SUCCESS.
-- Stage 7 Live Execution is next and credential/production-gated.
-- Real Linear, real workers, Health/Recovery runtime integration, n8n, Full Mission E2E, and Production Gate remain pending.
+- Stage 7 Live Execution: BLOCKED AT CREDENTIAL HUMAN GATE; evidence in `docs/aipos/STAGE7_LIVE_EXECUTION_GATE.md`.
+  - Available execution environment has no `LINEAR_ADAPTER`, `LINEAR_API_KEY`, or `LINEAR_TEAM_ID`.
+  - No secret value was read or exposed and no external Linear write was attempted.
+  - Next after credential configuration: one reversible idempotent Real Linear E2E test with mapping/reconciliation evidence.
+- Real Linear, real workers, Health/Recovery runtime integration, n8n, Full Mission E2E, and Production Gate remain pending and unverified.
