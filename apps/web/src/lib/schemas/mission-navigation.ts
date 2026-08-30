@@ -17,7 +17,7 @@ export const MissionInterruptionSchema = z.object({
   interruption_mission_id: z.string().min(1),
   classification: z.enum(["RELATED_IDEA", "SUBTASK", "URGENT_INTERRUPTION", "NEW_MISSION"]),
   reason: z.string().min(1),
-  checkpoint_id: z.string().min(1),
+  return_checkpoint: MissionCheckpointSchema,
   opened_at: z.string().datetime(),
 });
 
