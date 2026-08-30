@@ -6,7 +6,7 @@ Status: **BLOCKED AT HUMAN GATE — API credential required**
 
 ## Current state
 
-Stages 0–6 are implemented and verified on the Draft PR branch. CI #143 completed SUCCESS for the final Stage 0–6 documentation head. Stage 7 must begin with a real Linear end-to-end dispatch according to the approved execution order.
+Stages 0–6 are implemented and verified on the Draft PR branch. CI #143 completed SUCCESS for the final Stage 0–6 documentation head. CI #145 completed SUCCESS for the read-only Linear preflight (secret scan, format, lint, 112 tests, build, AIPOS Doctor, and dependency audit). Stage 7 must begin with a real Linear end-to-end dispatch according to the approved execution order.
 
 ## Credential and connection preflight
 

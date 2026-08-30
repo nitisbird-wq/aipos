@@ -122,6 +122,7 @@ Current tracked counters:
   - CI #138: SUCCESS.
 - Stage 7 Live Execution: BLOCKED AT CREDENTIAL HUMAN GATE; evidence in `docs/aipos/STAGE7_LIVE_EXECUTION_GATE.md`.
   - CI #143 completed SUCCESS for the Stage 0–6 final documentation head.
+  - CI #145 completed SUCCESS for the read-only Linear preflight: secret scan, format, lint, 112 tests, build, AIPOS Doctor, and dependency audit.
   - A read-only authenticated Linear connection verified team `Nitis Pro : AIPOS` and team ID `acee324a-f2d8-416d-96ef-237298e82986`; no external write occurred.
   - `npm run linear:preflight` verifies the runtime API key and exact team mapping without a mutation or secret output.
   - Remaining human gate: configure `LINEAR_ADAPTER=live` and `LINEAR_API_KEY` in the controlled runtime; use the verified `LINEAR_TEAM_ID`.
