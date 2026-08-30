@@ -9,12 +9,14 @@ import {
 
 const NAVIGATION_ACTION = "mission_navigation:snapshot";
 
+// prettier-ignore
 function navigationFromEvent(event: { action: string; policy_result: unknown }) {
   if (event.action !== NAVIGATION_ACTION) return null;
   const row = (event.policy_result as { mission_navigation?: unknown }).mission_navigation;
   return row ? MissionNavigationStateSchema.parse(row) : null;
 }
 
+// prettier-ignore
 async function listNavigationHistory(workspaceId: string) {
   const audit = await getRepository().listAudit({});
   return audit
@@ -24,14 +26,17 @@ async function listNavigationHistory(workspaceId: string) {
     .sort((a, b) => b.revision - a.revision || b.updated_at.localeCompare(a.updated_at));
 }
 
+// prettier-ignore
 export async function getMissionNavigation(workspaceId: string) {
   return (await listNavigationHistory(workspaceId))[0] ?? null;
 }
 
+// prettier-ignore
 async function assertMissionExists(missionId: string) {
   if (!(await getRepository().getMissionById(missionId))) throw new Error("MISSION_NOT_FOUND");
 }
 
+// prettier-ignore
 async function persistNavigation(
   previous: MissionNavigationState | null,
   next: MissionNavigationState,
@@ -55,6 +60,7 @@ async function persistNavigation(
   return next;
 }
 
+// prettier-ignore
 function checkpoint(input: {
   missionId: string;
   summary: string;
@@ -232,6 +238,7 @@ export async function resolveInterruption(input: {
   };
 }
 
+// prettier-ignore
 export async function resumeMission(workspaceId: string) {
   const state = await getMissionNavigation(workspaceId);
   if (!state) throw new Error("PRIMARY_MISSION_NOT_SET");
@@ -245,6 +252,7 @@ export async function resumeMission(workspaceId: string) {
   };
 }
 
+// prettier-ignore
 export function evaluateStaleMissionNavigation(
   state: MissionNavigationState,
   at = new Date(),
