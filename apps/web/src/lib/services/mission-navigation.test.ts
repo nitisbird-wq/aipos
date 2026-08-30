@@ -39,8 +39,14 @@ async function seedNavigation() {
   globalThis.__aiposPersistenceMode = "dev-file";
   process.env.NOTION_ADAPTER = "mock";
   process.env.NOTION_MOCK_SUCCESS = "true";
-  const primary = await seedMission("IDEM-NAV-PRIMARY", "Build the persistent mission navigator");
-  const interruption = await seedMission("IDEM-NAV-INT", "Handle an urgent bounded interruption");
+  const primary = await seedMission(
+    "IDEM-NAV-PRIMARY",
+    "Build a persistent mission navigator with checkpoint, resume, and measurable interruption recovery tests",
+  );
+  const interruption = await seedMission(
+    "IDEM-NAV-INT",
+    "Handle an urgent bounded verification and record measurable completion evidence before returning",
+  );
   await setPrimaryMission({
     workspaceId: "owner:nitis",
     missionId: primary,
