@@ -141,6 +141,51 @@ export function createLiveLinearClient(input: {
   };
 }
 
+export type LinearLivePreflightResult = {
+  authenticated: true;
+  viewer: { id: string; name: string };
+  team: { id: string; name: string; key: string };
+  write_performed: false;
+};
+
+/**
+ * Read-only Stage 7 preflight. Verifies the API key and exact team mapping.
+ * This query cannot create or mutate Linear data.
+ */
+export async function preflightLiveLinearConnection(input: {
+  apiKey: string;
+  teamId: string;
+}): Promise<LinearLivePreflightResult> {
+  const apiKey = input.apiKey.trim();
+  const teamId = input.teamId.trim();
+  if (!apiKey || !teamId) {
+    throw new Error("LINEAR_LIVE_MISCONFIGURED: LINEAR_API_KEY and LINEAR_TEAM_ID required");
+  }
+
+  const data = await linearGraphql<{
+    viewer: { id: string; name: string };
+    team: { id: string; name: string; key: string } | null;
+  }>(
+    apiKey,
+    `query Stage7Preflight($teamId: String!) {
+      viewer { id name }
+      team(id: $teamId) { id name key }
+    }`,
+    { teamId },
+  );
+
+  if (!data.team || data.team.id !== teamId) {
+    throw new Error("LINEAR_TEAM_NOT_ACCESSIBLE");
+  }
+
+  return {
+    authenticated: true,
+    viewer: data.viewer,
+    team: data.team,
+    write_performed: false,
+  };
+}
+
 /**
  * Resolve adapter from env. Live requires LINEAR_ADAPTER=live + LINEAR_API_KEY + LINEAR_TEAM_ID.
  * Fail closed to mock if live is misconfigured (never invent credentials).

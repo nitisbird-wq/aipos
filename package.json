@@ -26,7 +26,8 @@
     "services:up": "tsx scripts/dev/services.ts up",
     "services:down": "tsx scripts/dev/services.ts down",
     "test:api": "tsx scripts/dev/test-api.ts",
-    "verify": "tsx scripts/dev/verify.ts"
+    "verify": "tsx scripts/dev/verify.ts",
+    "linear:preflight": "npm run linear:preflight -w web"
   },
   "devDependencies": {
     "tsx": "^4.19.4"

@@ -121,7 +121,9 @@ Current tracked counters:
   - Forecast API returns min/max stage and mission ranges with assumptions.
   - CI #138: SUCCESS.
 - Stage 7 Live Execution: BLOCKED AT CREDENTIAL HUMAN GATE; evidence in `docs/aipos/STAGE7_LIVE_EXECUTION_GATE.md`.
-  - Available execution environment has no `LINEAR_ADAPTER`, `LINEAR_API_KEY`, or `LINEAR_TEAM_ID`.
-  - No secret value was read or exposed and no external Linear write was attempted.
-  - Next after credential configuration: one reversible idempotent Real Linear E2E test with mapping/reconciliation evidence.
+  - CI #143 completed SUCCESS for the Stage 0–6 final documentation head.
+  - A read-only authenticated Linear connection verified team `Nitis Pro : AIPOS` and team ID `acee324a-f2d8-416d-96ef-237298e82986`; no external write occurred.
+  - `npm run linear:preflight` verifies the runtime API key and exact team mapping without a mutation or secret output.
+  - Remaining human gate: configure `LINEAR_ADAPTER=live` and `LINEAR_API_KEY` in the controlled runtime; use the verified `LINEAR_TEAM_ID`.
+  - Next after credential preflight: one reversible idempotent Real Linear E2E test with mapping/reconciliation evidence.
 - Real Linear, real workers, Health/Recovery runtime integration, n8n, Full Mission E2E, and Production Gate remain pending and unverified.

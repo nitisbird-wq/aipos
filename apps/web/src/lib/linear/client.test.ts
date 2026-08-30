@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { createMockLinearClient, getLinearDispatchClient } from "@/lib/linear/client";
+import {
+  createMockLinearClient,
+  getLinearDispatchClient,
+  preflightLiveLinearConnection,
+} from "@/lib/linear/client";
 import { dispatchWorkstreams } from "@/lib/services/workstream-dispatcher";
 import { DevFileRepository } from "@/lib/repositories/dev-file-store";
 import path from "path";
@@ -44,6 +48,40 @@ describe("Linear dispatch client", () => {
   it("fails closed when live mode lacks credentials", () => {
     process.env.LINEAR_ADAPTER = "live";
     expect(() => getLinearDispatchClient()).toThrow(/LINEAR_LIVE_MISCONFIGURED/);
+  });
+
+  it("runs a read-only live preflight and verifies the exact team", async () => {
+    const fetchMock = vi.fn(async (_url: string, init?: RequestInit) => {
+      const headers = init?.headers as Record<string, string>;
+      expect(headers.Authorization).toBe("lin_test");
+      const body = JSON.parse(String(init?.body ?? "{}")) as {
+        query?: string;
+        variables?: { teamId?: string };
+      };
+      expect(body.query).toContain("query Stage7Preflight");
+      expect(body.query).not.toContain("mutation");
+      expect(body.variables?.teamId).toBe("team_test");
+      return new Response(
+        JSON.stringify({
+          data: {
+            viewer: { id: "USR-1", name: "Operator" },
+            team: { id: "team_test", name: "Nitis Pro : AIPOS", key: "AIP" },
+          },
+        }),
+        { status: 200 },
+      );
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await preflightLiveLinearConnection({
+      apiKey: "lin_test",
+      teamId: "team_test",
+    });
+
+    expect(result.authenticated).toBe(true);
+    expect(result.team.id).toBe("team_test");
+    expect(result.write_performed).toBe(false);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it("integrates mock client with dispatcher", async () => {
