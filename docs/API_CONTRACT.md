@@ -19,6 +19,13 @@ Correlation: `X-Correlation-Id` on transitions
 
 Chat-first aliases may wrap the same services (`/api/chat`, `/api/chat/confirm`) but MUST enforce the same gates and idempotency rules.
 
+## Mission navigation
+
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/mission-navigation?workspace_id={id}` | Persistent primary/active mission, resume checkpoint, interruption stack, and stale status |
+| POST | `/mission-navigation` | SET_PRIMARY, CHECKPOINT, INTERRUPT, or RESOLVE_INTERRUPTION command |
+
 ## Missions
 
 | Method | Path | Purpose |
