@@ -101,5 +101,12 @@ Current tracked counters:
   - Owner UI supports stage selection, draft/final save, compare, download/preview, rollback, QA evidence, and acceptance.
   - API: stage artifact list/save/compare, rollback, and accept.
   - CI #96 and #104: SUCCESS.
-- Stage 4 Policy Intelligence is the next executable implementation stage.
-- Stages 4–7 remain implementation pending. Real Linear, workers, n8n and production execution are not enabled by Stage 1–3 work.
+- Stage 4 Policy Intelligence: COMPLETE; evidence in `docs/aipos/STAGE4_POLICY_VERIFICATION.md`.
+  - Audit-backed `policy-inbox.v1` captures provenance, scope, priority, confidence, dates, and proposed canonical target.
+  - Deterministic source idempotency and fingerprinting identify duplicates; declared conflicts fail closed; supersession remains traceable.
+  - Canonical promotion requires separate review and explicit approval events and references the existing canonical policy ID.
+  - Coverage reports distinguish connected channels with/without data and unavailable-channel gaps.
+  - API: policy inbox list/capture/coverage, review, and promote.
+  - CI #116: SUCCESS.
+- Stage 5 Persistent Mission Navigation is the next executable implementation stage.
+- Stages 5–7 remain implementation pending. Real Linear, workers, n8n and production execution are not enabled by Stage 1–4 work.
