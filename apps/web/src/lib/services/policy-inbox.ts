@@ -14,20 +14,24 @@ const POLICY_INBOX_ACTIONS = new Set([
   "policy_inbox:promotion_approved",
 ]);
 
+// prettier-ignore
 function digest(value: string) {
   return createHash("sha256").update(value).digest("hex");
 }
 
+// prettier-ignore
 function normalize(value: string) {
   return value.trim().toLowerCase().replace(/\s+/g, " ");
 }
 
+// prettier-ignore
 function candidateFromEvent(event: { action: string; policy_result: unknown }) {
   if (!POLICY_INBOX_ACTIONS.has(event.action)) return null;
   const row = (event.policy_result as { policy_candidate?: unknown }).policy_candidate;
   return row ? PolicyCandidateSchema.parse(row) : null;
 }
 
+// prettier-ignore
 export async function listPolicyCandidates(): Promise<PolicyCandidate[]> {
   const audit = await getRepository().listAudit({});
   const latest = new Map<string, PolicyCandidate>();
@@ -40,6 +44,7 @@ export async function listPolicyCandidates(): Promise<PolicyCandidate[]> {
   return Array.from(latest.values()).sort((a, b) => b.captured_at.localeCompare(a.captured_at));
 }
 
+// prettier-ignore
 export async function getPolicyCandidate(candidateId: string) {
   return (await listPolicyCandidates()).find((row) => row.candidate_id === candidateId) ?? null;
 }
@@ -206,6 +211,7 @@ export async function approvePolicyPromotion(input: {
   return candidate;
 }
 
+// prettier-ignore
 export function buildPolicyCoverageReport(input: {
   expectedChannels: string[];
   connectedChannels: string[];
