@@ -108,5 +108,11 @@ Current tracked counters:
   - Coverage reports distinguish connected channels with/without data and unavailable-channel gaps.
   - API: policy inbox list/capture/coverage, review, and promote.
   - CI #116: SUCCESS.
-- Stage 5 Persistent Mission Navigation is the next executable implementation stage.
-- Stages 5–7 remain implementation pending. Real Linear, workers, n8n and production execution are not enabled by Stage 1–4 work.
+- Stage 5 Persistent Mission Navigation: COMPLETE; evidence in `docs/aipos/STAGE5_NAVIGATION_VERIFICATION.md`.
+  - Audit-backed `mission-navigation.v1` persists primary/active mission, objective, Definition of Done, checkpoint, and interruption stack.
+  - Checkpoints and resume are idempotent; interruption resolution returns to the preserved checkpoint with one next action.
+  - Stale evaluation exposes age/threshold and focused reminder data without mutating state.
+  - API: GET/POST `/api/mission-navigation`.
+  - CI #127: SUCCESS.
+- Stage 6 Scope and WIP Control is the next executable implementation stage.
+- Stages 6–7 remain implementation pending. Real Linear, workers, n8n and production execution are not enabled by Stage 1–5 work.
