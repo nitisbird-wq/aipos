@@ -11,9 +11,11 @@
 
 | Gate | Status |
 |---|---|
-| Human merge of Phase 2 Postgres adapter ([PR #8](https://github.com/nitisbird-wq/aipos/pull/8)) | Required before implementation PRs |
+| Human merge of Phase 2 Postgres adapter ([PR #8](https://github.com/nitisbird-wq/aipos/pull/8)) | **DONE** — Phase 2 **PRODUCTION PASS** ([AIPOS CURRENT STATE](https://app.notion.com/p/3cdbc165be4c81c48e73e5899ae5f0e3)) |
 | Human approval of ADR-005 (this docs PR) | Required before schema/code PRs |
+| ADR-007 Capability Orchestration (Decompose + Route) | **Reserved** — routing implementation blocked until Mission Decomposer approved |
 | No Execution/Artifact/Review/Closeout in 3a | Locked |
+| Do not modify production Mission Intake n8n (`7fLPHiiyt7sre5RR`) | Locked |
 
 ---
 

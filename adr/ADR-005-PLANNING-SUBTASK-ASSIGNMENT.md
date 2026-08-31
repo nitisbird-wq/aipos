@@ -4,7 +4,7 @@
 - **Date:** 2026-08-03  
 - **Deciders:** Mission owner (Human) — Pre-Phase-3 Verification conditional approval  
 - **Supersedes:** none  
-- **Related:** AIPOS-ADR-004 / Phase 1 Decisions (D2, D6); Architecture Contract (status vocabulary); [PHASE_3_SCOPE.md](../docs/PHASE_3_SCOPE.md)
+- **Related:** AIPOS-ADR-004 / Phase 1 Decisions (D2, D6); Architecture Contract (status vocabulary); [PHASE_3_SCOPE.md](../docs/PHASE_3_SCOPE.md); [ADR-007 — Capability Orchestration](./ADR-007-AIPOS-CAPABILITY-ORCHESTRATION.md) (Reserved; routing gated)
 
 ---
 

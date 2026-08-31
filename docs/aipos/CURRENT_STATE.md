@@ -1,11 +1,33 @@
 # AIPOS vNEXT Current State (Continuity Baseline)
 
+## Production operational truth (do not duplicate)
+
+Canonical production status lives on Notion — update that page in place; do not create a second CURRENT STATE doc:
+
+- [AIPOS CURRENT STATE](https://app.notion.com/p/3cdbc165be4c81c48e73e5899ae5f0e3)
+
+| Item | Status |
+|---|---|
+| Phase 1 | **PRODUCTION PASS** |
+| Phase 2 | **PRODUCTION PASS** |
+| Active workflow | AIPOS — Mission Intake Pilot v0.1 |
+| Workflow ID | `7fLPHiiyt7sre5RR` |
+| Active version | `760150d8-2e1a-4a5e-93a9-48781c306583` |
+| Smoke | execution 37 / MIS-3 / NIT-9 |
+| Notion writeback | **PASS** |
+| Duplicates | **0** |
+| Phase 1 regression | **NO** |
+| Rollback ready | **YES** |
+
+This file remains the **repo continuity / control-plane implementation** snapshot. Local and CI defaults stay mock (`NOTION_ADAPTER=mock`, `LINEAR_ADAPTER=mock`, DEV file store) unless explicitly configured.
+
 ## Scope status
 
-- Frozen production workflow baseline remains unchanged.
+- Frozen production Mission Intake workflow baseline must not be modified by agents.
 - New continuity and strategy contracts are implemented as additive orchestration contracts.
 - Control Plane v1 pipeline is implemented (Supervisor → Decompose → Human Gate → Linear dispatch → Worker packages → Verify → Integrate → Health).
 - Workstream Dispatcher is implemented with mock Linear default; live Linear dispatch is opt-in via `LINEAR_ADAPTER=live` + credentials.
+- Phase 3 routing / Capability Orchestration is reserved under [ADR-007](../../adr/ADR-007-AIPOS-CAPABILITY-ORCHESTRATION.md); ADR-006 remains Control Tower only.
 
 ## Implemented contracts
 
@@ -127,4 +149,5 @@ Current tracked counters:
   - `npm run linear:preflight` verifies the runtime API key and exact team mapping without a mutation or secret output.
   - Remaining human gate: configure `LINEAR_ADAPTER=live` and `LINEAR_API_KEY` in the controlled runtime; use the verified `LINEAR_TEAM_ID`.
   - Next after credential preflight: one reversible idempotent Real Linear E2E test with mapping/reconciliation evidence.
-- Real Linear, real workers, Health/Recovery runtime integration, n8n, Full Mission E2E, and Production Gate remain pending and unverified.
+- Production Mission Intake (Phase 1–2) is **PRODUCTION PASS** on Notion CURRENT STATE; do not conflate that with live Linear dispatch or Phase 3 routing.
+- Live Linear dispatch, real workers beyond intake, Phase 3 Capability Orchestration (ADR-007), Full Mission E2E beyond intake smoke, and Production Gate for control-plane remain pending Owner gates.
