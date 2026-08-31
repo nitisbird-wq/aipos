@@ -1,4 +1,7 @@
 import { preflightLiveLinearConnection } from "../src/lib/linear/client";
+import { loadLocalEnvFile } from "./load-local-env";
+
+loadLocalEnvFile();
 
 async function main(): Promise<void> {
   const mode = (process.env.LINEAR_ADAPTER ?? "").trim().toLowerCase();
