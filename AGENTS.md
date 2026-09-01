@@ -29,6 +29,35 @@ This file binds Cursor, Claude, and other coding agents working in this reposito
 
 Never say “SSOT” without naming the data class. Git does not own operator memory; Notion does not own application runtime state.
 
+## Mission Control / cross-agent handoff protocol
+
+For work that belongs to an AIPOS Mission or Project, agents must preserve a resumable operational handoff. This protocol does **not** make Notion the runtime database and does not transfer decision authority away from AIPOS Core.
+
+### Before execution
+
+1. Read the current Mission/Project operational state when the connector is available: status, current step / total steps, completed work, remaining work, blocker, last actor, handoff summary, next action, and evidence.
+2. Read the latest shared activity/handoff entries relevant to the mission.
+3. Do not repeat completed work unless there is new defect/evidence or the mission explicitly requires re-verification.
+4. If the operational source is unavailable, continue only when safe under existing repo contracts and state the handoff as `unverified` rather than inventing current state.
+
+### After execution
+
+Before handoff, produce a structured update containing at minimum:
+
+- actor (`Cursor`, `Claude`, `ChatGPT`, `Automation`, or human actor when known)
+- work completed
+- decision/outcome
+- status after execution
+- current step / total steps when defined
+- remaining work
+- blocker, if any
+- next executable action
+- evidence/artifacts (commit, PR, test result, document, or verified external readback)
+
+When Notion write access is available, update the canonical Mission/Project operational fields and append a new entry to **AIPOS — Mission Activity Log**. Activity history is append-only: never erase prior actor history to make a new handoff look cleaner.
+
+A mission may be marked complete only when its acceptance/success criteria have evidence. `code written`, `request sent`, or `tool returned success` alone is not sufficient when the governing contract requires readback or tests.
+
 ## Hard rules
 
 - **No silent scope expansion.** If the request would change MVP scope, architecture, or governance, stop and ask.
