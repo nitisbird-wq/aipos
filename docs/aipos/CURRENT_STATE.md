@@ -142,12 +142,20 @@ Current tracked counters:
   - Material time/cost/risk/architecture change is parked until explicit trade-off approval.
   - Forecast API returns min/max stage and mission ranges with assumptions.
   - CI #138: SUCCESS.
-- Stage 7 Live Execution: BLOCKED AT CREDENTIAL HUMAN GATE; evidence in `docs/aipos/STAGE7_LIVE_EXECUTION_GATE.md`.
+- Stage 7 Live Execution: **UNVERIFIED**; Owner-local credential preflight PASS reported at `cc7325b`, but draft review and live execution gates remain. Evidence in `docs/aipos/STAGE7_LIVE_EXECUTION_GATE.md`.
   - CI #143 completed SUCCESS for the Stage 0–6 final documentation head.
   - CI #145 completed SUCCESS for the read-only Linear preflight: secret scan, format, lint, 112 tests, build, AIPOS Doctor, and dependency audit.
   - A read-only authenticated Linear connection verified team `Nitis Pro : AIPOS` and team ID `acee324a-f2d8-416d-96ef-237298e82986`; no external write occurred.
   - `npm run linear:preflight` verifies the runtime API key and exact team mapping without a mutation or secret output.
-  - Remaining human gate: configure `LINEAR_ADAPTER=live` and `LINEAR_API_KEY` in the controlled runtime; use the verified `LINEAR_TEAM_ID`.
+  - Owner-local preflight reports `ok=true`, `adapter=live`, `authenticated=true`, `write_performed=false`; do not request credential setup again for that runtime. This is Owner evidence, not a live run in the coding environment.
   - Next after credential preflight: one reversible idempotent Real Linear E2E test with mapping/reconciliation evidence.
 - Production Mission Intake (Phase 1–2) is **PRODUCTION PASS** on Notion CURRENT STATE; do not conflate that with live Linear dispatch or Phase 3 routing.
 - Live Linear dispatch, real workers beyond intake, Phase 3 Capability Orchestration (ADR-007), Full Mission E2E beyond intake smoke, and Production Gate for control-plane remain pending Owner gates.
+
+### 2026-09-02 draft repair handoff
+
+- Owner acknowledged sensitivity and added constraints to the existing Stage 7 draft; do not create another intake or ask for the same input again.
+- Verified defect: Correct understanding only added a hint, free text only appended constraints, and the Advanced form was disabled for existing intakes.
+- Added bounded existing-draft editor + read-only resume + authenticated strict correction API. Risk, sensitivity, confirmation authority, raw request and identity remain unchanged.
+- Draft editing is not dispatch planning: Control Plane currently re-analyzes/re-decomposes downstream. One-workstream dispatch remains unverified and subject to existing Blueprint/routing/ADR gates.
+- Verification and remaining work: see the existing Stage 7 gate/evidence document. No production baseline, worker, Linear or n8n action was changed.

@@ -19,6 +19,16 @@ Correlation: `X-Correlation-Id` on transitions
 
 Chat-first aliases may wrap the same services (`/api/chat`, `/api/chat/confirm`) but MUST enforce the same gates and idempotency rules.
 
+### Existing draft correction (2026-09-02)
+
+- `GET /api/chat?intake_id={id}` resumes a persisted intake read-only; missing IDs return 404, never a new intake. `/intake?intake_id={id}` opens it in the Commander.
+- `PATCH /api/chat` accepts `intake_id`, `expected_updated_at`, `mission_summary`, `desired_outcome`, `success_criteria`, `constraints`, and `workstreams` (`id`, `name`, `purpose`, `expected_outputs`). All are required; unknown fields are rejected.
+- Workstreams must reference unique existing IDs. At least one remains. Retained workstreams keep their capability requirements; all prior workstream approval points are retained. Dependencies on explicitly removed draft workstreams are removed. Bundle-level capability and authority fields are unchanged.
+- Stale snapshots, confirmed/cancelled intakes and unknown workstream IDs fail closed. The timestamp check detects stale sequential edits; it is **not** a transactional cross-process compare-and-swap.
+- Edited text is screened by the existing heuristic: risk/flags can only increase, and new flags invalidate prior sensitivity acknowledgment. This does not fix the heuristic's negation false positives.
+- Save preserves intake ID, raw request and creation idempotency key; records the existing correction audit; refreshes the conversation/draft; never confirms, creates a Mission, dispatches or syncs externally.
+- This repairs Acceptance Criteria product #2 under Architecture Contract §§4/6/10. It does not change approved architecture, sensitivity classification, routing or dispatch semantics. Draft corrections do not approve a Blueprint or guarantee the downstream re-decomposition will produce the same workstreams.
+
 ## Mission navigation
 
 | Method | Path | Purpose |

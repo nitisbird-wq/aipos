@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { ChatThread } from "@/components/commander/ChatThread";
 import { DraftMissionSidebar } from "@/components/commander/DraftMissionSidebar";
 import { AdvancedMissionDetails } from "@/components/commander/AdvancedMissionDetails";
+import { DraftCorrectionEditor } from "@/components/commander/DraftCorrectionEditor";
+import type { DraftCorrection } from "@/lib/schemas/draft-correction";
 import type { ChatMessage, ConversationState } from "@/lib/conversation/types";
 import type { DraftMissionPanel } from "@/lib/services/chat-intake-service";
 import type { IntakeMissionBundle } from "@/lib/schemas/intake";
@@ -30,17 +32,31 @@ export function MissionCommander() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const loadWelcome = useCallback(async () => {
-    const res = await fetch("/api/chat");
-    if (res.status === 401) {
-      router.push("/login");
-      return;
-    }
-    const data = await res.json();
-    setSession(data);
-  }, [router]);
+  const loadWelcome = useCallback(
+    async (fresh = false) => {
+      const url = new URL(window.location.href);
+      const intakeId = fresh ? null : url.searchParams.get("intake_id");
+      const res = await fetch(
+        intakeId ? `/api/chat?intake_id=${encodeURIComponent(intakeId)}` : "/api/chat",
+      );
+      if (res.status === 401) {
+        router.push("/login");
+        return;
+      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error?.message || "Failed to load draft");
+      if (fresh) {
+        url.searchParams.delete("intake_id");
+        window.history.replaceState(null, "", url);
+      }
+      setSession(data);
+      setEditing(false);
+    },
+    [router],
+  );
 
   useEffect(() => {
     loadWelcome().catch(() => setError("Failed to start Mission Commander"));
@@ -78,16 +94,21 @@ export function MissionCommander() {
           attachments: payload.attachments,
         }),
       });
-      const data = await res.json();
       if (res.status === 401) {
         router.push("/login");
         return;
       }
+      const data = await res.json();
       if (!res.ok) {
         setError(data?.error?.message || "Chat turn failed");
         return;
       }
       setSession(data);
+      if (data.intake_id) {
+        const url = new URL(window.location.href);
+        url.searchParams.set("intake_id", data.intake_id);
+        window.history.replaceState(null, "", url);
+      }
       setPendingClarification(undefined);
       setInput("");
       setAttachmentRef("");
@@ -98,10 +119,37 @@ export function MissionCommander() {
     }
   }
 
+  async function saveCorrection(patch: DraftCorrection) {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/chat", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      });
+      if (res.status === 401) {
+        router.push("/login");
+        return;
+      }
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data?.error?.message || "Draft correction failed");
+        return;
+      }
+      setSession(data);
+      setEditing(false);
+    } catch {
+      setError("บันทึกไม่สำเร็จหรือไม่ทราบผล — เปิดร่างเดิมตรวจผลก่อนส่งซ้ำ");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     const text = input.trim();
-    if (!text || busy) return;
+    if (!text || busy || !session || editing) return;
     const attachments = attachmentRef.trim()
       ? [{ ref: attachmentRef.trim(), kind: "uri" }]
       : undefined;
@@ -223,7 +271,13 @@ export function MissionCommander() {
               }
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              disabled={busy || session?.conversation_state === "cancelled"}
+              disabled={
+                busy ||
+                editing ||
+                !session ||
+                session.conversation_state === "cancelled" ||
+                session.conversation_state === "ready_to_dispatch"
+              }
             />
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <button
@@ -257,7 +311,11 @@ export function MissionCommander() {
                 />
               )}
               <div className="ml-auto flex flex-wrap gap-2">
-                <button className="btn btn-primary" type="submit" disabled={busy || !input.trim()}>
+                <button
+                  className="btn btn-primary"
+                  type="submit"
+                  disabled={busy || editing || !session || !input.trim()}
+                >
                   {busy ? "Sending…" : "Send"}
                 </button>
               </div>
@@ -269,7 +327,7 @@ export function MissionCommander() {
           <button
             type="button"
             className="btn btn-primary"
-            disabled={busy || !canConfirm}
+            disabled={busy || editing || !canConfirm}
             onClick={confirmMission}
           >
             Confirm mission
@@ -279,58 +337,61 @@ export function MissionCommander() {
             className="btn btn-secondary"
             disabled={busy || !canCorrect}
             onClick={() => {
+              setEditing(true);
               setInput("");
               setPendingClarification(undefined);
-              // Nudge user to type corrections
               setError(null);
-              setSession((s) =>
-                s
-                  ? {
-                      ...s,
-                      messages: [
-                        ...s.messages,
-                        {
-                          id: `msg-hint-${Date.now()}`,
-                          role: "commander",
-                          kind: "status",
-                          created_at: new Date().toISOString(),
-                          content:
-                            s.draft?.language === "th"
-                              ? "พิมพ์สิ่งที่ต้องการแก้ แล้วกด Send — หรือใช้ Advanced mission details"
-                              : "Type what to correct, then Send — or use Advanced mission details.",
-                        },
-                      ],
-                    }
-                  : s,
-              );
             }}
           >
             Correct understanding
           </button>
-          <button type="button" className="btn btn-danger" disabled={busy} onClick={cancelMission}>
+          <button
+            type="button"
+            className="btn btn-danger"
+            disabled={busy || editing}
+            onClick={cancelMission}
+          >
             Cancel intake
           </button>
           <button
             type="button"
             className="btn btn-secondary"
-            disabled={busy}
-            onClick={() => loadWelcome()}
+            disabled={busy || editing}
+            onClick={() => {
+              void loadWelcome(true).catch(() => setError("Failed to start new intake"));
+            }}
           >
             New mission
           </button>
         </div>
 
-        <div className="mt-4">
-          <AdvancedMissionDetails
-            disabled={busy || !!session?.intake_id}
-            onSubmitStructured={(payload) => {
-              void sendTurn({
-                message: payload.raw_request,
-                deadline: payload.deadline,
-                constraints: payload.constraints,
-              });
-            }}
+        {editing && session?.bundle && (
+          <DraftCorrectionEditor
+            key={session.bundle.updated_at}
+            bundle={session.bundle}
+            busy={busy}
+            onSave={saveCorrection}
+            onClose={() => setEditing(false)}
           />
+        )}
+
+        <div className="mt-4">
+          {session?.intake_id ? (
+            <p className="text-sm">
+              มีร่างเดิมแล้ว: ใช้ Correct understanding เพื่อแก้ไข ไม่ต้องสร้างร่างใหม่
+            </p>
+          ) : (
+            <AdvancedMissionDetails
+              disabled={busy || !session || !!session.intake_id}
+              onSubmitStructured={(payload) => {
+                void sendTurn({
+                  message: payload.raw_request,
+                  deadline: payload.deadline,
+                  constraints: payload.constraints,
+                });
+              }}
+            />
+          )}
         </div>
       </div>
 
