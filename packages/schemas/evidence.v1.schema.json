@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aipos.dev/schemas/evidence.v1.schema.json",
+  "title": "AIPOS Evidence v1",
+  "type": "object",
+  "required": [
+    "claim",
+    "status",
+    "source",
+    "timestamp",
+    "freshness",
+    "confidence",
+    "evidence_ref",
+    "verified_by"
+  ],
+  "properties": {
+    "claim": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": ["CONFIRMED", "REPORTED", "INFERRED", "HYPOTHESIS", "UNKNOWN"]
+    },
+    "source": { "type": "string" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "freshness": { "type": "string" },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "evidence_ref": { "type": "string" },
+    "verified_by": { "type": "string" }
+  },
+  "additionalProperties": false
+}

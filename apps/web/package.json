@@ -16,7 +16,8 @@
     "test:e2e-thai": "tsx scripts/e2e-thai-smoke.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx scripts/db-migrate.ts",
-    "test:pg": "AIPOS_RUN_PG_TESTS=true vitest run src/lib/repositories"
+    "test:pg": "AIPOS_RUN_PG_TESTS=true vitest run src/lib/repositories",
+    "linear:preflight": "tsx scripts/linear-live-preflight.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.44.4",

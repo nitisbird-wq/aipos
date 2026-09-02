@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aipos.dev/schemas/control-plane-state.v1.schema.json",
+  "title": "AIPOS Control Plane State v1",
+  "type": "object",
+  "required": [
+    "state_version",
+    "mission_id",
+    "mission_state",
+    "next_action",
+    "responsible",
+    "workstreams",
+    "agent_runs",
+    "handoffs",
+    "artifacts",
+    "verifications",
+    "blockers",
+    "updated_at"
+  ],
+  "properties": {
+    "state_version": { "const": "control-plane.v1" },
+    "mission_id": { "type": "string" },
+    "mission_state": {
+      "type": "string",
+      "enum": [
+        "CAPTURED",
+        "UNDERSTOOD",
+        "STRATEGIZED",
+        "PLANNED",
+        "APPROVED",
+        "DISPATCHED",
+        "EXECUTING",
+        "VERIFYING",
+        "INTEGRATING",
+        "COMPLETED",
+        "BLOCKED",
+        "FAILED",
+        "RECONCILING",
+        "WAITING_HUMAN",
+        "CANCELLED"
+      ]
+    },
+    "next_action": { "type": "string" },
+    "responsible": { "type": "string" },
+    "workstreams": { "type": "array", "items": { "type": "object" } },
+    "agent_runs": { "type": "array", "items": { "type": "object" } },
+    "handoffs": { "type": "array", "items": { "$ref": "https://aipos.dev/schemas/handoff.v1.schema.json" } },
+    "artifacts": { "type": "array", "items": { "type": "object" } },
+    "verifications": { "type": "array", "items": { "type": "object" } },
+    "blockers": { "type": "array", "items": { "type": "object" } },
+    "updated_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}

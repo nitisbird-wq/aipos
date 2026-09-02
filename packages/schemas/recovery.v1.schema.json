@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aipos.dev/schemas/recovery.v1.schema.json",
+  "title": "AIPOS Recovery v1",
+  "type": "object",
+  "required": ["recovery_version", "sbi", "grow", "allowed_recovery"],
+  "properties": {
+    "recovery_version": { "const": "recovery.v1" },
+    "sbi": {
+      "type": "object",
+      "required": ["situation", "behavior", "impact"],
+      "properties": {
+        "situation": { "type": "string" },
+        "behavior": { "type": "string" },
+        "impact": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "grow": {
+      "type": "object",
+      "required": ["goal", "reality", "options", "will"],
+      "properties": {
+        "goal": { "type": "string" },
+        "reality": { "type": "string" },
+        "options": { "type": "array", "items": { "type": "string" } },
+        "will": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "allowed_recovery": {
+      "type": "string",
+      "enum": ["RETRY", "REROUTE", "RECONCILE", "ROLLBACK", "ESCALATE"]
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,11 +1,33 @@
 # Nitis Pro AIPOS
 
-Mission Operating System — **Mission Intake MVP v0.1**.
+Mission Operating System — **Mission Intake MVP v0.1** (Phases 1–2 production pass recorded).
+
+## Production status (operational truth)
+
+Canonical snapshot (update in Notion; do not duplicate as a second CURRENT STATE doc):
+
+- [AIPOS CURRENT STATE](https://app.notion.com/p/3cdbc165be4c81c48e73e5899ae5f0e3)
+
+| Item | Status |
+|---|---|
+| Phase 1 | **PRODUCTION PASS** |
+| Phase 2 | **PRODUCTION PASS** |
+| Active workflow | AIPOS — Mission Intake Pilot v0.1 |
+| Workflow ID | `7fLPHiiyt7sre5RR` |
+| Active version | `760150d8-2e1a-4a5e-93a9-48781c306583` |
+| Smoke | execution 37 / MIS-3 / NIT-9 |
+| Notion writeback | **PASS** |
+| Duplicates | **0** |
+| Phase 1 regression | **NO** |
+| Rollback ready | **YES** |
+
+Production Mission Intake runs via the frozen n8n workflow above. Agents must not modify that workflow, Notion Mission/Project registries, or Linear unless the Owner explicitly authorizes it.
 
 ## What this repo contains
 
 - Approved docs, JSON schemas, and seed data (`docs/`, `packages/schemas/`, `data/seeds/`)
-- Runnable Next.js app (`apps/web`) implementing Intake → Understanding → Confirm → Mission → Notion (mock)
+- Runnable Next.js app (`apps/web`) implementing Intake → Understanding → Confirm → Mission → Notion sync contract (local default: mock adapter)
+- ADRs including Control Tower ([ADR-006](adr/ADR-006-AIPOS-CONTROL-TOWER.md)) and reserved Capability Orchestration ([ADR-007](adr/ADR-007-AIPOS-CAPABILITY-ORCHESTRATION.md))
 
 ## Stack
 
@@ -56,11 +78,14 @@ Open [http://localhost:3000](http://localhost:3000) → **Mission Commander** (c
 | `DATABASE_URL` set + `FORCE_POSTGRES=true` | **PostgreSQL runtime adapter** (App DB SSOT). Apply `apps/web/drizzle/0000_init.sql` first — see `docs/POSTGRES_LOCAL_SETUP.md` |
 | `DATABASE_URL` set, `FORCE_POSTGRES` not true | File adapter remains active (opt-in required; schema ready) |
 
-PostgreSQL mode is Phase 2 Runtime Foundation (Intake / Mission / Audit / Notion sync state). It does **not** include Planning, Assignment, or Execution.
+PostgreSQL mode is Phase 2 Runtime Foundation (Intake / Mission / Audit / Notion sync state). Phase 2 is **PRODUCTION PASS** for the operational Mission Intake path; local Postgres remains opt-in. It does **not** include Planning, Assignment, or Execution (Phase 3+).
 
-### Notion
+### Notion (local / CI vs production)
 
-Default `NOTION_ADAPTER=mock`. No real Notion writes. Sync success is shown only when a verified page/record ID exists.
+| Context | Behavior |
+|---|---|
+| **Local / CI (default)** | `NOTION_ADAPTER=mock` — no real Notion writes from the Next.js app. `mock_synced` must never be presented as verified. |
+| **Production operational path** | Mission Intake Pilot n8n writeback to Notion is **PASS** (see Production status). App → Notion verified sync still requires real credentials + readback id when using the live adapter. |
 
 ### Useful commands
 
@@ -81,9 +106,9 @@ npm run aipos -- doctor --profile pr
 ```
 
 Agent rules: see `AGENTS.md`.
-## Out of scope (v0.1)
+## Out of scope (v0.1 / current Phase 3 gate)
 
-Specialist execution, routing/matching/assignment, real Subtask creation, real Notion/AI credentials, deploy.
+Specialist execution, Phase 3 routing/dispatcher expansion, real Subtask creation as Intake MVP work, and unattended production deploy. Capability Orchestration is reserved under ADR-007 and blocked until Mission Decomposer is approved.
 
 ## Phase 1.0 direction (approved decisions)
 

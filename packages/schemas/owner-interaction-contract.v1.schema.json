@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aipos.dev/schemas/owner-interaction-contract.v1.schema.json",
+  "title": "AIPOS Owner Interaction Contract v1",
+  "type": "object",
+  "required": ["owner_questions_count", "human_gate_count", "avoidable_questions_count"],
+  "properties": {
+    "owner_questions_count": { "type": "integer", "minimum": 0 },
+    "human_gate_count": { "type": "integer", "minimum": 0 },
+    "avoidable_questions_count": { "type": "integer", "minimum": 0 }
+  },
+  "additionalProperties": false
+}

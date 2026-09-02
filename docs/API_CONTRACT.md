@@ -19,6 +19,23 @@ Correlation: `X-Correlation-Id` on transitions
 
 Chat-first aliases may wrap the same services (`/api/chat`, `/api/chat/confirm`) but MUST enforce the same gates and idempotency rules.
 
+### Existing draft correction (2026-09-02)
+
+- `GET /api/chat?intake_id={id}` resumes a persisted intake read-only; missing IDs return 404, never a new intake. `/intake?intake_id={id}` opens it in the Commander.
+- `PATCH /api/chat` accepts `intake_id`, `expected_updated_at`, `mission_summary`, `desired_outcome`, `success_criteria`, `constraints`, and `workstreams` (`id`, `name`, `purpose`, `expected_outputs`). All are required; unknown fields are rejected.
+- Workstreams must reference unique existing IDs. At least one remains. Retained workstreams keep their capability requirements; all prior workstream approval points are retained. Dependencies on explicitly removed draft workstreams are removed. Bundle-level capability and authority fields are unchanged.
+- Stale snapshots, confirmed/cancelled intakes and unknown workstream IDs fail closed. The timestamp check detects stale sequential edits; it is **not** a transactional cross-process compare-and-swap.
+- Edited text is screened by the existing heuristic: risk/flags can only increase, and new flags invalidate prior sensitivity acknowledgment. This does not fix the heuristic's negation false positives.
+- Save preserves intake ID, raw request and creation idempotency key; records the existing correction audit; refreshes the conversation/draft; never confirms, creates a Mission, dispatches or syncs externally.
+- This repairs Acceptance Criteria product #2 under Architecture Contract §§4/6/10. It does not change approved architecture, sensitivity classification, routing or dispatch semantics. Draft corrections do not approve a Blueprint or guarantee the downstream re-decomposition will produce the same workstreams.
+
+## Mission navigation
+
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/mission-navigation?workspace_id={id}` | Persistent primary/active mission, resume checkpoint, interruption stack, and stale status |
+| POST | `/mission-navigation` | SET_PRIMARY, CHECKPOINT, INTERRUPT, or RESOLVE_INTERRUPTION command |
+
 ## Missions
 
 | Method | Path | Purpose |
@@ -28,6 +45,57 @@ Chat-first aliases may wrap the same services (`/api/chat`, `/api/chat/confirm`)
 | POST | `/missions/{id}/transitions` | Allowed transition commands only |
 | GET | `/missions/{id}/audit` | Audit events (append-only) |
 | POST | `/missions/{id}/notion/retry` | Retry Notion sync when `sync_status=failed` |
+| GET | `/missions/{id}/blueprint` | Latest Blueprint and immutable revision history |
+| POST | `/missions/{id}/blueprint` | Save a new editable Blueprint revision |
+| POST | `/missions/{id}/blueprint/approve` | Approve the latest Blueprint revision |
+| GET | `/missions/{id}/scope` | List classified scope/idea ledger |
+| POST | `/missions/{id}/scope` | Classify and gate a scope item under WIP policy |
+| POST | `/missions/{id}/scope/{scopeId}/approve` | Approve a material change with explicit trade-off |
+| POST | `/missions/{id}/forecast` | Calculate stage/mission effort range with assumptions |
+| GET | `/missions/{id}/stages/{stageId}/artifacts` | List immutable artifact revisions; optional `left`/`right` comparison |
+| POST | `/missions/{id}/stages/{stageId}/artifacts` | Save DRAFT or QA-verified FINAL snapshot |
+| POST | `/missions/{id}/stages/{stageId}/artifacts/rollback` | Create a rollback revision without mutating history |
+| POST | `/missions/{id}/stages/{stageId}/artifacts/accept` | Accept latest final artifact and emit the next canonical handoff |
+| GET | `/missions/{id}/control-plane` | Control Plane snapshot: state, health, supervisor assessment |
+| POST | `/missions/{id}/control-plane` | Run Control Plane v1 pipeline (Supervisor → dispatch → verify → integrate) |
+
+### Control Plane
+
+**GET** `/missions/{id}/control-plane`
+
+```json
+{
+  "ok": true,
+  "state": { "schema_version": "control-plane-state.v1", "mission_id": "MIS-...", "..." : "..." },
+  "health": { "status": "HEALTHY", "..." : "..." },
+  "supervisor": { "next_action": "...", "responsible": "...", "..." : "..." }
+}
+```
+
+**POST** `/missions/{id}/control-plane`
+
+Request body:
+
+```json
+{ "simulate_worker_pass": true }
+```
+
+- A persisted `mission_blueprint:approved` event for the latest revision is required. Mission confirmation or a request-body assertion is not Blueprint approval and cannot dispatch.
+- Default `simulate_worker_pass=true` runs the pipeline with simulated worker handoff success (no external worker).
+- Set `simulate_worker_pass=false` to require real worker handoff evidence (pipeline may stall at verification).
+
+Response includes the approved `blueprint`, `supervisor`, `routing`, `dispatch`, `assignments`, `verifications`, `integration`, `health`, `human_gate`, and `state`.
+
+Errors:
+
+| Code | When |
+|---|---|
+| `MISSION_NOT_FOUND` | Unknown mission id |
+| `BLUEPRINT_APPROVAL_REQUIRED` | Explicit Blueprint approval was not supplied |
+| `CAPABILITY_ROUTE_REQUIRED` | No verified/routable capability path exists; dispatch fails closed |
+| `LINEAR_LIVE_MISCONFIGURED` | `LINEAR_ADAPTER=live` without `LINEAR_API_KEY` / `LINEAR_TEAM_ID` |
+
+Linear dispatch uses `LINEAR_ADAPTER=mock` by default (no external writes). Live dispatch requires explicit env configuration.
 
 ## Forbidden
 
@@ -41,6 +109,13 @@ PATCH /missions/{id}/status
 |---|---|
 | GET | `/policies` |
 | GET | `/capabilities` |
+| GET | `/policy-inbox` | Policy candidates plus connected-channel coverage/gaps |
+| POST | `/policy-inbox` | Capture a provenance-bearing policy candidate idempotently |
+| POST | `/policy-inbox/{id}/review` | Resolve candidate to ready/rejected/superseded review state |
+| POST | `/policy-inbox/{id}/promote` | Record explicit approval against an existing canonical policy ID |
+| GET | `/capabilities/registry` | Living capability truth with evidence and effective expiry status |
+| POST | `/capabilities/registry` | Save an immutable capability truth revision |
+| POST | `/capabilities/registry/{id}/retest` | Record PASS/PARTIAL/FAIL retest evidence and downgrade when needed |
 
 ## Idempotency (required behavior)
 
