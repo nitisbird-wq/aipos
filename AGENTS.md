@@ -5,6 +5,7 @@ This file binds Cursor, Claude, and other coding agents working in this reposito
 ## Before changing code
 
 1. Read the binding docs for the task (minimum set):
+   - `docs/PRODUCTION_SOURCE_OF_TRUTH.md` (**n8n Phase 1–2 production freeze** vs App Phase 2 / ADR-005 / ADR-006)
    - `docs/AIPOS_PHASE_1_DECISIONS.md` (locked Phase 1 decisions / ADR-004)
    - `docs/AIPOS_ARCHITECTURE_CONTRACT.md` (**enforceable** verification, ownership, idempotency, sync failure)
    - `docs/OPERATOR_PROFILE_AND_KNOW_ME.md`
@@ -14,7 +15,7 @@ This file binds Cursor, Claude, and other coding agents working in this reposito
    - `docs/AIPOS_MVP_SCOPE.md`
    - `docs/ACCEPTANCE_CRITERIA.md` / `docs/API_CONTRACT.md`
    - `docs/SECURITY_AND_PERMISSIONS.md`
-   - relevant files under `adr/`
+   - relevant files under `adr/` (ADR-005 = App-DB planning **Proposed**; ADR-006 = n8n orchestration)
 2. Prefer existing contracts in `packages/schemas/` and seeds in `data/seeds/`.
 3. Do not invent product scope, gates, or mission semantics that conflict with those docs.
 4. Cite a Requirement ID, Decision ID (e.g. `D1`–`D6`), Architecture Contract section, or ADR when changing behavior.

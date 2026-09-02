@@ -1,0 +1,145 @@
+{
+  "plan_id": "plan-MIS-106-v1",
+  "mission_id": "MIS-106",
+  "parent_linear_issue": "NIT-106",
+  "plan_version": 1,
+  "mission_objective": "Produce a one-page Monday briefing of the top three operator priorities from a provided open-work list.",
+  "desired_outcome": "Owner can review priorities in under five minutes and know the next action for each.",
+  "success_criteria": [
+    "Exactly three priorities",
+    "Each priority has a one-line rationale and next action",
+    "Readable as one page"
+  ],
+  "domain": "executive_reporting",
+  "domain_signals": ["Monday briefing", "top three priorities", "open-work list"],
+  "final_deliverable": "One-page Monday briefing note",
+  "explicit_assumptions": [
+    {
+      "id": "a1",
+      "text": "If priority order is unspecified, rank by operational urgency then due date.",
+      "source": "inferred"
+    },
+    {
+      "id": "a2",
+      "text": "Plain-text or Notion page is acceptable for the briefing.",
+      "source": "inferred"
+    }
+  ],
+  "owner_questions": [],
+  "reasoning_actions": [
+    {
+      "id": "ra1",
+      "action": "Rank open-work items into a top-three list with rationale seeds",
+      "produces": "ranked_top3"
+    },
+    {
+      "id": "ra2",
+      "action": "Draft one-page briefing from ranked list",
+      "produces": "briefing_draft",
+      "consumes": ["ranked_top3"]
+    },
+    {
+      "id": "ra3",
+      "action": "Tighten draft for sub-five-minute read",
+      "produces": "briefing_final",
+      "consumes": ["briefing_draft"]
+    }
+  ],
+  "integration_required": false,
+  "mission_risk_level": "L1",
+  "workstreams": [
+    {
+      "workstream_id": "WS-MIS-106-01",
+      "mission_id": "MIS-106",
+      "parent_linear_issue": "NIT-106",
+      "title": "Rank open-work into top three priorities",
+      "objective": "Select and order exactly three open-work items with short rationale seeds for each.",
+      "required_capabilities": ["strategy.analyze"],
+      "dependencies": [],
+      "reasoning_action_refs": ["ra1"],
+      "is_integration_workstream": false,
+      "primary_operator": "unassigned",
+      "supporting_operator": null,
+      "tools_required": [],
+      "inputs": { "open_work_list_ref": "provided" },
+      "expected_output": {
+        "type": "document",
+        "location_hint": "other",
+        "description": "Ranked top-three list with rationale seeds"
+      },
+      "acceptance_criteria": ["Exactly three items", "Each has a rationale seed"],
+      "risk_level": "L1",
+      "approval_required": false,
+      "execution_order": 1,
+      "status": "proposed",
+      "correlation_id": "corr-mis-106",
+      "idempotency_key": "ws:MIS-106:01:v1",
+      "canonical_token": "AIPOS_WORKSTREAM_ID=WS-MIS-106-01"
+    },
+    {
+      "workstream_id": "WS-MIS-106-02",
+      "mission_id": "MIS-106",
+      "parent_linear_issue": "NIT-106",
+      "title": "Draft one-page Monday briefing",
+      "objective": "Write a briefing with rationale and next action for each of the three priorities.",
+      "required_capabilities": ["docs.write"],
+      "dependencies": ["WS-MIS-106-01"],
+      "reasoning_action_refs": ["ra2"],
+      "is_integration_workstream": false,
+      "primary_operator": "unassigned",
+      "supporting_operator": null,
+      "tools_required": [],
+      "inputs": { "upstream": ["ranked_top3"] },
+      "expected_output": {
+        "type": "document",
+        "location_hint": "notion",
+        "description": "Draft one-page Monday briefing note"
+      },
+      "acceptance_criteria": [
+        "Three priorities present",
+        "Each has next action"
+      ],
+      "risk_level": "L1",
+      "approval_required": false,
+      "execution_order": 2,
+      "status": "proposed",
+      "correlation_id": "corr-mis-106",
+      "idempotency_key": "ws:MIS-106:02:v1",
+      "canonical_token": "AIPOS_WORKSTREAM_ID=WS-MIS-106-02"
+    },
+    {
+      "workstream_id": "WS-MIS-106-03",
+      "mission_id": "MIS-106",
+      "parent_linear_issue": "NIT-106",
+      "title": "Tighten briefing for five-minute read",
+      "objective": "Edit the draft into the final Owner-facing one-page briefing deliverable.",
+      "required_capabilities": ["docs.write"],
+      "dependencies": ["WS-MIS-106-02"],
+      "reasoning_action_refs": ["ra3"],
+      "is_integration_workstream": false,
+      "primary_operator": "unassigned",
+      "supporting_operator": null,
+      "tools_required": [],
+      "inputs": { "upstream": ["briefing_draft"] },
+      "expected_output": {
+        "type": "document",
+        "location_hint": "notion",
+        "description": "One-page Monday briefing note"
+      },
+      "acceptance_criteria": [
+        "Fits one page",
+        "Readable in under five minutes"
+      ],
+      "risk_level": "L1",
+      "approval_required": false,
+      "execution_order": 3,
+      "status": "proposed",
+      "correlation_id": "corr-mis-106",
+      "idempotency_key": "ws:MIS-106:03:v1",
+      "canonical_token": "AIPOS_WORKSTREAM_ID=WS-MIS-106-03"
+    }
+  ],
+  "correlation_id": "corr-mis-106",
+  "created_at": "2026-08-12T18:50:00.000Z",
+  "decomposer_version": "ADR-006.v2"
+}

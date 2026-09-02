@@ -1,10 +1,11 @@
 # ADR-005 — Planning, Subtask, and Assignment (Phase 3a)
 
-- **Status:** Proposed (awaiting Human approval)  
+- **Status:** Proposed (awaiting Human approval) — **file is present; not missing**  
 - **Date:** 2026-08-03  
 - **Deciders:** Mission owner (Human) — Pre-Phase-3 Verification conditional approval  
 - **Supersedes:** none  
-- **Related:** AIPOS-ADR-004 / Phase 1 Decisions (D2, D6); Architecture Contract (status vocabulary); [PHASE_3_SCOPE.md](../docs/PHASE_3_SCOPE.md)
+- **Related:** AIPOS-ADR-004 / Phase 1 Decisions (D2, D6); Architecture Contract (status vocabulary); [PHASE_3_SCOPE.md](../docs/PHASE_3_SCOPE.md); **boundary:** n8n Capability Orchestration is [ADR-006](./ADR-006-CAPABILITY-ORCHESTRATION.md) (non-competing SoT track)  
+- **Operational note:** n8n Mission Intake Phase 1–2 is already **PRODUCTION PASS** (see [`docs/PRODUCTION_SOURCE_OF_TRUTH.md`](../docs/PRODUCTION_SOURCE_OF_TRUTH.md)). That production path is **not** this ADR. This ADR covers App-DB Planning/Subtask/Assignment only. Context below that says “Phase 2 establishes PostgreSQL…” refers to **App-DB Phase 2**, not n8n Linear dispatch.
 
 ---
 

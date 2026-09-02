@@ -1,0 +1,161 @@
+{
+  "plan_id": "plan-MIS-101-v1",
+  "mission_id": "MIS-101",
+  "parent_linear_issue": "NIT-101",
+  "plan_version": 1,
+  "mission_objective": "Compare three local café competitors’ pricing, menu positioning, and Instagram presence to inform SAHAKON’s next 30-day promo.",
+  "desired_outcome": "Owner can choose one promo angle with evidence from three competitors.",
+  "success_criteria": [
+    "Three competitors covered on pricing, menu positioning, and IG presence",
+    "Comparison is explicit versus SAHAKON",
+    "One recommended 30-day promo angle with two risks"
+  ],
+  "domain": "business_research",
+  "domain_signals": ["competitors", "pricing", "Instagram", "promo recommendation"],
+  "final_deliverable": "One-page competitor recommendation memo for SAHAKON 30-day promo",
+  "explicit_assumptions": [
+    {
+      "id": "a1",
+      "text": "Competitors are the top three nearby cafés by typical foot traffic unless Owner names others.",
+      "source": "inferred"
+    },
+    {
+      "id": "a2",
+      "text": "Instagram presence means public posts from the last 30 days.",
+      "source": "inferred"
+    },
+    {
+      "id": "a3",
+      "text": "Thai or English memo is acceptable.",
+      "source": "inferred"
+    }
+  ],
+  "owner_questions": [],
+  "reasoning_actions": [
+    {
+      "id": "ra1",
+      "action": "Collect competitor pricing, menu themes, and IG cadence",
+      "produces": "competitor_fact_table"
+    },
+    {
+      "id": "ra2",
+      "action": "Score positioning versus SAHAKON",
+      "produces": "comparison_matrix",
+      "consumes": ["competitor_fact_table"]
+    },
+    {
+      "id": "ra3",
+      "action": "Recommend one 30-day promo angle with risks",
+      "produces": "recommendation_memo",
+      "consumes": ["comparison_matrix"]
+    }
+  ],
+  "integration_required": false,
+  "mission_risk_level": "L1",
+  "workstreams": [
+    {
+      "workstream_id": "WS-MIS-101-01",
+      "mission_id": "MIS-101",
+      "parent_linear_issue": "NIT-101",
+      "linear_issue_id": null,
+      "title": "Collect competitor pricing, menu, and IG facts",
+      "objective": "Gather structured facts for three cafés: price bands, menu positioning themes, and Instagram posting cadence/content themes.",
+      "required_capabilities": ["research.synthesize"],
+      "dependencies": [],
+      "reasoning_action_refs": ["ra1"],
+      "is_integration_workstream": false,
+      "primary_operator": "unassigned",
+      "supporting_operator": null,
+      "tools_required": [],
+      "inputs": { "competitor_count": 3 },
+      "expected_output": {
+        "type": "dataset",
+        "location_hint": "notion",
+        "description": "Competitor fact table with pricing, menu themes, IG cadence"
+      },
+      "acceptance_criteria": [
+        "Exactly three competitors listed",
+        "Each row includes pricing, menu theme, and IG signal"
+      ],
+      "risk_level": "L1",
+      "approval_required": false,
+      "execution_order": 1,
+      "parallel_group": "A",
+      "status": "proposed",
+      "correlation_id": "corr-mis-101",
+      "idempotency_key": "ws:MIS-101:01:v1",
+      "canonical_token": "AIPOS_WORKSTREAM_ID=WS-MIS-101-01"
+    },
+    {
+      "workstream_id": "WS-MIS-101-02",
+      "mission_id": "MIS-101",
+      "parent_linear_issue": "NIT-101",
+      "linear_issue_id": null,
+      "title": "Build SAHAKON-versus-competitor matrix",
+      "objective": "Turn the fact table into a comparison matrix scoring positioning opportunities for SAHAKON.",
+      "required_capabilities": ["strategy.analyze"],
+      "dependencies": ["WS-MIS-101-01"],
+      "reasoning_action_refs": ["ra2"],
+      "is_integration_workstream": false,
+      "primary_operator": "unassigned",
+      "supporting_operator": null,
+      "tools_required": [],
+      "inputs": { "upstream": ["competitor_fact_table"] },
+      "expected_output": {
+        "type": "document",
+        "location_hint": "notion",
+        "description": "Comparison matrix of three competitors vs SAHAKON"
+      },
+      "acceptance_criteria": [
+        "Matrix covers pricing, menu, and IG dimensions",
+        "SAHAKON row or column is explicit"
+      ],
+      "risk_level": "L1",
+      "approval_required": false,
+      "execution_order": 2,
+      "parallel_group": "B",
+      "status": "proposed",
+      "correlation_id": "corr-mis-101",
+      "idempotency_key": "ws:MIS-101:02:v1",
+      "canonical_token": "AIPOS_WORKSTREAM_ID=WS-MIS-101-02"
+    },
+    {
+      "workstream_id": "WS-MIS-101-03",
+      "mission_id": "MIS-101",
+      "parent_linear_issue": "NIT-101",
+      "linear_issue_id": null,
+      "title": "Write one-page 30-day promo recommendation",
+      "objective": "Produce the Owner-facing one-page memo with one recommended promo angle and two risks grounded in the matrix.",
+      "required_capabilities": ["docs.write", "strategy.analyze"],
+      "dependencies": ["WS-MIS-101-02"],
+      "reasoning_action_refs": ["ra3"],
+      "is_integration_workstream": false,
+      "primary_operator": "unassigned",
+      "supporting_operator": null,
+      "tools_required": [],
+      "inputs": { "upstream": ["comparison_matrix"] },
+      "expected_output": {
+        "type": "document",
+        "location_hint": "notion",
+        "description": "One-page competitor recommendation memo for SAHAKON 30-day promo"
+      },
+      "acceptance_criteria": [
+        "Exactly one recommended angle",
+        "Two risks listed",
+        "Readable as one page"
+      ],
+      "risk_level": "L1",
+      "approval_required": false,
+      "execution_order": 3,
+      "parallel_group": "C",
+      "status": "proposed",
+      "correlation_id": "corr-mis-101",
+      "idempotency_key": "ws:MIS-101:03:v1",
+      "canonical_token": "AIPOS_WORKSTREAM_ID=WS-MIS-101-03"
+    }
+  ],
+  "parallel_groups": ["A", "B", "C"],
+  "correlation_id": "corr-mis-101",
+  "created_at": "2026-08-12T18:50:00.000Z",
+  "decomposer_version": "ADR-006.v2"
+}
