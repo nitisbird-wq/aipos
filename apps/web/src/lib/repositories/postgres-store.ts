@@ -5,6 +5,7 @@ import type { IntakeMissionBundle } from "@/lib/schemas/intake";
 import type { MissionObject, NotionSyncRecord } from "@/lib/schemas/mission";
 import type { AuditEvent, Capability, Policy } from "@/lib/schemas/policy";
 import { getDb, type AiposDb } from "@/lib/db/client";
+import { isUniqueViolation } from "@/lib/db/errors";
 import {
   auditEvents,
   capabilities,
@@ -13,7 +14,11 @@ import {
   notionSync,
   policies,
 } from "@/lib/db/schema";
-import type { Repository } from "./types";
+import type {
+  PersistConfirmedMappingInput,
+  PersistConfirmedMappingResult,
+  Repository,
+} from "./types";
 
 function toDate(iso: string | null | undefined): Date | null {
   if (!iso) return null;
@@ -419,5 +424,135 @@ export class PostgresRepository implements Repository {
     await this.ready;
     const rows = await this.db.select().from(capabilities);
     return rows.map(rowToCapability);
+  }
+
+  async persistConfirmedMapping(
+    input: PersistConfirmedMappingInput,
+  ): Promise<PersistConfirmedMappingResult> {
+    await this.ready;
+    const { bundle, mission, audit, notionSyncPending } = input;
+
+    try {
+      return await this.db.transaction(async (tx) => {
+        const existingRows = await tx
+          .select()
+          .from(missions)
+          .where(
+            and(
+              eq(missions.source_intake_id, mission.source_intake_id),
+              eq(missions.source_intake_version, mission.source_intake_version),
+            ),
+          )
+          .limit(1);
+        if (existingRows[0]) {
+          return {
+            created: false,
+            mission: existingRows[0].mission_json as MissionObject,
+          };
+        }
+
+        const createdAt = toDate(bundle.created_at) ?? new Date();
+        const updatedAt = toDate(bundle.updated_at) ?? new Date();
+        await tx
+          .insert(intakes)
+          .values({
+            id: bundle.intake_id,
+            intake_version: bundle.intake_version,
+            requester_id: bundle.requester_id,
+            source: bundle.source,
+            source_message_ref: bundle.source_message_ref,
+            raw_request: bundle.raw_request,
+            bundle_json: bundle,
+            readiness_status: bundle.readiness_status,
+            confirmed_by_user: bundle.confirmed_by_user,
+            idempotency_key: bundle.idempotency_key,
+            created_at: createdAt,
+            updated_at: updatedAt,
+          })
+          .onConflictDoUpdate({
+            target: intakes.id,
+            set: {
+              intake_version: bundle.intake_version,
+              requester_id: bundle.requester_id,
+              source: bundle.source,
+              source_message_ref: bundle.source_message_ref,
+              raw_request: bundle.raw_request,
+              bundle_json: bundle,
+              readiness_status: bundle.readiness_status,
+              confirmed_by_user: bundle.confirmed_by_user,
+              idempotency_key: bundle.idempotency_key,
+              updated_at: updatedAt,
+            },
+          });
+
+        const now = new Date();
+        await tx.insert(missions).values({
+          id: mission.mission_id,
+          object_version: mission.object_version,
+          revision: mission.revision,
+          source_intake_id: mission.source_intake_id,
+          source_intake_version: mission.source_intake_version,
+          mapping_version: mission.mapping_version,
+          status: mission.status,
+          planning_status: mission.planning_status,
+          planning_revision: mission.planning_revision,
+          last_planned_at: toDate(mission.last_planned_at),
+          planning_reason: mission.planning_reason,
+          criticality: mission.criticality,
+          mission_json: mission,
+          created_at: now,
+          updated_at: now,
+        });
+
+        await tx.insert(auditEvents).values({
+          id: audit.id,
+          aggregate_type: audit.aggregate_type ?? null,
+          mission_id: audit.mission_id,
+          intake_id: audit.intake_id,
+          actor: audit.actor,
+          action: audit.action,
+          reason: audit.reason,
+          correlation_id: audit.correlation_id,
+          causation_id: audit.causation_id ?? null,
+          previous_state: audit.previous_state,
+          new_state: audit.new_state,
+          policy_result: audit.policy_result,
+          created_at: toDate(audit.created_at) ?? now,
+        });
+
+        const syncUpdatedAt = toDate(notionSyncPending.updated_at) ?? now;
+        await tx
+          .insert(notionSync)
+          .values({
+            mission_id: notionSyncPending.mission_id,
+            notion_page_id: notionSyncPending.notion_page_id,
+            sync_status: notionSyncPending.sync_status,
+            sync_attempt_id: notionSyncPending.sync_attempt_id,
+            verified_by: notionSyncPending.verified_by,
+            verified_at: toDate(notionSyncPending.verified_at),
+            verification_method: notionSyncPending.verification_method,
+            verification_version: notionSyncPending.verification_version,
+            source_record_version: notionSyncPending.source_record_version,
+            policy_decision_id: notionSyncPending.policy_decision_id,
+            last_error: notionSyncPending.last_error,
+            synced_at: toDate(notionSyncPending.synced_at),
+            updated_at: syncUpdatedAt,
+          })
+          .onConflictDoNothing();
+
+        return { created: true, mission };
+      });
+    } catch (err) {
+      if (isUniqueViolation(err)) {
+        const byVersion = await this.getMissionByIntakeIdAndVersion(
+          mission.source_intake_id,
+          mission.source_intake_version,
+        );
+        if (byVersion) return { created: false, mission: byVersion };
+        const byId = await this.getMissionById(mission.mission_id);
+        if (byId) return { created: false, mission: byId };
+      }
+      throw err;
+    }
   }
 }

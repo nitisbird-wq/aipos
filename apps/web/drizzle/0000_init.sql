@@ -52,6 +52,9 @@ CREATE TABLE IF NOT EXISTS missions (
 
 CREATE INDEX IF NOT EXISTS missions_source_intake_id_idx ON missions (source_intake_id);
 CREATE INDEX IF NOT EXISTS missions_status_updated_at_idx ON missions (status, updated_at);
+-- C-03: one mission per confirmed intake_id + intake_version (also applied via 0001_*.sql)
+CREATE UNIQUE INDEX IF NOT EXISTS missions_source_intake_version_uidx
+  ON missions (source_intake_id, source_intake_version);
 
 -- Notion projection / sync (separate state machine; App DB owns verification + page id)
 CREATE TABLE IF NOT EXISTS notion_sync (
