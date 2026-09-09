@@ -90,3 +90,9 @@ Until the write/readback evidence exists, Real Linear E2E, Real Worker Execution
 **Health/drift:** code-level lost-update containment is PASS for one Node.js process. Owner record reconciliation is BLOCKED pending deployment-free local pull/restart, same-intake repair, and readback. Cross-process file locking is not provided; PostgreSQL remains the production transaction boundary.
 
 **Human Gate:** keep `INT-5D7A2B1143C8` unconfirmed. After readback proves the intended corrected bundle, review Blueprint/routing and obtain the existing ADR-007 architecture approval before any Real Linear write.
+
+## 2026-09-09 — CI critical dependency gate
+
+- CI #153 passed secret scan, format, lint, unit/PostgreSQL tests, build, and AIPOS Doctor, then failed the critical audit because Next.js `15.5.22` was covered by a newly published critical RCE advisory.
+- Bounded remediation: patch upgrade to Next.js `15.5.25`; no feature, schema, mission state, deployment, or Phase 1–2 workflow behavior changed.
+- Local verification after the patch: 118 tests passed, 7 PostgreSQL-gated tests skipped, lint/format/build passed, and `npm audit --audit-level=critical` reports no critical vulnerabilities. Remaining high/moderate advisories stay visible and require separate compatibility review.
