@@ -159,3 +159,11 @@ Current tracked counters:
 - Added bounded existing-draft editor + read-only resume + authenticated strict correction API. Risk, sensitivity, confirmation authority, raw request and identity remain unchanged.
 - Draft editing is not dispatch planning: Control Plane currently re-analyzes/re-decomposes downstream. One-workstream dispatch remains unverified and subject to existing Blueprint/routing/ADR gates.
 - Verification and remaining work: see the existing Stage 7 gate/evidence document. No production baseline, worker, Linear or n8n action was changed.
+
+### 2026-09-09 DEV persistence drift containment
+
+- Owner readback for `INT-5D7A2B1143C8` confirms the old two-workstream draft persisted even though sensitivity acknowledgment persisted. Matching intake audit events and correction/ack conversation markers were absent from the same DEV store snapshot. This is evidence of a lost-update class failure, not evidence that Linear failed.
+- Root cause in the development adapter: each mutation independently performed a whole-file read/modify/direct-write, so overlapping repository calls could overwrite each other's newer state and readers could observe a partially written file.
+- Containment implemented on the existing PR branch: all DEV store mutations now share a per-file process queue and commit through a unique temporary file plus atomic rename. This is development-only reliability work; the production adapter and frozen Phase 1–2 baseline are unchanged.
+- Automated evidence: concurrent writes from two repository instances retain all 24 audit events; correction followed by sensitivity re-ack retains the corrected draft. Full web verification: 118 passed, 7 PostgreSQL-gated tests skipped; ESLint, Prettier, and production build passed.
+- Drift remains unresolved in Owner data until the Owner pulls the fix, restarts the local runtime, repairs the same intake (never creates a duplicate), and reads it back. No Confirm, Linear write, Worker call, deployment, or production mutation is authorized by this containment.

@@ -88,6 +88,36 @@ describe("Existing draft correction — AC product #2 / Architecture Contract §
     const resumed = await resumeChatIntake(b.intake_id);
     expect(resumed.draft?.mission_summary).toBe(patch.mission_summary);
   });
+  it("preserves the corrected draft when the user acknowledges a new sensitivity flag", async () => {
+    const { b, patch } = await fixture();
+    const corrected = await correctChatDraft(
+      { ...patch, desired_outcome: "Review a password credential, then keep the corrected draft" },
+      "operator:test",
+    );
+    expect(corrected.bundle?.sensitivity_acknowledged).toBe(false);
+    expect(corrected.bundle?.draft_workstreams).toHaveLength(1);
+
+    const acknowledged = await handleChatTurn(
+      {
+        intake_id: b.intake_id,
+        message: "I acknowledge the sensitivity flags and want to continue",
+        clarification_code: "ACKNOWLEDGE_SENSITIVITY",
+        idempotency_key: "correction-ack-test",
+      },
+      "operator:test",
+    );
+    const saved = await repo.getIntakeById(b.intake_id);
+
+    expect(acknowledged.bundle?.sensitivity_acknowledged).toBe(true);
+    expect(saved?.mission_summary).toBe(patch.mission_summary);
+    expect(saved?.desired_outcome).toBe(
+      "Review a password credential, then keep the corrected draft",
+    );
+    expect(saved?.success_criteria).toEqual(patch.success_criteria);
+    expect(saved?.constraints).toEqual(patch.constraints);
+    expect(saved?.draft_workstreams).toHaveLength(1);
+    expect(saved?.draft_workstreams[0]?.name).toBe(patch.workstreams[0].name);
+  });
   it("rejects stale retries without duplicating audit or intakes", async () => {
     const { b, patch } = await fixture();
     await correctChatDraft(patch, "operator:test");

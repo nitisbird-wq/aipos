@@ -1,5 +1,6 @@
 import { promises as fs } from "fs";
 import path from "path";
+import { randomUUID } from "crypto";
 import type { IntakeMissionBundle } from "@/lib/schemas/intake";
 import type { MissionObject, NotionSyncRecord } from "@/lib/schemas/mission";
 import type { AuditEvent, Capability, Policy } from "@/lib/schemas/policy";
@@ -20,6 +21,7 @@ type StoreShape = {
  * Data lives under apps/web/.data/dev-store.json (gitignored).
  */
 export class DevFileRepository implements Repository {
+  private static mutationQueues = new Map<string, Promise<void>>();
   readonly adapterName = "dev-file" as const;
   private filePath: string;
   private ready: Promise<void>;
@@ -27,7 +29,7 @@ export class DevFileRepository implements Repository {
   constructor(baseDir?: string) {
     const root = baseDir ?? path.join(process.cwd(), ".data");
     this.filePath = path.join(root, "dev-store.json");
-    this.ready = this.ensureSeeded();
+    this.ready = this.enqueueMutation(() => this.ensureSeeded());
   }
 
   private async ensureSeeded(): Promise<void> {
@@ -45,7 +47,7 @@ export class DevFileRepository implements Repository {
         policies,
         capabilities,
       };
-      await this.write(initial);
+      await this.writeAtomic(initial);
     }
   }
 
@@ -73,9 +75,39 @@ export class DevFileRepository implements Repository {
     return JSON.parse(raw) as StoreShape;
   }
 
-  private async write(store: StoreShape): Promise<void> {
+  private async writeAtomic(store: StoreShape): Promise<void> {
     await fs.mkdir(path.dirname(this.filePath), { recursive: true });
-    await fs.writeFile(this.filePath, JSON.stringify(store, null, 2), "utf8");
+    const temporaryPath = `${this.filePath}.${process.pid}.${randomUUID()}.tmp`;
+    try {
+      await fs.writeFile(temporaryPath, JSON.stringify(store, null, 2), "utf8");
+      await fs.rename(temporaryPath, this.filePath);
+    } catch (error) {
+      await fs.rm(temporaryPath, { force: true }).catch(() => undefined);
+      throw error;
+    }
+  }
+
+  private enqueueMutation<T>(mutation: () => Promise<T>): Promise<T> {
+    const previous = DevFileRepository.mutationQueues.get(this.filePath) ?? Promise.resolve();
+    const current = previous.catch(() => undefined).then(mutation);
+    DevFileRepository.mutationQueues.set(
+      this.filePath,
+      current.then(
+        () => undefined,
+        () => undefined,
+      ),
+    );
+    return current;
+  }
+
+  private async mutate(change: (store: StoreShape) => void): Promise<void> {
+    await this.ready;
+    await this.enqueueMutation(async () => {
+      const raw = await fs.readFile(this.filePath, "utf8");
+      const store = JSON.parse(raw) as StoreShape;
+      change(store);
+      await this.writeAtomic(store);
+    });
   }
 
   async getIntakeById(id: string) {
@@ -94,9 +126,9 @@ export class DevFileRepository implements Repository {
   }
 
   async saveIntake(bundle: IntakeMissionBundle) {
-    const s = await this.read();
-    s.intakes[bundle.intake_id] = bundle;
-    await this.write(s);
+    await this.mutate((store) => {
+      store.intakes[bundle.intake_id] = bundle;
+    });
   }
 
   async getMissionById(id: string) {
@@ -126,9 +158,9 @@ export class DevFileRepository implements Repository {
   }
 
   async saveMission(mission: MissionObject) {
-    const s = await this.read();
-    s.missions[mission.mission_id] = mission;
-    await this.write(s);
+    await this.mutate((store) => {
+      store.missions[mission.mission_id] = mission;
+    });
   }
 
   async getNotionSync(missionId: string) {
@@ -137,15 +169,15 @@ export class DevFileRepository implements Repository {
   }
 
   async saveNotionSync(record: NotionSyncRecord) {
-    const s = await this.read();
-    s.notion_sync[record.mission_id] = record;
-    await this.write(s);
+    await this.mutate((store) => {
+      store.notion_sync[record.mission_id] = record;
+    });
   }
 
   async appendAudit(event: AuditEvent) {
-    const s = await this.read();
-    s.audit_events.push(event);
-    await this.write(s);
+    await this.mutate((store) => {
+      store.audit_events.push(event);
+    });
   }
 
   async listAudit(filter: { mission_id?: string; intake_id?: string; correlation_id?: string }) {
