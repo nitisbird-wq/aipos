@@ -96,3 +96,10 @@ Until the write/readback evidence exists, Real Linear E2E, Real Worker Execution
 - CI #153 passed secret scan, format, lint, unit/PostgreSQL tests, build, and AIPOS Doctor, then failed the critical audit because Next.js `15.5.22` was covered by a newly published critical RCE advisory.
 - Bounded remediation: patch upgrade to Next.js `15.5.25`; no feature, schema, mission state, deployment, or Phase 1–2 workflow behavior changed.
 - Local verification after the patch: 118 tests passed, 7 PostgreSQL-gated tests skipped, lint/format/build passed, and `npm audit --audit-level=critical` reports no critical vulnerabilities. Remaining high/moderate advisories stay visible and require separate compatibility review.
+
+## 2026-09-10 — same-intake authentication resume
+
+- **Observed blocker:** opening `/intake?intake_id=INT-5D7A2B1143C8` after session expiry produced API 401, then login discarded the deep link and returned the Owner to a blank New Mission screen.
+- **Contained defect:** unauthorized Mission Commander requests now send a sanitized internal return path to login; successful authentication resumes the original intake URL. External/open redirects are rejected.
+- **Evidence:** return-path security tests pass (5/5); Control Plane regression plus return-path tests pass (7/7); ESLint/Prettier on changed files and Next.js 15.5.25 production build pass.
+- **Gate effect:** removes navigation churn only. `INT-5D7A2B1143C8` remains unconfirmed, and Blueprint/routing/ADR-007 plus Real Linear Human Gates remain unchanged.

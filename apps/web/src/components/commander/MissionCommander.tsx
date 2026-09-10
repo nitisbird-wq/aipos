@@ -35,6 +35,11 @@ export function MissionCommander() {
   const [editing, setEditing] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
+  const redirectToLogin = useCallback(() => {
+    const returnPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    router.push(`/login?next=${encodeURIComponent(returnPath)}`);
+  }, [router]);
+
   const loadWelcome = useCallback(
     async (fresh = false) => {
       const url = new URL(window.location.href);
@@ -43,7 +48,7 @@ export function MissionCommander() {
         intakeId ? `/api/chat?intake_id=${encodeURIComponent(intakeId)}` : "/api/chat",
       );
       if (res.status === 401) {
-        router.push("/login");
+        redirectToLogin();
         return;
       }
       const data = await res.json();
@@ -55,7 +60,7 @@ export function MissionCommander() {
       setSession(data);
       setEditing(false);
     },
-    [router],
+    [redirectToLogin],
   );
 
   useEffect(() => {
@@ -95,7 +100,7 @@ export function MissionCommander() {
         }),
       });
       if (res.status === 401) {
-        router.push("/login");
+        redirectToLogin();
         return;
       }
       const data = await res.json();
@@ -129,7 +134,7 @@ export function MissionCommander() {
         body: JSON.stringify(patch),
       });
       if (res.status === 401) {
-        router.push("/login");
+        redirectToLogin();
         return;
       }
       const data = await res.json();
