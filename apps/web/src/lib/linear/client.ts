@@ -81,8 +81,10 @@ export function createLiveLinearClient(input: {
     async searchByCorrelationId(correlationId) {
       // Fail closed: any transport/parse error must throw (dispatcher catches → BLOCKED).
       const marker = CORRELATION_MARKER(correlationId);
+      // Linear deprecated `issueSearch`; `searchIssues(term:)` is the current
+      // full-text entry point. The exact correlation marker is matched below.
       const data = await linearGraphql<{
-        issueSearch: {
+        searchIssues: {
           nodes: Array<{
             id: string;
             title: string;
@@ -93,13 +95,13 @@ export function createLiveLinearClient(input: {
       }>(
         apiKey,
         `query Search($term: String!) {
-          issueSearch(query: $term, first: 10) {
+          searchIssues(term: $term, first: 25) {
             nodes { id title identifier description }
           }
         }`,
         { term: marker },
       );
-      const exact = data.issueSearch.nodes.find(
+      const exact = data.searchIssues.nodes.find(
         (n) => (n.description ?? "").includes(marker) || n.title.includes(correlationId),
       );
       if (!exact) return null;

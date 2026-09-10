@@ -15,4 +15,6 @@ test-results/
 .data-test/
 apps/web/.data/
 apps/web/.data-test/
+.data-stage7-e2e/
+apps/web/.data-stage7-e2e/
 AIPOS_AUDIT_REPORT.md

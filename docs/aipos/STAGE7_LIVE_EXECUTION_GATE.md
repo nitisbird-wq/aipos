@@ -103,3 +103,52 @@ Until the write/readback evidence exists, Real Linear E2E, Real Worker Execution
 - **Contained defect:** unauthorized Mission Commander requests now send a sanitized internal return path to login; successful authentication resumes the original intake URL. External/open redirects are rejected.
 - **Evidence:** return-path security tests pass (5/5); Control Plane regression plus return-path tests pass (7/7); ESLint/Prettier on changed files and Next.js 15.5.25 production build pass.
 - **Gate effect:** removes navigation churn only. `INT-5D7A2B1143C8` remains unconfirmed, and Blueprint/routing/ADR-007 plus Real Linear Human Gates remain unchanged.
+
+## 2026-09-10 — Linear live-search defect fix + E2E dispatch harness
+
+**Deprecated-endpoint defect (verified live, read-only):** the live Linear client used
+`issueSearch(query:)` for correlation-id lookup. The Linear GraphQL API now rejects that
+field — `{"errors":[{"message":"deprecated", "path":["issueSearch"], "code":"INPUT_ERROR",
+"statusCode":400}]}`. The dispatcher catches any search error and fails closed, so **every
+real dispatch would have been BLOCKED before create**. The read-only preflight never
+exercised search (it only queries `viewer` + `team(id:)`), which is why the earlier
+Owner-local `ok=true` preflight did not surface this.
+
+- **Fix:** `apps/web/src/lib/linear/client.ts` now calls the current full-text entry point
+  `searchIssues(term:, first: 25)` and keeps the exact `correlation_id=` marker match on
+  `description`/`title`. No mutation path changed; idempotency semantics are unchanged.
+- **Regression cover:** `client.test.ts` asserts the search query uses `searchIssues(term:` and
+  never `issueSearch`, and still resolves the exact marker past fuzzy hits;
+  `control-plane-e2e.test.ts` transport mock updated to the `searchIssues` shape.
+- **Read-only re-preflight from the coding environment:** `npm run linear:preflight` →
+  `ok=true`, `adapter=live`, `authenticated=true`, team `Nitis Pro : AIPOS` / `NIT` /
+  `acee324a-f2d8-416d-96ef-237298e82986`, `write_performed=false`.
+
+**E2E dispatch harness (Owner-runnable, no external write performed here):**
+`apps/web/scripts/linear-e2e-dispatch.ts`, wired as `npm run linear:e2e`. It:
+
+1. runs the read-only preflight (viewer + exact team);
+2. seeds ONE reversible mission + workstream in a dedicated local store
+   (`.data-stage7-e2e/`, gitignored — isolated from Owner mission data and `INT-5D7A2B1143C8`);
+   Notion is forced to mock;
+3. dispatches exactly one workstream through the live adapter (the single real `issueCreate`);
+4. asserts the returned issue id/identifier and that canonical control-plane state reconciled
+   `workstream_id -> linear_issue_id` with status `DISPATCHED`;
+5. re-runs the dispatch and asserts the same issue is reused (idempotency, no second write);
+6. runs an independent `searchIssues` correlation-id readback and asserts it matches;
+7. prints an evidence JSON block and never deletes or archives the issue. A fixed idempotency
+   key + persistent local store keep re-runs pointed at the same one issue.
+
+**Local verification:** full web suite 124 passed / 7 PostgreSQL-gated skipped; ESLint clean;
+Prettier clean on changed files; Next.js 15.5.25 production build passed; AIPOS Doctor
+`pass=32 fail=0 critical=0`.
+
+**Gate effect — unchanged blocks.** The live `npm run linear:e2e` run is NOT executed by an
+agent. Before the Owner runs it:
+- `INT-5D7A2B1143C8` still needs repair + readback (that draft is not what the harness uses,
+  but the standing Human Gate covers all Real Linear writes);
+- Blueprint/routing review for the one-workstream dispatch is still required;
+- **ADR-007 is still `Reserved` — the full decision text is unapproved.** No Real Linear write
+  is authorized until that checkbox is ticked.
+
+The harness only makes the gated action a single reproducible command; it does not lift the gate.

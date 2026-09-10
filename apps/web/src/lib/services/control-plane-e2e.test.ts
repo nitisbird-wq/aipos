@@ -159,11 +159,11 @@ describe("live Linear client — mocked GraphQL transport", () => {
     const fetchMock = vi.fn(async (_url: string, init?: RequestInit) => {
       const body = JSON.parse(String(init?.body ?? "{}")) as { query?: string };
       const q = String(body.query ?? "");
-      if (q.includes("issueSearch") || q.includes("Search")) {
+      if (q.includes("searchIssues") || q.includes("Search")) {
         return new Response(
           JSON.stringify({
             data: {
-              issueSearch: {
+              searchIssues: {
                 nodes: [
                   {
                     id: "LIN-LIVE-1",

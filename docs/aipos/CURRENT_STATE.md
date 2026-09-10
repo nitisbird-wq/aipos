@@ -148,7 +148,9 @@ Current tracked counters:
   - A read-only authenticated Linear connection verified team `Nitis Pro : AIPOS` and team ID `acee324a-f2d8-416d-96ef-237298e82986`; no external write occurred.
   - `npm run linear:preflight` verifies the runtime API key and exact team mapping without a mutation or secret output.
   - Owner-local preflight reports `ok=true`, `adapter=live`, `authenticated=true`, `write_performed=false`; do not request credential setup again for that runtime. This is Owner evidence, not a live run in the coding environment.
-  - Next after credential preflight: one reversible idempotent Real Linear E2E test with mapping/reconciliation evidence.
+  - 2026-09-10: fixed a live-search defect — the Linear API deprecated `issueSearch`, so every real dispatch would have failed closed at the correlation-id lookup; the live client now uses `searchIssues(term:)`. Read-only preflight re-verified from the coding environment (`ok=true`, expected team, `write_performed=false`).
+  - 2026-09-10: added `npm run linear:e2e` (`apps/web/scripts/linear-e2e-dispatch.ts`) — an Owner-runnable, reversible, idempotent one-workstream Real Linear E2E that proves issue id/identifier, `workstream_id -> linear_issue_id` reconciliation, idempotent reuse, and `searchIssues` readback, without deleting the issue. Not executed by an agent.
+  - Next: the Owner runs `npm run linear:e2e` once, but only after Blueprint/routing review and ADR-007 approval; `INT-5D7A2B1143C8` repair/readback and the standing Real Linear Human Gate are unchanged.
 - Production Mission Intake (Phase 1–2) is **PRODUCTION PASS** on Notion CURRENT STATE; do not conflate that with live Linear dispatch or Phase 3 routing.
 - Live Linear dispatch, real workers beyond intake, Phase 3 Capability Orchestration (ADR-007), Full Mission E2E beyond intake smoke, and Production Gate for control-plane remain pending Owner gates.
 

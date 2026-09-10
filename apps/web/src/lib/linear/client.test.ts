@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  createLiveLinearClient,
   createMockLinearClient,
   getLinearDispatchClient,
   preflightLiveLinearConnection,
@@ -83,6 +84,40 @@ describe("Linear dispatch client", () => {
     expect(result.team.id).toBe("team_test");
     expect(result.write_performed).toBe(false);
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("live search uses the non-deprecated searchIssues query and matches the exact correlation marker", async () => {
+    const seen: string[] = [];
+    const fetchMock = vi.fn(async (_url: string, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body ?? "{}")) as { query?: string };
+      seen.push(String(body.query ?? ""));
+      return new Response(
+        JSON.stringify({
+          data: {
+            searchIssues: {
+              nodes: [
+                { id: "LIN-A", title: "Unrelated fuzzy hit", identifier: "NIT-1", description: "" },
+                {
+                  id: "LIN-B",
+                  title: "Target",
+                  identifier: "NIT-2",
+                  description: "correlation_id=DSP-M1-WS1\n_aipos_workstream_dispatch_",
+                },
+              ],
+            },
+          },
+        }),
+        { status: 200 },
+      );
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const live = createLiveLinearClient({ apiKey: "lin_test", teamId: "team_test" });
+    const found = await live.searchByCorrelationId("DSP-M1-WS1");
+
+    expect(found?.id).toBe("LIN-B");
+    expect(seen[0]).toContain("searchIssues(term:");
+    expect(seen[0]).not.toContain("issueSearch");
   });
 
   it("integrates mock client with dispatcher", async () => {
