@@ -86,17 +86,25 @@ describe("Linear dispatch client", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it("live search uses the non-deprecated searchIssues query and matches the exact correlation marker", async () => {
-    const seen: string[] = [];
+  it("live search uses the non-deprecated issues(filter:) query and matches the exact correlation marker", async () => {
+    // `searchIssues(term:)` (Linear's relevance-ranked full-text search) was tried
+    // as the deprecated-`issueSearch` replacement first, but verified LIVE to
+    // silently miss the exact match for a freshly created issue and return
+    // unrelated older issues instead — unsafe for a fail-closed idempotency key
+    // lookup. `issues(filter: { description: { contains } })` hits the primary
+    // store directly and was verified live to return exactly the right issue.
+    const seen: Array<{ query: string; variables: Record<string, unknown> }> = [];
     const fetchMock = vi.fn(async (_url: string, init?: RequestInit) => {
-      const body = JSON.parse(String(init?.body ?? "{}")) as { query?: string };
-      seen.push(String(body.query ?? ""));
+      const body = JSON.parse(String(init?.body ?? "{}")) as {
+        query?: string;
+        variables?: Record<string, unknown>;
+      };
+      seen.push({ query: String(body.query ?? ""), variables: body.variables ?? {} });
       return new Response(
         JSON.stringify({
           data: {
-            searchIssues: {
+            issues: {
               nodes: [
-                { id: "LIN-A", title: "Unrelated fuzzy hit", identifier: "NIT-1", description: "" },
                 {
                   id: "LIN-B",
                   title: "Target",
@@ -116,8 +124,11 @@ describe("Linear dispatch client", () => {
     const found = await live.searchByCorrelationId("DSP-M1-WS1");
 
     expect(found?.id).toBe("LIN-B");
-    expect(seen[0]).toContain("searchIssues(term:");
-    expect(seen[0]).not.toContain("issueSearch");
+    expect(seen[0]?.query).toContain("issues(filter:");
+    expect(seen[0]?.query).not.toContain("issueSearch");
+    expect(seen[0]?.query).not.toContain("searchIssues");
+    expect(seen[0]?.variables.desc).toContain("correlation_id=DSP-M1-WS1");
+    expect(seen[0]?.variables.teamId).toBe("team_test");
   });
 
   it("integrates mock client with dispatcher", async () => {

@@ -80,11 +80,18 @@ export function createLiveLinearClient(input: {
     adapterName: "live",
     async searchByCorrelationId(correlationId) {
       // Fail closed: any transport/parse error must throw (dispatcher catches → BLOCKED).
+      // Linear deprecated `issueSearch`. `searchIssues(term:)` (relevance-ranked
+      // full-text search) was tried as the replacement but verified LIVE against
+      // this team to silently miss the exact match for a freshly created issue
+      // (returned unrelated older issues instead, with no error) — unsafe for an
+      // idempotency/fail-closed key lookup, since it can both miss an existing
+      // issue (duplicate create) and fuzzy-match the wrong one (wrong reuse).
+      // `issues(filter: { description: { contains } })` queries the primary store
+      // directly (not a search index) and was verified to return exactly the
+      // matching issue with no false positives.
       const marker = CORRELATION_MARKER(correlationId);
-      // Linear deprecated `issueSearch`; `searchIssues(term:)` is the current
-      // full-text entry point. The exact correlation marker is matched below.
       const data = await linearGraphql<{
-        searchIssues: {
+        issues: {
           nodes: Array<{
             id: string;
             title: string;
@@ -94,14 +101,14 @@ export function createLiveLinearClient(input: {
         };
       }>(
         apiKey,
-        `query Search($term: String!) {
-          searchIssues(term: $term, first: 25) {
+        `query Search($desc: String!, $teamId: ID!) {
+          issues(filter: { description: { contains: $desc }, team: { id: { eq: $teamId } } }, first: 10) {
             nodes { id title identifier description }
           }
         }`,
-        { term: marker },
+        { desc: marker, teamId },
       );
-      const exact = data.searchIssues.nodes.find(
+      const exact = data.issues.nodes.find(
         (n) => (n.description ?? "").includes(marker) || n.title.includes(correlationId),
       );
       if (!exact) return null;
