@@ -1,8 +1,10 @@
 # Stage 7 Live Execution Gate
 
-Date: 2026-08-31  
+Date: 2026-08-31 (updated 2026-09-11)  
 Scope: PR #21 branch `cursor/master-continuity-strategy-169c`  
-Status: **UNVERIFIED — Owner-local preflight passed; draft review / live execution pending**
+Status: **Stage 7A (Real Linear E2E) — PASS, verified live.** Stage 7B (Real Worker Execution) onward
+remain unverified and gated. See "2026-09-11 — Real Linear E2E PASS" below for evidence; see
+"Prohibited claims" for exactly what PASS does and does not authorize.
 
 ## Current state
 
@@ -48,7 +50,11 @@ A successful preflight reports authenticated/team metadata and `write_performed:
 
 ## Prohibited claims
 
-Until the write/readback evidence exists, Real Linear E2E, Real Worker Execution, Health/Recovery live runtime, n8n integration, Full Mission E2E, and Production Gate remain unverified.
+**Real Linear E2E is verified as of 2026-09-11** (see that section below) — it may be reported as PASS.
+**Everything else stays unverified**: Real Worker Execution, Health/Recovery live runtime, n8n
+integration, Full Mission E2E, and Production Gate. Verified Linear dispatch does not imply any of
+those, and does not approve ADR-007 or authorize expanding Capability Orchestration into production —
+ADR-007 remains `Reserved` and requires its own explicit Owner approval, unrelated to this result.
 
 ## 2026-09-02 — Existing draft correction defect / decision / handoff
 
@@ -152,3 +158,49 @@ agent. Before the Owner runs it:
   is authorized until that checkbox is ticked.
 
 The harness only makes the gated action a single reproducible command; it does not lift the gate.
+
+## 2026-09-11 — Real Linear E2E PASS (live verified, Owner-confirmed)
+
+**Second defect found and fixed (verified live):** `searchIssues(term:)` is relevance-ranked full-text
+search, not exact lookup — right after creating an issue with a unique `correlation_id` marker, it
+returned zero exact matches (two unrelated older issues instead, just-created one silently omitted from
+the top 25). Unsafe for a fail-closed idempotency key: could both miss an existing issue (duplicate
+create) and fuzzy-match the wrong one (wrong reuse). Fixed by querying the primary issue store directly
+— `issues(filter: { description: { contains }, team: { id: { eq } } } })` — instead of the search index.
+Verified live: returns exactly the one matching issue, no false positives, no misses. Commit `9385fdb`.
+
+**Live run evidence:** `npm run linear:e2e` executed end-to-end against the real `Nitis Pro : AIPOS`
+team after the fix. Result: `write_performed=true`, `idempotent_reuse=true`, `readback_matched=true`,
+resolved to the same real issue **NIT-22** on both the first and a re-run — no duplicate created. Two
+throwaway issues created while investigating the defect (**NIT-20**, **NIT-21**) were canceled in Linear
+with an explanatory note; **NIT-22 is left untouched**, per the harness's own instruction not to
+delete/archive without explicit Owner authority.
+
+**Local verification:** web suite 124 passed / 7 PostgreSQL-gated skipped; lint/format/build clean;
+Doctor `pass=32 fail=0 critical=0`.
+
+**Owner reconciliation (2026-09-11):** Owner cross-checked this evidence against GitHub (PR #21 open,
+Draft, mergeable, head `9385fdb`, CI green) and updated the Notion canonical state (`PRJ-2`) and
+Activity Log (`LOG-52`) to match — Real Linear E2E is recorded as PASS there too, so this and Notion no
+longer disagree. Cross-AI handoff recorded per STD-002 so a later Claude/ChatGPT session does not repeat
+this test.
+
+**What PASS means and does not mean:**
+- Dispatch → real external write → real readback → idempotent reuse is proven end-to-end against the
+  live team, with a real, inspectable artifact (NIT-22).
+- It does **not** mean ADR-007 is approved, PR #21 is ready to merge, or Capability Orchestration may
+  expand into production. Those remain separate Owner decisions.
+- It does **not** cover Real Worker Execution — that Stage 7B needs an explicit Owner-defined scope
+  (which worker, which credentials, allowed/forbidden actions, authority level) before any agent
+  proceeds. See "Next executable action" below, updated for this stage.
+
+## Next executable action (updated 2026-09-11)
+
+Stage 7A is done — do not repeat the Linear E2E test. Two Owner decisions gate what comes next:
+
+1. **PR #21 merge** — Owner's call, on Owner's timeline; still Draft, not merged, not deployed.
+2. **Real Worker Execution (Stage 7B) scope** — before any agent is authorized to proceed, the Owner
+   defines: which worker/executor, what credentials it uses, what it is and is not allowed to do, and
+   its authority level. Once that scope is set, the order is Real Worker → Test → Verify → Evidence →
+   n8n → Health/Recovery → Full Mission E2E → Production Gate — each stage keeps its own Human Gate;
+   none of them are pre-authorized by Stage 7A passing.
