@@ -1,0 +1,9 @@
+title = "AIPOS Gitleaks Configuration"
+
+[allowlist]
+  description = "Allowlist for known false positives"
+  # Commit a013c21 introduced test correlation_id constants (STAGE7D-*-TEST-*).
+  # gitleaks generic-api-key rule fires on hyphenated strings assigned to
+  # variables named *key*. These are test stage markers, not credentials.
+  # The current file already carries // gitleaks:allow on those lines.
+  commits = ["a013c2132c82cc29258ba2ea80972b5c9d548984"]
