@@ -194,13 +194,21 @@ this test.
   (which worker, which credentials, allowed/forbidden actions, authority level) before any agent
   proceeds. See "Next executable action" below, updated for this stage.
 
-## Next executable action (updated 2026-09-11)
+## Stage 7B authorization (recorded 2026-09-12)
 
-Stage 7A is done — do not repeat the Linear E2E test. Two Owner decisions gate what comes next:
+ADR-007 Approved 2026-09-12. Owner decision D-007.6 Option B:
 
-1. **PR #21 merge** — Owner's call, on Owner's timeline; still Draft, not merged, not deployed.
-2. **Real Worker Execution (Stage 7B) scope** — before any agent is authorized to proceed, the Owner
-   defines: which worker/executor, what credentials it uses, what it is and is not allowed to do, and
-   its authority level. Once that scope is set, the order is Real Worker → Test → Verify → Evidence →
-   n8n → Health/Recovery → Full Mission E2E → Production Gate — each stage keeps its own Human Gate;
-   none of them are pre-authorized by Stage 7A passing.
+> AI worker operators authorized at L0–L1 only, for Stage 7B proof only.
+> All writes must go through authorized adapters. Forbidden-actions list binding — see ADR-007 §D-007.6.
+
+**Stage 7B authorized scope:** one reversible, idempotent L0–L1 Real Worker proof task, with audit evidence and readback verification. See `docs/aipos/STAGE7B_WORKER_PROOF.md` for execution record (created during Stage 7B implementation).
+
+## Next executable action (updated 2026-09-12)
+
+Stage 7A is done — do not repeat the Linear E2E test (NIT-22 exists).
+
+Stage 7B gate is now open per ADR-007 D-007.6:
+
+1. **Stage 7B Real Worker proof** — implement one reversible L0–L1 worker task; produce audit evidence and readback. Must not reuse Linear E2E. Must not touch Phase 1–2.
+2. **PR #21 merge** — Owner's call, on Owner's timeline; still Draft, not merged, not deployed.
+3. After Stage 7B: Real Worker Test → Verify → Evidence → n8n → Health/Recovery → Full Mission E2E → Production Gate — each stage keeps its own Human Gate.

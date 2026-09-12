@@ -1,7 +1,7 @@
 # ADR-007 — AIPOS Capability Orchestration
 
-- **Status:** Proposed — full decision text drafted, awaiting Human Architecture Approval  
-- **Date:** 2026-08-31 (reserved); full text drafted 2026-09-11  
+- **Status:** Approved — Owner decision recorded 2026-09-12  
+- **Date:** 2026-08-31 (reserved); full text drafted 2026-09-11; Approved 2026-09-12  
 - **Deciders:** Mission owner (Human)  
 - **Supersedes:** none  
 - **Recommends superseding:** [ADR-005 — Planning, Subtask, and Assignment (Phase 3a)](./ADR-005-PLANNING-SUBTASK-ASSIGNMENT.md) — see D-007.5. Not automatic; requires the Owner's own approval of that supersession.  
@@ -58,26 +58,47 @@ ADR-005 (2026-08-03, still `Proposed (awaiting Human approval)` on this branch) 
 
 Meanwhile, `cursor/master-continuity-strategy-169c` independently built and **verified** a different, materially larger model for the same problem — Mission Blueprint + Stage Map (`mission-blueprint.v1`, versioned revisions, explicit approval events, evidence-gated progress) plus the Capability Registry and Workstream Dispatcher above — and it is live-integrated with Stage 7A's real Linear dispatch. Running both models would mean two competing "how is a Mission broken into approvable work" mechanisms — exactly the duplicate-SSOT risk `docs/aipos/CURRENT_STATE.md`'s hard rules and STD-002 both forbid.
 
-**Recommendation (Owner decision required, not automatic):**
+**Owner decision (recorded 2026-09-12): Option A — Supersede ADR-005.**
 
-1. Treat ADR-005's `Plan`/`Subtask`/`Assignment` model as **superseded in intent** by Mission Blueprint + Capability Registry + Workstream Dispatcher: plan versioning/reject-creates-new-version ⇒ Blueprint revisions; command-only transitions with audit ⇒ already the pattern for Blueprint/Assignment/Dispatch commands; `status_before_block`/restore ⇒ already Mission's coarse-status transition rules. Nothing in ADR-005's substance is lost by not implementing it separately.
-2. On approval of this ADR, mark ADR-005's own Status line `Superseded by ADR-007` (edit that file; do not delete it — it stays as a record of the earlier proposal).
-3. Close the orphan branch `claude/nitispro-system-dev-08qnvw` without merging it into `main` or into this branch. No code from it is needed.
+> ADR-007 supersedes ADR-005 in intent. Mission Blueprint, Capability Registry, and Workstream Dispatcher are the new primary architecture. Nothing in ADR-005's substance is lost by not implementing it separately.
 
-If the Owner instead wants the simpler Plan/Subtask/Assignment model kept as a lighter-weight path for missions that do not need the full Blueprint machinery, say so explicitly when reviewing this ADR — that is a valid alternative this draft does not rule out, but it is the Owner's call, not something to infer from either ADR's text.
+**Actions taken on approval:**
 
-### D-007.6 — Real Worker Execution scope (Stage 7B) — OPEN, requires an explicit Owner decision
+1. ✅ ADR-005's Status line updated to `Superseded by ADR-007` (file retained as historical record).
+2. **Orphan branch inspection result (read-only, 2026-09-12):** `claude/nitispro-system-dev-08qnvw` (commit `669ded8`) contains unique files **not present in PR #21**: `apps/web/src/lib/schemas/{plan,subtask,assignment}.ts` and corresponding tests, `packages/schemas/{plan,subtask,assignment}.schema.json`. These are schema-only (never wired to any repository, service, or API route). They are superseded in intent by Mission Blueprint + Capability Registry. The branch is marked for closure without merge. **Branch not deleted yet** — Owner has confirmed it may be closed; deletion awaits explicit Owner directive.
+3. ✅ Orphan branch `claude/nitispro-system-dev-08qnvw` is designated for closure without merge. No code from it is needed.
 
-This is the one item in this ADR that a coding agent must not decide or narrow on its own, per `docs/aipos/SYSTEM_UNDERSTANDING_NITISPRO.md` §8.3 and this ADR's own authority model (D-007.3): Real Worker Execution needs an Owner-defined worker identity, credential set, and forbidden-actions list before any agent proceeds. Two options, presented for the Owner to choose between (or reject both):
+If the Owner later decides to retain Plan/Subtask/Assignment as a lighter-weight path alongside Blueprint, that requires a new ADR decision, not a reversal of this one.
 
-| | Option A — adapters only | Option B — AI worker operators |
-|---|---|---|
-| What executes | Only declared tool adapters already in the Capability Registry (n8n, Linear, future connectors) | Adapters **plus** an AI coding/drafting agent (e.g. Cursor, Claude via API) acting as a `worker:*` operator under the existing Operator Contract (`operator-contract.ts`, `buildWorkerAssignmentPackages`) |
-| Risk ceiling | Whatever the adapter itself allows | Recommend capped at `L0`–`L1`: drafting, research, documentation, non-destructive code changes only |
-| External writes | Via adapter's own idempotent dispatch pattern (D-007.4) | Never direct; always through the same adapter dispatch path — an AI worker is not a bypass around D-007.4 |
-| Owner must still specify | Which adapters are live-enabled (today: Linear only, Stage 7A) | Which worker identities are authorized; credentials each one gets and how they're scoped; an explicit forbidden-actions list (no financial transactions, no credential/secret changes, no production deploy, no direct Notion/Linear/database writes outside the existing dispatcher, no merging PRs); required authority level per action class |
+### D-007.6 — Real Worker Execution scope (Stage 7B)
 
-This draft's non-binding recommendation is Option B scoped narrowly as shown, because it is the smallest change that makes Real Worker Execution more than "adapters that only ever call other automation" — but the Owner may pick A, a narrower or wider version of B, or defer Stage 7B entirely. **No agent should begin implementing Stage 7B from this table alone; it is context for the Owner's decision, not a specification to build against.**
+**Owner decision (recorded 2026-09-12): Option B — AI worker operators, L0–L1 only, Stage 7B proof scope.**
+
+> "อนุญาต AI worker operators เฉพาะระดับ L0–L1 สำหรับ Stage 7B proof เท่านั้น"
+
+**Authorized scope for Stage 7B:**
+- AI workers (e.g. Claude Code acting as `worker:*`) may perform drafting, research, documentation, non-destructive code changes — L0–L1 only.
+- All external writes (Linear, Notion, database) must go through the existing adapter dispatch path (D-007.4); AI workers are **not** a bypass around that path.
+- Every write must carry: `idempotency_key`, `readback_verification`, `audit_evidence`, and a `rollback_recovery_path`.
+
+**Explicit forbidden-actions list (binding; no agent may override):**
+1. ❌ Writing to Linear, Notion, or any database **directly** — must use authorized adapters with idempotency and readback
+2. ❌ Modifying secrets, credentials, or environment variables
+3. ❌ Production deploy of any kind
+4. ❌ Financial transactions or legally-binding operations
+5. ❌ Merging PRs (automated or otherwise)
+6. ❌ Touching or re-implementing Phase 1–2 intake baseline
+7. ❌ Counting a simulation, mock, or stub as evidence of Real Worker success
+8. ❌ Re-running `npm run linear:e2e` — NIT-22 already exists from Stage 7A; duplicate dispatch would violate idempotency semantics
+
+**Stage 7B is authorized** to implement one reversible, idempotent L0–L1 Real Worker proof task, subject to the above constraints and D-007.3's Human Gate rules.
+
+| Axis | Value |
+|---|---|
+| What executes | Adapters + L0–L1 AI worker operators under Operator Contract |
+| Risk ceiling | L0–L1 only (drafting, research, documentation, non-destructive changes) |
+| External writes | Via authorized adapter dispatch only — never direct |
+| Proof task | One reversible, idempotent task; must produce audit evidence and readback |
 
 ### D-007.7 — Phase 3 routing gate
 
@@ -110,10 +131,11 @@ Reaffirmed: Phase 3 dispatcher/router **expansion** beyond what Stage 0–7A alr
 
 ## Compliance checklist (for implementers)
 
-- [x] No source code changed in this docs commit
-- [ ] Owner has recorded a decision on D-007.5 (ADR-005 disposition)
-- [ ] Owner has recorded a decision on D-007.6 (Real Worker Execution scope) — **required before any Stage 7B implementation PR**
-- [ ] `docs/aipos/CURRENT_STATE.md` / `SYSTEM_UNDERSTANDING_NITISPRO.md` updated to reflect the approved (or corrected) text
+- [x] No source code changed in the initial docs commit
+- [x] Owner has recorded a decision on D-007.5 (ADR-005 disposition) — **Option A: Supersede**
+- [x] Owner has recorded a decision on D-007.6 (Real Worker Execution scope) — **Option B: L0–L1 AI workers, Stage 7B proof only**
+- [x] ADR-005 Status updated to `Superseded by ADR-007`
+- [x] `docs/aipos/CURRENT_STATE.md` / `SYSTEM_UNDERSTANDING_NITISPRO.md` to be updated in this commit
 
 ---
 
@@ -140,4 +162,4 @@ Production Phase 1–2 status (do not duplicate as a second CURRENT STATE doc):
 
 | Role | Decision | Date |
 |---|---|---|
-| Mission owner (Human) | Full decision text drafted 2026-09-11 by Claude Code for review — ☐ Approve / ☐ Approve with corrections / ☐ Reject | _pending_ |
+| Mission owner (Human) | **Approved** — D-007.5: Option A (Supersede ADR-005); D-007.6: Option B (L0–L1 AI workers, Stage 7B proof only) with explicit forbidden-actions list as stated | 2026-09-12 |

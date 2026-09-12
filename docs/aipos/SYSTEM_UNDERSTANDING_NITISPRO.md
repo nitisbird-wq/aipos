@@ -127,7 +127,7 @@ Standard นี้คือ "ระบบตอบโจทย์ Owner" ที�
 
 **ADR:**
 - ADR-006 = **Control Tower / Governance Enforcement** (Proposed) — ห้าม rename/rewrite
-- ADR-007 = **Capability Orchestration / Mission Decompose + Route** (**Reserved — full decision text ยังไม่อนุมัติ**) → Phase 3 routing / dispatcher expansion ถูกบล็อกจนกว่าจะ approve
+- ADR-007 = **Capability Orchestration / Mission Decompose + Route** (**Approved 2026-09-12** — D-007.5: ADR-005 Superseded; D-007.6: Option B L0–L1 AI workers, Stage 7B proof authorized)
 
 ---
 
@@ -152,7 +152,7 @@ Standard นี้คือ "ระบบตอบโจทย์ Owner" ที�
 ### 7.2 สิ่งที่ **ยังไม่ทำ** และทำไม (Human Gate ที่ยังปิดอยู่)
 
 `npm run linear:e2e` ตัวจริง **agent ไม่รัน** เพราะ:
-- **ADR-007 ยังเป็น `Reserved` — full decision text ยังไม่อนุมัติ** → ไม่มี Real Linear write ใดได้รับอนุญาต
+- **ADR-007 Approved 2026-09-12** — D-007.6 Option B: Stage 7B Real Worker (L0–L1) authorized; see ADR-007 §D-007.6 for forbidden-actions list
 - Blueprint/routing review ของ one-workstream dispatch ยังไม่ทำ
 - `INT-5D7A2B1143C8` ยังต้อง repair + readback (harness ไม่ได้ใช้ draft นั้น แต่ standing Human Gate ครอบทุก Real Linear write)
 - creating a Linear issue = external write บน workspace ของ Owner → ต้องมี explicit per-action approval
@@ -161,20 +161,19 @@ Harness แค่ทำให้ gated action เป็น **1 คำสั่�
 
 ---
 
-## 8. ขั้นตอน & แนวทางต่อจากนี้ (ลำดับที่แนะนำ)
+## 8. ขั้นตอน & แนวทางต่อจากนี้ (อัปเดต 2026-09-12)
 
-### 8.1 ก่อนแตะ Real Linear (Owner decisions)
+### 8.1 ✅ สำเร็จแล้ว — ก่อน Stage 7B (ปิด gate แล้ว)
 
-1. **อนุมัติ ADR-007** — เขียน full decision text (Decomposer acceptance, routing policy, autonomy classes, ความสัมพันธ์ control-plane vs n8n, Phase 3 gates) แล้ว tick ☑ Approve / Approve-with-corrections / Reject ใน `adr/ADR-007-AIPOS-CAPABILITY-ORCHESTRATION.md`
-2. **Repair `INT-5D7A2B1143C8`** — Owner เปิด `/intake?intake_id=INT-5D7A2B1143C8` (ตอนนี้ deep-link resume หลัง login ทำงานแล้ว), แก้ draft, save, อ่านกลับให้เห็น corrected two/one-workstream bundle ที่ตั้งใจ, ยืนยัน sensitivity/risk เดิมไม่ถูกล้าง
-3. **Blueprint/routing review** — ตรวจว่า one-workstream Blueprint กับ downstream re-decomposition สอดคล้องกัน (control-plane ปัจจุบัน re-analyze/re-decompose เอง)
+1. ✅ **ADR-007 อนุมัติแล้ว (2026-09-12)** — D-007.5: ADR-005 Superseded; D-007.6: Option B L0–L1 AI workers
+2. **Repair `INT-5D7A2B1143C8`** — ยังค้างอยู่ (ต้องทำในเครื่อง Owner); ไม่บล็อก Stage 7B proof
+3. ✅ **Stage 7A Linear E2E** — PASS (NIT-22, commit `9385fdb`, 2026-09-11)
 
-### 8.2 รัน Stage 7 Linear E2E (Owner, ในเครื่อง Owner)
+### 8.2 ✅ Stage 7A เสร็จแล้ว — ห้ามรันซ้ำ (NIT-22 มีอยู่แล้ว)
 
-4. `npm run linear:preflight` → ต้องได้ `ok=true`, expected team, `write_performed=false`
-5. `npm run linear:e2e` → ตรวจ evidence JSON: `linear_issue.id/identifier`, `reconciliation.matched=true`, `idempotent_reuse=true`, `readback_matched=true`, `deleted_external_issue=false`
-6. บันทึก evidence ลง `docs/aipos/STAGE7_LIVE_EXECUTION_GATE.md` (issue identifier NIT-xx, mission id, correlation id). **ห้ามลบ/archive issue** โดยไม่มี explicit authority
-7. รัน `npm run linear:e2e` ซ้ำอีกครั้ง → พิสูจน์ idempotency ข้าม process (ต้อง reuse ตัวเดิม)
+ห้ามรัน `npm run linear:e2e` ซ้ำ — NIT-22 ใน Linear ยังคงอยู่โดยตั้งใจ
+
+### 8.3 Stage 7B — Real Worker Proof (AUTHORIZED, 2026-09-12)
 
 ### 8.3 หลัง Linear E2E ผ่าน (ตามลำดับที่ standard กำหนด)
 
@@ -210,7 +209,7 @@ Harness แค่ทำให้ gated action เป็น **1 คำสั่�
 
 **ลำดับความสำคัญสูง**
 
-1. **ADR-007 full text + approval** — เป็น critical-path blocker เดียวที่ค้ำ Stage 7 และ Phase 3 ทั้งหมด ตอนนี้เป็น stub มี checkbox เปล่า ควรเขียนให้จบแล้วให้ Owner ตัดสิน
+1. ~~**ADR-007 full text + approval**~~ ✅ **DONE (2026-09-12)** — ADR-007 Approved; D-007.5 ADR-005 Superseded; D-007.6 Option B L0–L1 Stage 7B authorized
 2. **Authority Gate / G5 ใน app live path** — `CURRENT_CAPABILITIES.md` ระบุเองว่า Authority gate "ยังไม่มีหลักฐานรองรับ" เทียบเท่า Handling/Mapping gate. ก่อน live worker execution ควรมี `authority-gate.ts` + test ที่ enforce L3–L4 / high-impact ทุก path จริง
 3. **Cross-process concurrency สำหรับ DEV store หรือบังคับ Postgres ใน integration** — ตอนนี้ containment เป็น in-process เท่านั้น; lost-update class เคยเกิดจริงกับ Owner data (`INT-5D7A2B1143C8`). แนะนำ: (ก) integration/E2E ที่แตะ mission state ให้ require Postgres, หรือ (ข) เพิ่ม file-lock (`proper-lockfile`) + version/optimistic-concurrency check ใน `DevFileRepository`
 4. **`linear/client.ts` live path hardening** — จาก defect วันนี้ เห็นชัดว่า live GraphQL ไม่มี contract test กับ schema จริง. เพิ่ม: (ก) nightly/manual `linear:preflight` + `searchIssues` shape check เป็น scheduled check, (ข) pin Linear API เวอร์ชันถ้าทำได้, (ค) log `LINEAR_GQL` error แบบมี field path เพื่อ debug เร็วขึ้น

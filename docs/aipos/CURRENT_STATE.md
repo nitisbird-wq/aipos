@@ -142,16 +142,19 @@ Current tracked counters:
   - Material time/cost/risk/architecture change is parked until explicit trade-off approval.
   - Forecast API returns min/max stage and mission ranges with assumptions.
   - CI #138: SUCCESS.
-- Stage 7 Live Execution: **Stage 7A (Real Linear E2E) — PASS, verified live (2026-09-11).** Stage 7B (Real Worker Execution) onward remain unverified and gated. Evidence in `docs/aipos/STAGE7_LIVE_EXECUTION_GATE.md`.
+- Stage 7 Live Execution: **Stage 7A (Real Linear E2E) — PASS, verified live (2026-09-11). Stage 7B (Real Worker Execution) — GATE OPEN (ADR-007 Approved 2026-09-12, D-007.6 Option B L0–L1).** Evidence in `docs/aipos/STAGE7_LIVE_EXECUTION_GATE.md`.
   - CI #143 completed SUCCESS for the Stage 0–6 final documentation head.
   - CI #145 completed SUCCESS for the read-only Linear preflight: secret scan, format, lint, 112 tests, build, AIPOS Doctor, and dependency audit.
   - A read-only authenticated Linear connection verified team `Nitis Pro : AIPOS` and team ID `acee324a-f2d8-416d-96ef-237298e82986`; no external write occurred.
   - 2026-09-10: fixed a deprecated-endpoint defect (`issueSearch` → `searchIssues`) and added `npm run linear:e2e` (`apps/web/scripts/linear-e2e-dispatch.ts`), an Owner-runnable idempotent one-workstream Real Linear E2E harness. Not executed by an agent at that point.
   - 2026-09-11 (commit `9385fdb`): a second defect was found live — `searchIssues` is relevance-ranked full-text search, not exact lookup, so it silently missed the just-created issue. Fixed with a direct primary-store filter query (`issues(filter: { description: { contains }, team: { id: { eq } } } })`). `npm run linear:e2e` was then run end-to-end against the real `Nitis Pro : AIPOS` team: `write_performed=true`, `idempotent_reuse=true`, `readback_matched=true`, resolved to the same real issue **NIT-22** on both runs, no duplicate. Two investigation-only test issues (NIT-20, NIT-21) were canceled with a note; NIT-22 is left untouched pending explicit Owner authority to delete/archive.
   - Owner cross-checked this evidence against GitHub (PR #21 open, Draft, mergeable, head `9385fdb`, CI green) and reconciled Notion (`PRJ-2`, new Activity Log `LOG-52`) to match; a cross-AI handoff was recorded per STD-002 so this test is not repeated.
-  - **What this does not mean:** ADR-007 is still `Reserved` (unapproved) — Real Linear E2E passing does not approve it or authorize expanding Capability Orchestration into production. PR #21 is still Draft/unmerged/undeployed — merge timing is the Owner's call. Real Worker Execution needs its own Owner-defined scope (worker, credentials, allowed/forbidden actions, authority level) before any agent proceeds — that scope has not been set yet.
+  - 2026-09-11 (commit `50449df`): ADR-007 full decision text drafted, CI green. Status: `Proposed — awaiting Owner approval`.
+  - 2026-09-12 (this commit): **ADR-007 Approved** by Owner. D-007.5: ADR-005 Superseded by ADR-007. D-007.6: Option B — L0–L1 AI workers authorized for Stage 7B proof with explicit forbidden-actions list (see ADR-007 §D-007.6). Stage 7B implementation authorized to proceed under those constraints.
+  - **Orphan branch inspection (2026-09-12, read-only):** `claude/nitispro-system-dev-08qnvw` (commit `669ded8`) contains unique schema files (plan/subtask/assignment) not in PR #21. These are superseded per D-007.5. Branch designated for closure without merge. Not deleted — Owner has authorized closure; deletion requires explicit Owner directive.
 - Production Mission Intake (Phase 1–2) is **PRODUCTION PASS** on Notion CURRENT STATE; do not conflate that with live Linear dispatch or Phase 3 routing.
-- Real workers beyond intake, Phase 3 Capability Orchestration (ADR-007), Full Mission E2E beyond intake smoke, and Production Gate for control-plane remain pending Owner gates. Live Linear dispatch (Stage 7A) is no longer pending — see above.
+- Stage 7B (Real Worker Execution L0–L1 proof): **AUTHORIZED — gate open per ADR-007 D-007.6 Option B.** See ADR-007 §D-007.6 for the full forbidden-actions list.
+- Full Mission E2E beyond intake smoke and Production Gate for control-plane remain pending future Owner gates.
 
 ### 2026-09-02 draft repair handoff
 
