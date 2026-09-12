@@ -128,8 +128,8 @@ describe("runWorkerProof", () => {
     expect(result.handoff.status).toBe("PASS");
     expect(result.handoff.requires_human).toBe(false);
     expect(result.handoff.evidence.every((e) => e.verified_by === "worker:research-l0")).toBe(true);
-    // Confirm no external write claim — all evidence is app_persisted
-    expect(result.handoff.evidence.every((e) => e.status === "app_persisted")).toBe(true);
+    // Confirm all evidence is CONFIRMED (direct readback verification — no external-system writes)
+    expect(result.handoff.evidence.every((e) => e.status === "CONFIRMED")).toBe(true);
   });
 
   it("audit trail records all steps including readback", async () => {

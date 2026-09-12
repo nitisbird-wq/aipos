@@ -48,7 +48,7 @@ Worker-proof specific tests:
 | `readback_matched=true` after write | ✅ verified by test |
 | Authority level enforced at L0 (even if package says L3) | ✅ verified by test |
 | Handoff passes `evaluateHandoffVerification()` | ✅ verified by test |
-| All evidence `status="app_persisted"` (no `external_verified`) | ✅ verified by test |
+| All evidence `status="CONFIRMED"` (direct readback, no external-system writes) | ✅ verified by test |
 | No external writes in any code path | ✅ structural — no Linear/Notion/DB import |
 | Audit trail complete (start → authority_check → generate → persisted → readback → done) | ✅ verified by test |
 

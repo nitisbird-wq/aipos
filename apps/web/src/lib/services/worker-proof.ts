@@ -113,7 +113,7 @@ function buildHandoff(
   const evidence: Evidence[] = [
     {
       claim: "Worker executed at L0 authority — no external writes performed",
-      status: "app_persisted",
+      status: "CONFIRMED",
       source: "worker-proof.ts:runWorkerProof",
       timestamp: now,
       freshness: "immediate",
@@ -123,7 +123,7 @@ function buildHandoff(
     },
     {
       claim: "Artifact stored via control-plane adapter and read back successfully",
-      status: "app_persisted",
+      status: "CONFIRMED",
       source: "worker-proof.ts:runWorkerProof",
       timestamp: now,
       freshness: "immediate",
@@ -135,7 +135,7 @@ function buildHandoff(
       claim: idempotentReuse
         ? "Idempotent reuse — existing artifact returned, no second write"
         : "First execution — artifact created and persisted",
-      status: "app_persisted",
+      status: "CONFIRMED",
       source: "worker-proof.ts:runWorkerProof",
       timestamp: now,
       freshness: "immediate",
