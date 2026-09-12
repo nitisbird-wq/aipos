@@ -78,7 +78,7 @@ describe("Stage 7D — Mission E2E Proof", () => {
 
     const n8nAdapter = makeMockN8nAdapter();
     const linearAdapter = createProofLinearAdapter();
-    const idempotencyKey = "STAGE7D-E2E-TEST-001";
+    const idempotencyKey = "STAGE7D-E2E-TEST-001"; // gitleaks:allow
 
     const proof = await runMissionE2dProof({
       missionId,
@@ -149,7 +149,7 @@ describe("Stage 7D — Mission E2E Proof", () => {
 
     const n8nAdapter = makeMockN8nAdapter();
     const linearAdapter = createProofLinearAdapter();
-    const idempotencyKey = "STAGE7D-E2E-TEST-001";
+    const idempotencyKey = "STAGE7D-E2E-TEST-001"; // gitleaks:allow
 
     const proof = await runMissionE2dProof({
       missionId,
@@ -208,7 +208,7 @@ describe("Stage 7D — Mission E2E Proof", () => {
 
     const failAdapter = makeMockN8nAdapter({ forceFailure: true, failureError: "STAGING_WORKER_FAILURE" });
     const linearAdapter = createProofLinearAdapter();
-    const idempotencyKey = "STAGE7D-FAIL-TEST-001";
+    const idempotencyKey = "STAGE7D-FAIL-TEST-001"; // gitleaks:allow
 
     const proof = await runMissionE2dProof({
       missionId,
