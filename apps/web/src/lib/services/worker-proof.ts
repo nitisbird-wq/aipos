@@ -208,7 +208,7 @@ export async function runWorkerProof(input: {
   audit.push({ timestamp: ts(), step: "start", detail: `idempotency_key=${idempotencyKey}` });
 
   // 1. Authority enforcement — L0 ceiling regardless of package claim.
-  const effectiveAuthority: "L0" = "L0";
+  const effectiveAuthority = "L0" as const;
   audit.push({
     timestamp: ts(),
     step: "authority_check",
