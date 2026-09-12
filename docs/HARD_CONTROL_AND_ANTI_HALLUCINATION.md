@@ -29,7 +29,7 @@ Unlabeled claims about identity, authority, family, cases, or external system st
 | `app_persisted` | App DB record id exists | “Saved in AIPOS” |
 | `external_verified` | External write + readback id | “Synced to Notion (page id…)” |
 
-UI and API must not use success wording for a higher state than achieved. Prefer existing `mock_synced` vs `synced` distinction until real Notion is live.
+UI and API must not use success wording for a higher state than achieved. Prefer existing `mock_synced` vs `synced` distinction for the **local/CI mock adapter**. Production Mission Intake Pilot Notion writeback is recorded as **PASS** on [AIPOS CURRENT STATE](https://app.notion.com/p/3cdbc165be4c81c48e73e5899ae5f0e3); app paths may only claim `external_verified` when a verified external page/record ID exists.
 
 ## Evidence and handoff spine
 

@@ -4,7 +4,7 @@
 - **Date:** 2026-08-07  
 - **Deciders:** Mission owner (Human)  
 - **Supersedes:** none  
-- **Related:** Architecture Contract; Phase 1 Decisions (D1, D4); ADR-005; [CONTROL_TOWER_SCOPE.md](../docs/CONTROL_TOWER_SCOPE.md); Doctor / CI governance
+- **Related:** Architecture Contract; Phase 1 Decisions (D1, D4); ADR-005; [ADR-007 — Capability Orchestration](./ADR-007-AIPOS-CAPABILITY-ORCHESTRATION.md) (separate topic — do not conflate); [CONTROL_TOWER_SCOPE.md](../docs/CONTROL_TOWER_SCOPE.md); Doctor / CI governance
 
 ---
 

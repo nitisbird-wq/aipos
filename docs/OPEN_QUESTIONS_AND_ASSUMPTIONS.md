@@ -36,11 +36,29 @@ Locked:
 6. Existing Mission Registry in Notion is preferred target for sync (confirm property map at wiring time).
 7. ChatGPT Actions remain Phase 0.2 intake channel after Hard Control.
 
+### Production Phase 1–2 status (2026-08-31) — resolved operationally
+
+Canonical operational truth (do not duplicate CURRENT STATE docs): [AIPOS CURRENT STATE](https://app.notion.com/p/3cdbc165be4c81c48e73e5899ae5f0e3)
+
+| Item | Status |
+|---|---|
+| Phase 1 | **PRODUCTION PASS** |
+| Phase 2 | **PRODUCTION PASS** |
+| Active workflow | AIPOS — Mission Intake Pilot v0.1 (`7fLPHiiyt7sre5RR` / `760150d8-2e1a-4a5e-93a9-48781c306583`) |
+| Smoke | execution 37 / MIS-3 / NIT-9 |
+| Notion writeback | **PASS** (duplicates 0; Phase 1 regression NO; rollback ready YES) |
+
+ADR numbering lock (Owner 2026-08-31):
+
+- **ADR-006** = Control Tower / Governance Enforcement (do not rename)
+- **ADR-007** = Capability Orchestration / Mission Decompose + Route (**Reserved**)
+
 Still open (non-blocking for docs):
 
-1. Neon vs Supabase vs other Postgres host for production?
+1. Neon vs Supabase vs other Postgres host for production app DB?
 2. When to enable real `ANALYZE_PROVIDER` (openai/claude) behind env flag?
 3. Approval channel for L3–L4 in pilot (in-app only vs n8n chat)?
+4. Full ADR-007 decision text + Mission Decomposer approval before Phase 3 routing
 
 ## Assumptions (MVP v0.1 — still valid for Intake-only runtime)
 
@@ -74,14 +92,14 @@ Still open (non-blocking for docs):
 2. **ORM:** Drizzle with PostgreSQL dialect is used; SQL migration files remain Neon/Postgres compatible.
 3. **Dev persistence:** When `DATABASE_URL` is unset, a clearly marked **development file/memory adapter** under `.data/` is used. This is not production architecture and must never be silent in logs/UI.
 4. **Auth:** MVP uses a signed cookie session for the single operator (`OPERATOR_EMAIL` / `OPERATOR_PASSWORD`), equivalent in spirit to Auth.js credentials for one tenant.
-5. **Notion adapter:** Default is mock (`NOTION_ADAPTER=mock`). Real SDK path exists behind interface but is not invoked without verified credentials/config; sync success still requires a verified page/record ID.
+5. **Notion adapter (local / CI):** Default is mock (`NOTION_ADAPTER=mock`). Real SDK path exists behind interface but is not invoked without verified credentials/config; sync success still requires a verified page/record ID. **Production** Mission Intake Pilot Notion writeback is separately recorded as **PASS** on [AIPOS CURRENT STATE](https://app.notion.com/p/3cdbc165be4c81c48e73e5899ae5f0e3) — local mock defaults do not contradict that operational stamp.
 6. **Analyze provider:** Default `ANALYZE_PROVIDER=none` uses deterministic heuristic stub only (no external AI credentials).
 7. **Readiness Gate naming:** Gate evaluates IntakeMissionBundle readiness transitions (`needs_input` → `awaiting_confirmation` → `ready_to_dispatch`) separately from Mapping Gate.
 8. **Notion + Handling Gate:** Allow-listed Mission Registry sync to `system=notion` / `purpose=mission_registry` is permitted after sensitivity acknowledgment in MVP; other external transfers of sensitive data still fail Handling Gate pending Authority Approval.
 
 ## Phase B Revision 1 assumptions
 
-1. **mock_synced status:** Mock Notion adapter persists `sync_status=mock_synced` (never `synced`). UI copy: “Mock sync only — no external Notion record was created.” “Notion verified” is reserved for real external page/record IDs.
+1. **mock_synced status (local / CI):** Mock Notion adapter persists `sync_status=mock_synced` (never `synced`). UI copy: “Mock sync only — no external Notion record was created.” “Notion verified” is reserved for real external page/record IDs. Production writeback evidence lives on Notion CURRENT STATE / n8n execution records — not via the local mock adapter.
 2. **Retry gate:** `POST /missions/{id}/notion/retry` requires `sync_status=failed`, unless `force=true` and `diagnostic=true` for authorized diagnostics. `notion:retry_success` / `notion:retry_mock_synced` audit events are written only when previous state was `failed`.
 3. **Success criteria split:** Mission `success_criteria` are outcome-derived; system intake checks live under `gate_results` / `intake_validation` (also mirrored in `knowledge_refs` on the bundle).
 ## Phase B.2 assumptions (Chat-first)

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aipos.dev/schemas/deliverable-contract.v1.schema.json",
+  "title": "AIPOS Deliverable Contract v1",
+  "type": "object",
+  "required": [
+    "deliverable_type",
+    "audience",
+    "purpose",
+    "required_sections",
+    "required_artifacts",
+    "quality_standard",
+    "acceptance_criteria",
+    "evidence_requirement",
+    "format",
+    "completion_definition"
+  ],
+  "properties": {
+    "deliverable_type": { "type": "string" },
+    "audience": { "type": "string" },
+    "purpose": { "type": "string" },
+    "required_sections": { "type": "array", "items": { "type": "string" } },
+    "required_artifacts": { "type": "array", "items": { "type": "string" } },
+    "quality_standard": { "type": "string" },
+    "acceptance_criteria": { "type": "array", "items": { "type": "string" } },
+    "evidence_requirement": { "type": "string" },
+    "format": { "type": "string" },
+    "completion_definition": { "type": "string" }
+  },
+  "additionalProperties": false
+}

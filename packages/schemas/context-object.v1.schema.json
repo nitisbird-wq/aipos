@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aipos.dev/schemas/context-object.v1.schema.json",
+  "title": "AIPOS Context Object v1",
+  "type": "object",
+  "required": [
+    "id",
+    "context_class",
+    "domain",
+    "type",
+    "statement",
+    "source",
+    "provenance",
+    "status",
+    "version",
+    "effective_at",
+    "freshness",
+    "review_due",
+    "confidence",
+    "evidence",
+    "owner",
+    "sensitivity",
+    "access",
+    "supersedes",
+    "conflicts_with"
+  ],
+  "properties": {
+    "id": { "type": "string" },
+    "context_class": {
+      "type": "string",
+      "enum": ["OWNER", "ROLE", "SYSTEM", "DOMAIN", "HISTORICAL", "LIVE", "EVIDENCE"]
+    },
+    "domain": { "type": "string" },
+    "type": { "type": "string" },
+    "statement": { "type": "string" },
+    "source": { "type": "string" },
+    "provenance": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": ["CONFIRMED", "REPORTED", "INFERRED", "HYPOTHESIS", "UNKNOWN"]
+    },
+    "version": { "type": "string" },
+    "effective_at": { "type": "string", "format": "date-time" },
+    "freshness": { "type": "string" },
+    "review_due": { "type": "string", "format": "date-time" },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "evidence": { "type": "array", "items": { "$ref": "https://aipos.dev/schemas/evidence.v1.schema.json" } },
+    "owner": { "type": "string" },
+    "approver": { "type": "string" },
+    "sensitivity": { "type": "string" },
+    "access": { "type": "string" },
+    "supersedes": { "type": "array", "items": { "type": "string" } },
+    "conflicts_with": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": false
+}

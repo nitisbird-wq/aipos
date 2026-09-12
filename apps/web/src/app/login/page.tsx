@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { safeInternalReturnPath } from "@/lib/auth/return-path";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -25,7 +26,10 @@ export default function LoginPage() {
         setError(data?.error?.message || "Login failed");
         return;
       }
-      router.push("/intake");
+      const returnPath = safeInternalReturnPath(
+        new URLSearchParams(window.location.search).get("next"),
+      );
+      router.push(returnPath);
       router.refresh();
     } catch {
       setError("Network error");

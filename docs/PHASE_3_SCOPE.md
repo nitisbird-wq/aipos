@@ -1,28 +1,31 @@
 # AIPOS Phase 3 Scope — Planning & Assignment (3a)
 
 **Status:** Approved for documentation (Pre-Phase-3 Verification, conditional approval)  
-**Depends on:** Phase 2 Runtime Foundation (PostgreSQL App DB) — [PR #8](https://github.com/nitisbird-wq/aipos/pull/8)  
+**Depends on:** Phase 2 Runtime Foundation (PostgreSQL App DB) — [PR #8](https://github.com/nitisbird-wq/aipos/pull/8) — **COMPLETE / PRODUCTION PASS**  
+**Operational SoT:** [AIPOS CURRENT STATE](https://app.notion.com/p/3cdbc165be4c81c48e73e5899ae5f0e3)  
 **Binding ADR:** [ADR-005](../adr/ADR-005-PLANNING-SUBTASK-ASSIGNMENT.md)  
+**Capability Orchestration:** [ADR-007](../adr/ADR-007-AIPOS-CAPABILITY-ORCHESTRATION.md) (Reserved — separate from ADR-006 Control Tower)  
 **Does not modify:** `docs/AIPOS_ARCHITECTURE_CONTRACT.md` without a further ADR
 
 ---
 
-## Capability status correction (must match repository)
+## Capability status correction (must match repository + operational truth)
 
 | Capability | Status | Notes |
 |---|---|---|
-| Mission Intake → Confirm → Mission `ready` | **DONE** | Intake MVP |
-| PostgreSQL runtime adapter | **Phase 2** (opt-in via `FORCE_POSTGRES`) | See PR #8 |
+| Mission Intake → Confirm → Mission `ready` | **DONE / PRODUCTION PASS** | Intake MVP + n8n Mission Intake Pilot |
+| PostgreSQL runtime adapter | **Phase 2 COMPLETE** (local opt-in via `FORCE_POSTGRES`) | Production Phase 2 PASS; see Notion CURRENT STATE |
 | Planning Engine | **NOT STARTED** | Schema has `planning_*` only |
 | Subtask creation (L0–L1) | **NOT STARTED** | Forbidden in Intake MVP |
 | Assignment (propose + approve) | **NOT STARTED** | Seeds only; no auto-route |
-| Execution (n8n) | **NOT STARTED** | Out of Phase 3a |
-| Artifact | **NOT STARTED** | No artifact service |
+| Capability Orchestration / Decompose + Route | **PROTOTYPE ONLY** | n8n `AIPOS — P3 Decompose + Route v0.1` unpublished; ADR-007 Reserved |
+| Execution (n8n beyond intake) | **NOT STARTED** for Phase 3a | Frozen intake workflow must not be modified by agents |
+| Artifact | **NOT STARTED** as Phase 3a OS loop | Continuity stage artifacts are separate |
 | Review (post-execution) | **NOT STARTED** | Do not confuse with Intake Confirm |
 | Closeout | **NOT STARTED** | Future (D5) |
 | Monitoring | **PARTIAL / THIN** | Mission list + audit + sync badge only |
 
-Any dashboard or roadmap that marks Artifact / Review / Closeout as complete is **incorrect** and must be corrected to the table above.
+Any dashboard or roadmap that marks Artifact / Review / Closeout as complete is **incorrect** and must be corrected to the table above. Phase 3 routing remains blocked until Mission Decomposer is approved.
 
 ---
 

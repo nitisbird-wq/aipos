@@ -1,9 +1,10 @@
 # ADR-005 — Planning, Subtask, and Assignment (Phase 3a)
 
-- **Status:** Proposed (awaiting Human approval)  
+- **Status:** Superseded by ADR-007 — Owner decision recorded 2026-09-12 (see ADR-007 §D-007.5, Option A). This file is retained as a historical record only; do not implement.  
 - **Date:** 2026-08-03  
 - **Deciders:** Mission owner (Human) — Pre-Phase-3 Verification conditional approval  
 - **Supersedes:** none  
+- **Superseded by:** [ADR-007 — AIPOS Capability Orchestration](./ADR-007-AIPOS-CAPABILITY-ORCHESTRATION.md) (Approved 2026-09-12)  
 - **Related:** AIPOS-ADR-004 / Phase 1 Decisions (D2, D6); Architecture Contract (status vocabulary); [PHASE_3_SCOPE.md](../docs/PHASE_3_SCOPE.md)
 
 ---

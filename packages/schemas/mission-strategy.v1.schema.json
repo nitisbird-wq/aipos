@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aipos.dev/schemas/mission-strategy.v1.schema.json",
+  "title": "AIPOS Mission Strategy v1",
+  "type": "object",
+  "required": [
+    "strategy_id",
+    "mission_id",
+    "objective",
+    "desired_outcome",
+    "final_deliverable",
+    "selected_playbook",
+    "strategy_reasoning",
+    "missing_information",
+    "backward_plan_summary",
+    "decomposition_ready"
+  ],
+  "properties": {
+    "strategy_id": { "type": "string" },
+    "mission_id": { "type": "string" },
+    "objective": { "type": "string" },
+    "desired_outcome": { "type": "string" },
+    "final_deliverable": { "$ref": "https://aipos.dev/schemas/deliverable-contract.v1.schema.json" },
+    "selected_playbook": { "type": "string" },
+    "strategy_reasoning": { "type": "array", "items": { "type": "string" } },
+    "missing_information": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "detail", "owner_question_required"],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["BLOCKER", "SAFE_ASSUMPTION", "DISCOVERABLE", "OPTIONAL_REFINEMENT"]
+          },
+          "detail": { "type": "string" },
+          "owner_question_required": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "backward_plan_summary": { "type": "array", "items": { "type": "string" } },
+    "decomposition_ready": { "type": "boolean" }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,145 @@
+import { afterEach, describe, expect, it } from "vitest";
+import path from "path";
+import { promises as fs } from "fs";
+import { DevFileRepository } from "@/lib/repositories/dev-file-store";
+import { analyzeIntake, confirmIntake, createIntake } from "@/lib/services/intake-service";
+import { runControlPlanePipeline } from "@/lib/services/control-plane-pipeline";
+import { approveMissionBlueprint, saveMissionBlueprint } from "@/lib/services/mission-blueprint";
+import { saveCapabilityRegistryEntry } from "@/lib/services/capability-registry";
+
+const tmpRoot = path.join(process.cwd(), ".data-test-cp-pipeline");
+
+afterEach(async () => {
+  globalThis.__aiposRepo = undefined;
+  (globalThis as { __aiposLinearMock?: unknown }).__aiposLinearMock = undefined;
+  await fs.rm(tmpRoot, { recursive: true, force: true });
+});
+
+// prettier-ignore
+describe("control plane pipeline", () => {
+  it("runs mission through dispatch verify integrate health via Linear mock", async () => {
+    globalThis.__aiposRepo = new DevFileRepository(tmpRoot);
+    globalThis.__aiposPersistenceMode = "dev-file";
+    process.env.NOTION_ADAPTER = "mock";
+    process.env.NOTION_MOCK_SUCCESS = "true";
+    process.env.LINEAR_ADAPTER = "mock";
+
+    const { bundle } = await createIntake(
+      {
+        raw_request: "Implement a small TypeScript helper with measurable success criteria",
+        idempotency_key: "IDEM-PIPE-1",
+      },
+      "operator:test",
+    );
+    await analyzeIntake(bundle.intake_id, "operator:test");
+    const confirmed = await confirmIntake(
+      bundle.intake_id,
+      { reason: "confirm", sensitivity_acknowledged: true },
+      "operator:test",
+    );
+    expect(confirmed.ok).toBe(true);
+    if (!confirmed.ok) return;
+
+    const blueprint = await saveMissionBlueprint({
+      missionId: confirmed.mission_id,
+      actor: "operator:test",
+      final_outcome: "Verified TypeScript helper",
+      definition_of_done: "Implementation, tests, and evidence pass",
+      stages: [
+        {
+          stage_id: "STAGE-1",
+          order: 1,
+          title: "Implement and verify",
+          objective: "Produce the accepted helper",
+          outputs: ["TypeScript helper", "Test evidence"],
+          dependencies: [],
+          entry_criteria: ["Blueprint approved"],
+          exit_criteria: ["Tests pass"],
+          owner: "worker",
+          status: "PLANNED",
+          evidence_refs: [],
+        },
+      ],
+      critical_path: ["STAGE-1"],
+      next_action: "Dispatch approved work",
+    });
+    await approveMissionBlueprint({
+      missionId: confirmed.mission_id,
+      revision: blueprint.revision,
+      actor: "operator:test",
+    });
+
+    for (const family of ["docs", "code", "testing", "verification"]) {
+      await saveCapabilityRegistryEntry({
+        capability_id: `CAP-${family.toUpperCase()}`,
+        family,
+        name: `Verified ${family}`,
+        description: `Runtime-tested ${family} capability`,
+        status: "VERIFIED",
+        enabled: true,
+        operators: [
+          {
+            operator_id: "cursor",
+            role: "PRIMARY",
+            enabled: true,
+            evidence_refs: [`evidence:${family}:operator`],
+          },
+        ],
+        tools: [family],
+        evidence_refs: [`evidence:${family}:pass`],
+        verified_at: "2026-08-29T00:00:00.000Z",
+        expires_at: "2027-08-29T00:00:00.000Z",
+        retest_due_at: "2027-07-29T00:00:00.000Z",
+        last_test_outcome: "PASS",
+        actor: "operator:test",
+      });
+    }
+
+    const result = await runControlPlanePipeline({
+      missionId: confirmed.mission_id,
+      actor: "operator:test",
+    });
+
+    expect(result.blueprint.status).toBe("APPROVED");
+    expect(result.routing.output).toBe("ROUTED");
+    expect(result.dispatch.blocked).toHaveLength(0);
+    expect(result.dispatch.dispatched.length).toBeGreaterThan(0);
+    expect(result.assignments.length).toBeGreaterThan(0);
+    expect(result.verifications.every((v) => v.status === "PASS")).toBe(true);
+    expect(result.integration.final_status).toBe("READY_FOR_OWNER_REVIEW");
+    expect(["HEALTHY", "WARNING", "BLOCKED", "CRITICAL"]).toContain(result.health.status);
+    expect(result.state.workstreams.length).toBeGreaterThan(0);
+    expect(result.state.handoffs.length).toBeGreaterThan(0);
+  });
+
+  it("fails closed before dispatch without explicit Blueprint approval", async () => {
+    globalThis.__aiposRepo = new DevFileRepository(tmpRoot);
+    globalThis.__aiposPersistenceMode = "dev-file";
+    process.env.NOTION_ADAPTER = "mock";
+    process.env.NOTION_MOCK_SUCCESS = "true";
+    process.env.LINEAR_ADAPTER = "mock";
+
+    const { bundle } = await createIntake(
+      {
+        raw_request: "Implement a small TypeScript helper with measurable success criteria",
+        idempotency_key: "IDEM-PIPE-BLUEPRINT-GATE",
+      },
+      "operator:test",
+    );
+    await analyzeIntake(bundle.intake_id, "operator:test");
+    const confirmed = await confirmIntake(
+      bundle.intake_id,
+      { reason: "confirm intake only", sensitivity_acknowledged: true },
+      "operator:test",
+    );
+    expect(confirmed.ok).toBe(true);
+    if (!confirmed.ok) return;
+
+    await expect(
+      runControlPlanePipeline({
+        missionId: confirmed.mission_id,
+        actor: "operator:test",
+      }),
+    ).rejects.toThrow("BLUEPRINT_APPROVAL_REQUIRED");
+  });
+});

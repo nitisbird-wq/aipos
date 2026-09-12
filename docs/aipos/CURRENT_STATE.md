@@ -1,0 +1,175 @@
+# AIPOS vNEXT Current State (Continuity Baseline)
+
+## Production operational truth (do not duplicate)
+
+Canonical production status lives on Notion — update that page in place; do not create a second CURRENT STATE doc:
+
+- [AIPOS CURRENT STATE](https://app.notion.com/p/3cdbc165be4c81c48e73e5899ae5f0e3)
+
+| Item | Status |
+|---|---|
+| Phase 1 | **PRODUCTION PASS** |
+| Phase 2 | **PRODUCTION PASS** |
+| Active workflow | AIPOS — Mission Intake Pilot v0.1 |
+| Workflow ID | `7fLPHiiyt7sre5RR` |
+| Active version | `760150d8-2e1a-4a5e-93a9-48781c306583` |
+| Smoke | execution 37 / MIS-3 / NIT-9 |
+| Notion writeback | **PASS** |
+| Duplicates | **0** |
+| Phase 1 regression | **NO** |
+| Rollback ready | **YES** |
+
+This file remains the **repo continuity / control-plane implementation** snapshot. Local and CI defaults stay mock (`NOTION_ADAPTER=mock`, `LINEAR_ADAPTER=mock`, DEV file store) unless explicitly configured.
+
+## Scope status
+
+- Frozen production Mission Intake workflow baseline must not be modified by agents.
+- New continuity and strategy contracts are implemented as additive orchestration contracts.
+- Control Plane v1 pipeline is implemented (Supervisor → Decompose → Human Gate → Linear dispatch → Worker packages → Verify → Integrate → Health).
+- Workstream Dispatcher is implemented with mock Linear default; live Linear dispatch is opt-in via `LINEAR_ADAPTER=live` + credentials.
+- Phase 3 routing / Capability Orchestration is reserved under [ADR-007](../../adr/ADR-007-AIPOS-CAPABILITY-ORCHESTRATION.md); ADR-006 remains Control Tower only.
+
+## Implemented contracts
+
+- `handoff.v1`
+- `context-object.v1`
+- `mission-context-pack.v1`
+- `owner-interaction-contract.v1`
+- `mission-strategy.v1`
+- `deliverable-contract.v1`
+- `evidence.v1`
+- `recovery.v1`
+
+## Implemented runtime modules
+
+- Control Plane state core: `apps/web/src/lib/services/control-plane-state.ts`
+- AIPOS Supervisor: `apps/web/src/lib/services/aipos-supervisor.ts`
+- Health Supervisor: `apps/web/src/lib/services/health-supervisor.ts`
+- Workstream Dispatcher (idempotent + repair): `apps/web/src/lib/services/workstream-dispatcher.ts`
+- Linear dispatch client (mock default / live opt-in): `apps/web/src/lib/linear/client.ts`
+- Operator Contract packager: `apps/web/src/lib/services/operator-contract.ts`
+- Verifier + Result Integrator: `apps/web/src/lib/services/verifier-integrator.ts`
+- Human Gate policy bridge: `apps/web/src/lib/services/human-gate.ts`
+- Evidence promotion guards: `apps/web/src/lib/services/evidence.ts`
+- Recovery SBI/GROW planner: `apps/web/src/lib/services/recovery.ts`
+- Canonical handoff builder: `apps/web/src/lib/services/handoff.ts`
+- Mission strategist: `apps/web/src/lib/services/mission-strategist.ts`
+- Playbook engine: `apps/web/src/lib/services/playbook-engine.ts`
+- Decomposer (playbook/outcome-driven, rejects generic titles): `apps/web/src/lib/services/decomposer.ts`
+- Authority evaluator: `apps/web/src/lib/services/authority.ts`
+- Capability router + operator handle: `apps/web/src/lib/services/capability-router.ts`
+- Control Plane pipeline orchestrator: `apps/web/src/lib/services/control-plane-pipeline.ts`
+- Mission control-plane API: `apps/web/src/app/api/missions/[id]/control-plane/route.ts`
+- Runtime reconcile after external actions: `apps/web/src/lib/services/runtime-reconcile.ts`
+- Independent Verifier: `apps/web/src/lib/services/verifier.ts`
+- Independent Result Integrator: `apps/web/src/lib/services/result-integrator.ts`
+- Architecture gap audit: `docs/aipos/ARCHITECTURE_GAP_AUDIT.md`
+
+## Continuity contract behavior
+
+- Handoff payload includes required continuity fields and mission orchestration state.
+- Context loading is bounded to relevant context pack entries.
+- Missing information uses:
+  - `BLOCKER`
+  - `SAFE_ASSUMPTION`
+  - `DISCOVERABLE`
+  - `OPTIONAL_REFINEMENT`
+- Only `BLOCKER` is treated as owner interruption.
+
+## Owner friction tracking
+
+Current tracked counters:
+
+- `owner_questions_count`
+- `human_gate_count`
+- `avoidable_questions_count`
+
+## SoT boundary statement
+
+- Notion remains mission/business/knowledge projection.
+- Linear remains operational work status.
+- Git/GitHub remain code/contracts/ADR source.
+- n8n remains execution truth.
+- App DB remains runtime transaction system.
+
+## Health Supervisor states
+
+- `HEALTHY` / `WARNING` / `BLOCKED` / `CRITICAL` with findings + remediation
+- Continuous scan: `evaluateAllMissionsHealth()`
+- Detects stale missions, failed executions, duplicate workstreams, missing handoffs, orphan Linear mappings, state divergence, stale evidence, waiting-human SLA breaches, completed work without artifacts
+
+
+## Owner Mission Standard implementation status
+
+- Stage 0 PR verification gate: COMPLETE; evidence in `docs/aipos/PR21_STAGE0_VERIFICATION.md`.
+- Stage 1 Mission Blueprint & Stage Map: COMPLETE; evidence in `docs/aipos/STAGE1_BLUEPRINT_VERIFICATION.md`.
+  - Implemented `mission-blueprint.v1`, numbered stages, dependencies, entry/exit criteria, critical path, immutable audit-backed revisions, explicit approval event, and evidence-only completion progress.
+  - Control-plane dispatch reads the persisted latest approved Blueprint; request-body assertions cannot approve.
+  - Owner mission UI shows stage X/Y, progress, remaining path, critical path, evidence, revision history, and one next action.
+  - Owner can edit stage contracts, add/remove/reorder stages, save a new revision, and explicitly approve the latest revision.
+  - API: GET/POST `/api/missions/{id}/blueprint`; POST `/api/missions/{id}/blueprint/approve`.
+  - CI #72, #76, and #77: SUCCESS.
+- Stage 2 Capability & Team Intelligence: COMPLETE; evidence in `docs/aipos/STAGE2_CAPABILITY_VERIFICATION.md`.
+  - Living `capability-registry.v1` records immutable audit-backed truth revisions.
+  - VERIFIED/PARTIAL/UNVERIFIED/UNAVAILABLE/REVERIFY_REQUIRED/DEGRADED states include evidence, expiry, retest, and downgrade behavior.
+  - Routing reports requirement coverage and explainable KEEP/ASSIST/HANDOFF/SPLIT/HUMAN_REQUIRED decisions.
+  - Control Plane consumes Living Registry truth when populated and fails closed on any uncovered requirement.
+  - API: GET/POST `/api/capabilities/registry`; POST `/api/capabilities/registry/{id}/retest`.
+  - CI #90: SUCCESS.
+- Stage 3 Stage Artifact Pipeline: COMPLETE; evidence in `docs/aipos/STAGE3_ARTIFACT_VERIFICATION.md`.
+  - Immutable audit-backed `stage-artifact.v1` snapshots preserve revision/parent/rollback lineage and checksums.
+  - Artifact promotion requires editable/final/preview URIs plus artifact-specific QA evidence.
+  - Acceptance emits canonical handoff and advances the next action while keeping accepted artifacts accessible.
+  - Owner UI supports stage selection, draft/final save, compare, download/preview, rollback, QA evidence, and acceptance.
+  - API: stage artifact list/save/compare, rollback, and accept.
+  - CI #96 and #104: SUCCESS.
+- Stage 4 Policy Intelligence: COMPLETE; evidence in `docs/aipos/STAGE4_POLICY_VERIFICATION.md`.
+  - Audit-backed `policy-inbox.v1` captures provenance, scope, priority, confidence, dates, and proposed canonical target.
+  - Deterministic source idempotency and fingerprinting identify duplicates; declared conflicts fail closed; supersession remains traceable.
+  - Canonical promotion requires separate review and explicit approval events and references the existing canonical policy ID.
+  - Coverage reports distinguish connected channels with/without data and unavailable-channel gaps.
+  - API: policy inbox list/capture/coverage, review, and promote.
+  - CI #116: SUCCESS.
+- Stage 5 Persistent Mission Navigation: COMPLETE; evidence in `docs/aipos/STAGE5_NAVIGATION_VERIFICATION.md`.
+  - Audit-backed `mission-navigation.v1` persists primary/active mission, objective, Definition of Done, checkpoint, and interruption stack.
+  - Checkpoints and resume are idempotent; interruption resolution returns to the preserved checkpoint with one next action.
+  - Stale evaluation exposes age/threshold and focused reminder data without mutating state.
+  - API: GET/POST `/api/mission-navigation`.
+  - CI #127: SUCCESS.
+- Stage 6 Scope and WIP Control: COMPLETE; evidence in `docs/aipos/STAGE6_SCOPE_VERIFICATION.md`.
+  - Audit-backed `scope-guard.v1` classifies MUST_NOW/SHOULD_NEXT/LATER/REJECT and retains parked ideas.
+  - MUST_NOW requires Definition-of-Done or safety evidence; WIP limit enforces finish-before-expand.
+  - Material time/cost/risk/architecture change is parked until explicit trade-off approval.
+  - Forecast API returns min/max stage and mission ranges with assumptions.
+  - CI #138: SUCCESS.
+- Stage 7 Live Execution: **Stage 7A (Real Linear E2E) — PASS, verified live (2026-09-11). Stage 7B (Real Worker Execution) — GATE OPEN (ADR-007 Approved 2026-09-12, D-007.6 Option B L0–L1).** Evidence in `docs/aipos/STAGE7_LIVE_EXECUTION_GATE.md`.
+  - CI #143 completed SUCCESS for the Stage 0–6 final documentation head.
+  - CI #145 completed SUCCESS for the read-only Linear preflight: secret scan, format, lint, 112 tests, build, AIPOS Doctor, and dependency audit.
+  - A read-only authenticated Linear connection verified team `Nitis Pro : AIPOS` and team ID `acee324a-f2d8-416d-96ef-237298e82986`; no external write occurred.
+  - 2026-09-10: fixed a deprecated-endpoint defect (`issueSearch` → `searchIssues`) and added `npm run linear:e2e` (`apps/web/scripts/linear-e2e-dispatch.ts`), an Owner-runnable idempotent one-workstream Real Linear E2E harness. Not executed by an agent at that point.
+  - 2026-09-11 (commit `9385fdb`): a second defect was found live — `searchIssues` is relevance-ranked full-text search, not exact lookup, so it silently missed the just-created issue. Fixed with a direct primary-store filter query (`issues(filter: { description: { contains }, team: { id: { eq } } } })`). `npm run linear:e2e` was then run end-to-end against the real `Nitis Pro : AIPOS` team: `write_performed=true`, `idempotent_reuse=true`, `readback_matched=true`, resolved to the same real issue **NIT-22** on both runs, no duplicate. Two investigation-only test issues (NIT-20, NIT-21) were canceled with a note; NIT-22 is left untouched pending explicit Owner authority to delete/archive.
+  - Owner cross-checked this evidence against GitHub (PR #21 open, Draft, mergeable, head `9385fdb`, CI green) and reconciled Notion (`PRJ-2`, new Activity Log `LOG-52`) to match; a cross-AI handoff was recorded per STD-002 so this test is not repeated.
+  - 2026-09-11 (commit `50449df`): ADR-007 full decision text drafted, CI green. Status: `Proposed — awaiting Owner approval`.
+  - 2026-09-12 (this commit): **ADR-007 Approved** by Owner. D-007.5: ADR-005 Superseded by ADR-007. D-007.6: Option B — L0–L1 AI workers authorized for Stage 7B proof with explicit forbidden-actions list (see ADR-007 §D-007.6). Stage 7B implementation authorized to proceed under those constraints.
+  - **Orphan branch inspection (2026-09-12, read-only):** `claude/nitispro-system-dev-08qnvw` (commit `669ded8`) contains unique schema files (plan/subtask/assignment) not in PR #21. These are superseded per D-007.5. Branch designated for closure without merge. Not deleted — Owner has authorized closure; deletion requires explicit Owner directive.
+- Production Mission Intake (Phase 1–2) is **PRODUCTION PASS** on Notion CURRENT STATE; do not conflate that with live Linear dispatch or Phase 3 routing.
+- Stage 7B (Real Worker Execution L0–L1 proof): **AUTHORIZED — gate open per ADR-007 D-007.6 Option B.** See ADR-007 §D-007.6 for the full forbidden-actions list.
+- Full Mission E2E beyond intake smoke and Production Gate for control-plane remain pending future Owner gates.
+
+### 2026-09-02 draft repair handoff
+
+- Owner acknowledged sensitivity and added constraints to the existing Stage 7 draft; do not create another intake or ask for the same input again.
+- Verified defect: Correct understanding only added a hint, free text only appended constraints, and the Advanced form was disabled for existing intakes.
+- Added bounded existing-draft editor + read-only resume + authenticated strict correction API. Risk, sensitivity, confirmation authority, raw request and identity remain unchanged.
+- Draft editing is not dispatch planning: Control Plane currently re-analyzes/re-decomposes downstream. One-workstream dispatch remains unverified and subject to existing Blueprint/routing/ADR gates.
+- Verification and remaining work: see the existing Stage 7 gate/evidence document. No production baseline, worker, Linear or n8n action was changed.
+
+### 2026-09-09 DEV persistence drift containment
+
+- Owner readback for `INT-5D7A2B1143C8` confirms the old two-workstream draft persisted even though sensitivity acknowledgment persisted. Matching intake audit events and correction/ack conversation markers were absent from the same DEV store snapshot. This is evidence of a lost-update class failure, not evidence that Linear failed.
+- Root cause in the development adapter: each mutation independently performed a whole-file read/modify/direct-write, so overlapping repository calls could overwrite each other's newer state and readers could observe a partially written file.
+- Containment implemented on the existing PR branch: all DEV store mutations now share a per-file process queue and commit through a unique temporary file plus atomic rename. This is development-only reliability work; the production adapter and frozen Phase 1–2 baseline are unchanged.
+- Automated evidence: concurrent writes from two repository instances retain all 24 audit events; correction followed by sensitivity re-ack retains the corrected draft. Full web verification: 118 passed, 7 PostgreSQL-gated tests skipped; ESLint, Prettier, and production build passed.
+- Drift remains unresolved in Owner data until the Owner pulls the fix, restarts the local runtime, repairs the same intake (never creates a duplicate), and reads it back. No Confirm, Linear write, Worker call, deployment, or production mutation is authorized by this containment.
+- CI #153 exposed a new critical Next.js security advisory after all functional gates passed. The verified defect is contained by upgrading the web runtime from Next.js `15.5.22` to patched `15.5.25`; local critical audit now reports zero critical findings, and the full 118-test/lint/format/build gate passes on the patched dependency. High/moderate advisories remain tracked and are not misreported as cleared.
+- Owner runtime readback on 2026-09-10 exposed an authentication-resume defect: a 401 from an intake deep link redirected to `/login` without preserving `intake_id`, and successful login always returned to blank `/intake`. The bounded PR #21 fix carries a sanitized internal `next` path through login so the same intake resumes; it does not create, confirm, dispatch, or mutate an intake.

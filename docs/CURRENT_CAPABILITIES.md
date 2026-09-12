@@ -1,38 +1,53 @@
 # AIPOS Current Capabilities
 
-**Document status:** Analysis only (read-only of repository state)  
-**Repository tip analyzed:** `5da6723` on `main` (`fix: install Tailwind native optional dependencies in CI (#5)`)  
-**Scope of evidence:** commits on `main` from governance baseline through CI fix  
-**Generated from:** repository contents under `docs/`, `packages/schemas/`, `apps/web/`, `scripts/aipos/`, `.github/`, `AGENTS.md`, `README.md`  
-**Not claimed:** production deploy health, live Notion verification, or Notion ADR `verified=true` unless evidenced in this repo
+**Document status:** Capability inventory — repository evidence + operational production stamp  
+**Operational truth (canonical):** [AIPOS CURRENT STATE](https://app.notion.com/p/3cdbc165be4c81c48e73e5899ae5f0e3) — update in place; do not create a duplicate CURRENT STATE doc  
+**Repository tip note:** Continuity work tracks on feature branches; merge tip on `main` may lag operational Notion status  
+**Not claimed from local defaults alone:** live Linear writes or unattended production deploy
+
+---
+
+## Production status (Phases 1–2)
+
+| Item | Status |
+|---|---|
+| Phase 1 | **PRODUCTION PASS** |
+| Phase 2 | **PRODUCTION PASS** |
+| Active workflow | AIPOS — Mission Intake Pilot v0.1 |
+| Workflow ID | `7fLPHiiyt7sre5RR` |
+| Active version | `760150d8-2e1a-4a5e-93a9-48781c306583` |
+| Smoke | execution 37 / MIS-3 / NIT-9 |
+| Notion writeback | **PASS** |
+| Duplicates | **0** |
+| Phase 1 regression | **NO** |
+| Rollback ready | **YES** |
+
+**Local / CI honesty:** Default adapters remain `NOTION_ADAPTER=mock`, `LINEAR_ADAPTER=mock`, DEV file store when `DATABASE_URL` is empty. Those defaults describe agent-safe local runs — they do **not** mean production Phase 2 is incomplete.
 
 ---
 
 ## Executive Summary
 
-AIPOS ปัจจุบันทำหน้าที่เป็น **Mission Intake MVP + Development Governance Platform** ไม่ใช่ Mission Operating System ที่วางแผน/มอบหมาย/รันงานอัตโนมัติเต็มรูป
+AIPOS ปัจจุบันมี **Mission Intake ที่ผ่าน PRODUCTION PASS (Phase 1–2)** ผ่าน n8n Mission Intake Pilot + Notion writeback และยังเป็น **Development Governance Platform** ใน repo — ยังไม่ใช่ Mission Operating System ที่วางแผน/มอบหมาย/รันงานอัตโนมัติเต็มรูป (Phase 3+ / ADR-007)
 
 **ทำได้แล้ว**
 
 - กำหนดขอบเขตและสัญญา (Architecture Contract, Phase 1 decisions, API/schema contracts)
 - บังคับพฤติกรรม agent/นักพัฒนาผ่าน `AGENTS.md`, Doctor, PR template, CI
-- รันเว็บแอป Mission Intake แบบ local ได้ครบ flow หลัก: chat intake → analyze → understanding → user confirm → Mission Object → audit → Notion sync **แบบ mock**
+- รันเว็บแอป Mission Intake แบบ local ได้ครบ flow หลัก: chat intake → analyze → understanding → user confirm → Mission Object → audit → Notion sync (**local default = mock**)
+- Production Mission Intake Pilot (n8n) + Notion writeback **PASS** (see table above)
 - มี quality gate อัตโนมัติ: format, lint, unit tests, build, secret scan, doctor (`pr`), npm audit (critical)
 
-**ยังไม่ใช่เป้าหมายของ Phase นี้ (และยังไม่มีใน runtime จริง)**
+**ยังไม่ใช่เป้าหมายของ Phase routing นี้ (Phase 3+)**
 
-- Planning Engine / Subtask creation
-- Capability Matching / Assignment / Specialist execution
-- Real Notion verified write + readback ใน production
-- PostgreSQL/Neon ใช้งานจริงเป็น default runtime
-- n8n runtime orchestration
-- Autonomous multi-agent execution
-- **Artifact** — **NOT STARTED**
-- **Review** (post-execution human review) — **NOT STARTED** (อย่าสับสนกับ Intake Confirm)
-- **Closeout** — **NOT STARTED**
-- **Monitoring** — **PARTIAL / THIN** (มีแค่ mission list + audit + Notion sync badge; ไม่มี alerting/SLO)
+- Planning Engine / Subtask creation (Phase 3a / ADR-005)
+- Capability Orchestration / approved Mission Decompose + Route (ADR-007 **Reserved**; do not expand dispatcher yet)
+- PostgreSQL as **local default** (opt-in via `FORCE_POSTGRES`; production Phase 2 foundation is PASS)
+- Autonomous multi-agent execution / specialist fleet
+- **Artifact** (full OS artifact loop) / **Review** (post-execution) / **Closeout** — see limitations; do not confuse Intake Confirm with Review
+- **Monitoring** — product OS monitoring still **PARTIAL / THIN** (mission list + audit + sync badge; control-plane Health Supervisor is continuity work)
 
-สรุปสั้นๆ: **AIPOS ตอนนี้ช่วย “ควบคุมการพัฒนา + รับ mission เข้าสู่ระบบอย่างมีวินัย” ได้แล้ว แต่ยังไม่ช่วย “ดำเนิน mission จนจบด้วย specialists”**
+สรุปสั้นๆ: **Phase 1–2 Mission Intake เป็น PRODUCTION PASS แล้ว; AIPOS ยังไม่ช่วย “decompose → route → execute mission จนจบด้วย specialists” จนกว่า ADR-007 / Decomposer จะได้รับอนุมัติ**
 
 ---
 
@@ -141,15 +156,15 @@ AIPOS ปัจจุบันทำหน้าที่เป็น **Mission 
 | **Readiness / Handling / Mapping gates** | มี implementation + Vitest (`readiness-gate`, `handling-gate`, `mapping-gate`) |
 | **Mission Object** | `status=ready` แปลว่า **ready_for_planning**; `planning_status=not_started`; `subtask_ids=[]` |
 | **Audit / transitions** | transition commands + audit APIs/tests; ห้ามตรง PATCH status ตามสัญญา/AC |
-| **Notion Sync Contract** | schema + service + mock adapter; `mock_synced` แยกจาก verified; real adapter ปฏิเสธ write ใน MVP |
+| **Notion Sync Contract** | schema + service + mock adapter (local/CI default); `mock_synced` แยกจาก verified; production Mission Intake Pilot writeback = **PASS** (n8n; see CURRENT STATE) |
 | **Dashboard / Detail / Governance viewer** | `/missions`, `/missions/[id]`, `/governance` (policies seed, read-only) |
 | **Idempotency / retry semantics** | มีเทสครอบคลุมส่วนสำคัญของ sync/mapping ตาม Architecture Contract |
 
 ### ข้อจำกัดที่ยังมี (ชัดจาก README / code / docs)
 
-- Default persistence คือ **DEV file store** ไม่ใช่ Postgres production
-- Default Notion คือ **mock**; ห้ามเคลม `external_verified` จาก mock
-- ไม่มี specialist execution / assignment / planning
+- Default **local** persistence คือ **DEV file store** ไม่ใช่ Postgres (Phase 2 foundation is PRODUCTION PASS operationally)
+- Default **local** Notion คือ **mock**; ห้ามเคลม `external_verified` จาก mock
+- ไม่มี approved Phase 3 Capability Orchestration (ADR-007 Reserved) / specialist assignment routing
 - Auth เป็น single-operator session แบบง่าย
 - Authority Gate มีในเอกสาร/สัญญาณ risk (`authority_approval`) แต่ **ยังไม่มีหลักฐานรองรับ** ว่ามี gate service แยกไฟล์เทียบเท่า Handling/Mapping ที่ enforce ครบทุก path
 - E2E/smoke มีสคริปต์/Playwright config แต่ไม่ได้เป็น blocking gate หลักใน CI verify (CI เน้น unit/build/doctor)
@@ -197,17 +212,18 @@ Merge (มนุษย์; ตัวอย่างที่เกิดแล�
 - Dependabot PR generation (npm / actions)
 - Doctor report generation (`AIPOS_AUDIT_REPORT.md` — generated/gitignored)
 - Deterministic intake analyze stub (ไม่เรียก LLM)
-- Mock Notion sync path หลัง confirm
-- Unit test suite (9 files / 46 tests ณ เวลาตรวจล่าสุด)
+- Mock Notion sync path หลัง confirm (**local / CI default**)
+- Production Mission Intake Pilot n8n writeback (**PASS** — operational truth on Notion CURRENT STATE)
+- Unit test suite (Vitest; count evolves with continuity PRs)
 
 ### ยัง Manual (หรือนอก automation หลัก)
 
 - การตัดสินใจ merge / production deploy / ใส่ secrets จริง
 - การตั้ง branch protection บน GitHub
-- การเปิดใช้ Postgres (`DATABASE_URL` + migrations + `FORCE_POSTGRES`) และ real Notion token/DB
+- การเปิดใช้ Postgres ใน local (`DATABASE_URL` + migrations + `FORCE_POSTGRES`) และ live Notion/Linear tokens สำหรับ app adapters
 - การรัน Playwright E2E / browser install ใน CI เป็นประจำ: **ยังไม่มีหลักฐานรองรับว่าเป็น required job**
 - การ verify ADR ใน Notion governance registry (`verified: true` fields)
-- การแตกงาน planning/assignment/execution หลัง Mission `ready`
+- การแตกงาน planning/assignment/execution หลัง Mission `ready` (Phase 3 / ADR-007 gate)
 - Code review เชิงสถาปัตยกรรมโดยมนุษย์/agent นอก checklist
 
 ---
@@ -227,11 +243,11 @@ Merge (มนุษย์; ตัวอย่างที่เกิดแล�
 | Closeout | **NOT STARTED** — เอกสาร D5 เท่านั้น; ไม่มี API/UI/`completed` mission status |
 | Monitoring | **PARTIAL / THIN** — dashboard list + audit + sync badge; ไม่มี health/alerting |
 | Runtime Orchestrator (AIPOS เป็นตัวรัน mission ยาว) | Core ทำ intake/gates/audit/sync contract เท่านั้น |
-| PostgreSQL Production เป็น default | schema/drizzle พร้อม; runtime default = file store (Phase 2 adapter เป็น opt-in) |
-| Real Notion Sync + G5 readback | mock only ใน MVP; real writes disabled; **ทิศทาง App DB → Notion เท่านั้น** |
-| n8n Runtime | Doctor ระบุ N/A / PLANNED |
-| Full Hard Control G0–G5 + Evidence/Handoff objects | เอกสารครบ; implementation บางส่วนใน intake เท่านั้น |
-| In-repo ADR corpus ที่สมบูรณ์ | มี ADR-005 (Phase 3a Proposed); ADR-001 ไฟล์เดิมว่าง |
+| PostgreSQL as **local default** | schema/drizzle พร้อม; local runtime default = file store (Phase 2 adapter opt-in). Phase 2 foundation = **PRODUCTION PASS** |
+| Real Notion Sync + G5 readback (app adapter) | local default = mock; production Mission Intake Pilot writeback = **PASS** (n8n path). App live adapter still requires credentials + verified readback |
+| n8n Runtime | Production Mission Intake Pilot **active** (`7fLPHiiyt7sre5RR`). Phase 3 Decompose+Route prototype unpublished. Doctor may still say N/A for local MVP profile until exports land in-repo |
+| Full Hard Control G0–G5 + Evidence/Handoff objects | เอกสารครบ; implementation บางส่วนใน intake + continuity control-plane |
+| In-repo ADR corpus | ADR-005 (Phase 3a Proposed); ADR-006 (Control Tower Proposed); ADR-007 (Capability Orchestration **Reserved**) |
 | Traceability matrix / architecture version graph | backlog ยังไม่ส่งมอบ |
 | Multi-tenant / strong auth | single operator assumption |
 
@@ -241,13 +257,15 @@ Merge (มนุษย์; ตัวอย่างที่เกิดแล�
 
 | ระยะ | สิ่งที่มี/จะเพิ่ม | หลักฐานอ้างอิง |
 |---|---|---|
-| **Current** | Governance docs + domain schemas + Mission Intake app + tooling + CI green | ประวัติ `main` |
+| **Current / Phase 1–2** | Governance docs + domain schemas + Mission Intake app + tooling + CI; **PRODUCTION PASS** for Mission Intake Pilot + Notion writeback | Notion [AIPOS CURRENT STATE](https://app.notion.com/p/3cdbc165be4c81c48e73e5899ae5f0e3); workflow `7fLPHiiyt7sre5RR` |
 | ↓ | | |
-| **Phase 2** | Postgres runtime adapter (opt-in) + Real Notion verified sync (ยังค้าง) + Three-State | D6 ขั้น 2–3; PR #8; Architecture Contract C-01 |
+| **Phase 2 (complete)** | Postgres runtime foundation + Three-State + production Notion writeback via intake pilot | **PRODUCTION PASS**; local app still mock/file by default |
 | ↓ | | |
 | **Phase 3a** | Planning → confirm-once → L0–L1 Subtasks → Propose/Approve Assignment (**จบที่ assigned**) | ADR-005; `docs/PHASE_3_*.md` — **ไม่รวม** Execution/Artifact/Review/Closeout |
 | ↓ | | |
-| **Phase 3b+ / Execution** | Execution via n8n adapter + artifacts + review (ADR แยก) | D2/D6; ต้อง reconcile auto-run vs human gates |
+| **Capability Orchestration** | Mission Decompose + Route (after Decomposer approved) | **ADR-007 Reserved**; n8n P3 prototype unpublished; do not expand dispatcher yet |
+| ↓ | | |
+| **Phase 3b+ / Execution** | Execution via n8n adapter + artifacts + review (ADR แยก) | D2/D6; must reconcile auto-run vs human gates |
 | ↓ | | |
 | **Full AIPOS** | Closeout/feedback, specialists at scale, policy CRUD, multi-channel intake | Phase 1 decisions + out-of-scope MVP list |
 
@@ -255,12 +273,12 @@ Merge (มนุษย์; ตัวอย่างที่เกิดแล�
 
 | Capability | Traffic light |
 |---|---|
-| Artifact | **NOT STARTED** |
-| Review | **NOT STARTED** |
+| Artifact | **PARTIAL** (control-plane stage artifacts) / full OS artifact loop not Phase 3a |
+| Review | **NOT STARTED** (post-execution) |
 | Closeout | **NOT STARTED** |
 | Monitoring | **PARTIAL / THIN** |
 
-หมายเหตุตรงไปตรงมา: **roadmap ด้านบนมาจากเอกสารที่อนุมัติแล้ว ไม่ใช่จากโค้ดที่ implement ครบ** — อย่าตีความว่า Phase 2+ พร้อมใช้
+หมายเหตุตรงไปตรงมา: **Phase 1–2 production pass is operational truth on Notion. Phase 3+ remains gated. Local mock defaults are not evidence against production pass.**
 
 ---
 
@@ -275,49 +293,49 @@ Merge (มนุษย์; ตัวอย่างที่เกิดแล�
 | 1 | Source Controlled | ผ่านแล้ว (GitHub + ประวัติ commit ชัด) |
 | **2** | **Governed** | **ตรงที่สุด** — สัญญา, Doctor, CI, agent rules, PR governance |
 | 3 | AI Assisted | **บางส่วน** — agent-assisted development แข็ง; AI product runtime ยังเป็น stub |
-| 4 | Mission Operating System | **ยังไม่ถึง** — intake/mapping เท่านั้น ไม่มี plan/assign/execute |
+| 4 | Mission Operating System | **ยังไม่ถึง** — Phase 1–2 intake PASS; ไม่มี approved Phase 3 decompose/route |
 | 5 | Autonomous Orchestration | **ยังไม่ถึง** |
 
 ### คะแนนรายหมวด (1–10)
 
 | หมวด | คะแนน | เหตุผลสั้นๆ |
 |---|---:|---|
-| Architecture | **8** | Contract/SoT/status vocabulary ชัดและ enforceable ในเอกสาร; ช่องว่างคือ ADR in-repo ว่างและ semantic rename ยังค้าง |
+| Architecture | **8** | Contract/SoT/status vocabulary ชัด; ADR-006 Control Tower vs ADR-007 Capability Orchestration แยกชัด |
 | Governance | **8** | `AGENTS.md`, Doctor, PR template, CODEOWNERS, Phase 1 locks แข็งแรง; branch protection enforcement ยังไม่พิสูจน์ใน repo |
 | Code Quality | **7** | Vitest ครอบ gates/services สำคัญ, prettier/eslint/build ผ่าน; E2E ยังไม่เป็น gate หลัก |
-| Automation | **7** | CI ครบและเขียวหลัง oxide fix; Dependabot มี; ยังไม่มี release/deploy/orchestration automation |
-| AI Readiness | **6** | พร้อมให้ AI ช่วยพัฒนาภายใต้กฎ; runtime AI analyze/Know-Me/Hard Control ยังไม่ครบ |
-| CI/CD | **8** | Actions + gitleaks + doctor + audit + optional native deps; CD/production deploy **ยังไม่มีหลักฐานรองรับ** |
-| Mission Readiness | **5** | Intake MVP ใช้งาน local ได้จริง แต่ mock Notion + file store + ไม่มี planning/execution ทำให้ยังไม่พร้อมเป็น operating system |
+| Automation | **8** | CI ครบ; production Mission Intake n8n + Notion writeback PASS; Phase 3 routing ยังไม่ publish |
+| AI Readiness | **6** | พร้อมให้ AI ช่วยพัฒนาภายใต้กฎ; runtime AI analyze/Know-Me ยังไม่ครบ |
+| CI/CD | **8** | Actions + gitleaks + doctor + audit + optional native deps; CD/production deploy **ยังไม่มีหลักฐานรองรับใน repo** |
+| Mission Readiness | **7** | Phase 1–2 PRODUCTION PASS + smoke evidence; local still mock/file by default; Phase 3 decompose/route not approved |
 
 ### จุดแข็ง
 
 - ขอบเขต MVP ถูกเขียนและสะท้อนในโค้ดชัด (ไม่แกล้งมี specialist)
-- Three-State / mock vs verified ถูกแยกใน sync path
+- Three-State / mock vs verified ถูกแยกใน sync path; production writeback recorded separately
 - ท่อคุณภาพหลัง CI fix พร้อมใช้เป็นเกณฑ์รวมงาน
-- เอกสารgovernance หนาและ actionable สำหรับ agents
+- เอกสาร governance หนาและ actionable สำหรับ agents
 
 ### จุดอ่อน / ควรพัฒนาต่อ
 
-1. เปิด Postgres + real Notion verified ก่อนขยาย autonomy (ตาม D4 foundation)  
-2. เติม Hard Control ที่ยังเป็นเอกสารให้เป็นโค้ด/เทส (โดยเฉพาะ Authority/G5 จริง)  
+1. อนุมัติ ADR-007 + Mission Decomposer ก่อน Phase 3 routing  
+2. เติม Hard Control ที่ยังเป็นเอกสารให้เป็นโค้ด/เทส (โดยเฉพาะ Authority/G5 ใน app live path)  
 3. ทำให้ in-repo ADR และ traceability matrix มีของจริง ไม่ชี้ไปไฟล์ว่าง  
 4. ยกระดับ E2E/smoke เข้า CI ถ้าต้องการความมั่นใจด้าน UI  
 5. พิสูจน์ branch protection บน GitHub ให้ Doctor/`production` profile มีหลักฐาน  
-6. อย่าขยายไป Planning/Execution จนกว่า foundation และ verification จะพร้อม
+6. อย่าขยาย dispatcher/router จนกว่า Decomposer จะได้รับอนุมัติ  
 
 ---
 
-## Evidence Snapshot (repository)
+## Evidence Snapshot (repository + operational)
 
 | Item | Value |
 |---|---|
-| Tip commit | `5da6723` — CI Tailwind optional deps fix merged via PR #5 |
-| Prior governance CI commit | `1d26531` — repository governance workflow |
+| Operational SoT | [AIPOS CURRENT STATE](https://app.notion.com/p/3cdbc165be4c81c48e73e5899ae5f0e3) |
+| Production workflow | `7fLPHiiyt7sre5RR` / version `760150d8-2e1a-4a5e-93a9-48781c306583` |
+| Smoke | execution 37 / MIS-3 / NIT-9 |
 | App entry | `apps/web` Next.js Mission Intake |
-| Default adapters | `NOTION_ADAPTER=mock`, `ANALYZE_PROVIDER=none`, DEV file store |
-| Automated tests observed | 9 files / 46 unit tests passing in verification environment |
-| Doctor | READY on `local` / `pr` profiles in verification environment |
-| Out of scope confirmed by docs+code | specialists, real subtasks, n8n runtime, production Notion writes |
+| Default local adapters | `NOTION_ADAPTER=mock`, `ANALYZE_PROVIDER=none`, DEV file store |
+| ADRs | ADR-005 Proposed; ADR-006 Control Tower Proposed; ADR-007 Capability Orchestration Reserved |
+| Out of scope until Owner gate | Phase 3 routing publish, production n8n edits, Notion DB schema changes |
 
-**Honesty note:** เอกสารนี้เป็นการประเมินความสามารถจาก repository ปัจจุบันเท่านั้น ไม่ใช่ใบรับรอง production readiness และไม่แก้โค้ด/สคีมา/เอกสารเดิมอื่น
+**Honesty note:** Production Phase 1–2 status is Owner-recorded operational truth on Notion. Local mock/file defaults remain mandatory honesty for agent and CI runs.

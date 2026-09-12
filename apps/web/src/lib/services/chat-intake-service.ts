@@ -8,9 +8,10 @@ import {
   createIntake,
 } from "@/lib/services/intake-service";
 import { evaluateReadiness } from "@/lib/gates/readiness-gate";
-import { detectLanguage } from "@/lib/services/analyze";
+import { analyzeMissionHeuristic, detectLanguage } from "@/lib/services/analyze";
 import { getRepository } from "@/lib/repositories";
 import { newIdempotencyKey, nowIso } from "@/lib/ids";
+import { DraftCorrectionSchema } from "@/lib/schemas/draft-correction";
 import {
   applyClarificationAnswer,
   buildClarificationPrompts,
@@ -403,4 +404,96 @@ export function initialChatSession(language: "th" | "en" = "en"): ChatTurnRespon
     bundle: null,
     draft: null,
   };
+}
+
+/** Read-only resume: never interpret a missing ID as permission to create. */
+export async function resumeChatIntake(intakeId: string): Promise<ChatTurnResponse> {
+  const bundle = await getRepository().getIntakeById(intakeId);
+  if (!bundle) throw new Error("INTAKE_NOT_FOUND");
+  const prior = getConversationRef(bundle);
+  return {
+    ok: true,
+    intake_id: bundle.intake_id,
+    conversation_state:
+      bundle.readiness_status === "cancelled"
+        ? "cancelled"
+        : bundle.confirmed_by_user
+          ? "ready_to_dispatch"
+          : readinessToConversation(bundle),
+    readiness_status: bundle.readiness_status,
+    messages: prior?.messages ?? [understandingMessage(bundle)],
+    clarifications: buildClarificationPrompts(bundle),
+    bundle,
+    draft: buildDraftPanel(bundle),
+  };
+}
+
+/** Bounded correction of an existing draft; authority fields are never accepted. */
+export async function correctChatDraft(input: unknown, actor: string): Promise<ChatTurnResponse> {
+  const parsed = DraftCorrectionSchema.parse(input);
+  const repo = getRepository();
+  const existing = await repo.getIntakeById(parsed.intake_id);
+  if (!existing) throw new Error("INTAKE_NOT_FOUND");
+  if (existing.confirmed_by_user) throw new Error("INTAKE_ALREADY_CONFIRMED");
+  if (existing.readiness_status === "cancelled") throw new Error("INTAKE_CANCELLED");
+  if (existing.updated_at !== parsed.expected_updated_at) throw new Error("INTAKE_STALE");
+  const retainedIds = new Set(parsed.workstreams.map((w) => w.id));
+  // Keep all prior approval requirements even when a draft workstream is removed.
+  const approvals = [...new Set(existing.draft_workstreams.flatMap((w) => w.approval_points))];
+  const workstreams = parsed.workstreams.map((w) => {
+    const original = existing.draft_workstreams.find((row) => row.id === w.id);
+    if (!original) throw new Error("INTAKE_WORKSTREAM_UNKNOWN");
+    return {
+      ...original,
+      ...w,
+      approval_points: approvals,
+      depends_on_ws: original.depends_on_ws.filter((id) => retainedIds.has(id)),
+    };
+  });
+  // Corrections may introduce sensitive content: only escalate, never auto-clear.
+  const safety = analyzeMissionHeuristic(
+    [
+      parsed.mission_summary,
+      parsed.desired_outcome,
+      ...parsed.success_criteria,
+      ...parsed.constraints,
+      ...parsed.workstreams.flatMap((w) => [w.name, w.purpose, ...w.expected_outputs]),
+    ].join("\n"),
+  );
+  const newFlags = safety.sensitivity_flags.some(
+    (flag) => !existing.sensitivity_flags.includes(flag),
+  );
+  const missingBlockers = newFlags
+    ? [
+        ...existing.missing_blockers.filter((b) => b.code !== "ACKNOWLEDGE_SENSITIVITY"),
+        {
+          code: "ACKNOWLEDGE_SENSITIVITY",
+          question: "พบธงความอ่อนไหวเพิ่มเติม กรุณาตรวจและรับทราบก่อนยืนยัน",
+          blocking: true,
+          resolved: false,
+        },
+      ]
+    : existing.missing_blockers;
+  const corrected = await correctIntake(
+    existing.intake_id,
+    {
+      mission_summary: parsed.mission_summary,
+      desired_outcome: parsed.desired_outcome,
+      success_criteria: parsed.success_criteria,
+      constraints: parsed.constraints,
+      draft_workstreams: workstreams,
+      operational_risk:
+        safety.operational_risk > existing.operational_risk
+          ? safety.operational_risk
+          : existing.operational_risk,
+      sensitivity_flags: [...new Set([...existing.sensitivity_flags, ...safety.sensitivity_flags])],
+      sensitivity_acknowledged: newFlags ? false : existing.sensitivity_acknowledged,
+      missing_blockers: missingBlockers,
+    },
+    actor,
+  );
+  return finalizeAfterAnalysis(corrected, [
+    ...(getConversationRef(existing)?.messages ?? []),
+    msg("user", "บันทึกการแก้ไขร่างเดิม — ยังไม่ยืนยันหรือส่งงาน", "status"),
+  ]);
 }

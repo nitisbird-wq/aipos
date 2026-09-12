@@ -16,11 +16,13 @@
     "test:e2e-thai": "tsx scripts/e2e-thai-smoke.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx scripts/db-migrate.ts",
-    "test:pg": "AIPOS_RUN_PG_TESTS=true vitest run src/lib/repositories"
+    "test:pg": "AIPOS_RUN_PG_TESTS=true vitest run src/lib/repositories",
+    "linear:preflight": "tsx scripts/linear-live-preflight.ts",
+    "linear:e2e": "tsx scripts/linear-e2e-dispatch.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.44.4",
-    "next": "15.5.22",
+    "next": "15.5.25",
     "postgres": "^3.4.7",
     "react": "19.1.0",
     "react-dom": "19.1.0",

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aipos.dev/schemas/mission-context-pack.v1.schema.json",
+  "title": "AIPOS Mission Context Pack v1",
+  "type": "object",
+  "required": [
+    "mission_id",
+    "generated_at",
+    "generated_by",
+    "selected_context",
+    "excluded_context_ids",
+    "rationale"
+  ],
+  "properties": {
+    "mission_id": { "type": "string" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "generated_by": { "type": "string" },
+    "selected_context": {
+      "type": "array",
+      "items": { "$ref": "https://aipos.dev/schemas/context-object.v1.schema.json" }
+    },
+    "excluded_context_ids": { "type": "array", "items": { "type": "string" } },
+    "rationale": { "type": "string" }
+  },
+  "additionalProperties": false
+}

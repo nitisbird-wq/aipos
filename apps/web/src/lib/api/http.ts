@@ -25,6 +25,13 @@ export function handleRouteError(err: unknown) {
     });
   }
   if (err instanceof Error) {
+    if (["INTAKE_STALE", "INTAKE_CANCELLED", "INTAKE_WORKSTREAM_UNKNOWN"].includes(err.message)) {
+      return jsonError(
+        err.message,
+        "Draft changed or cannot be edited; reload the existing draft before retrying",
+        409,
+      );
+    }
     if (err.message === "INTAKE_NOT_FOUND") {
       return jsonError("INTAKE_NOT_FOUND", "Intake not found", 404);
     }
