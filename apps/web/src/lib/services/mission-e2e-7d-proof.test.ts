@@ -109,9 +109,7 @@ describe("Stage 7D — Mission E2E Proof", () => {
     expect(proof.happy_path.reconcile_state.blockers.length).toBe(0);
 
     // Health check executed
-    expect(["HEALTHY", "WARNING", "BLOCKED", "CRITICAL"]).toContain(
-      proof.happy_path.health_status,
-    );
+    expect(["HEALTHY", "WARNING", "BLOCKED", "CRITICAL"]).toContain(proof.happy_path.health_status);
 
     // Verified handoff
     expect(proof.happy_path.handoff_pass).toBe(true);
@@ -206,7 +204,10 @@ describe("Stage 7D — Mission E2E Proof", () => {
     // With a success adapter, failure_recovery.n8n_output.ok=true (no blocker added).
     // We need to run with forceFailure adapter to get a real failure scenario.
 
-    const failAdapter = makeMockN8nAdapter({ forceFailure: true, failureError: "STAGING_WORKER_FAILURE" });
+    const failAdapter = makeMockN8nAdapter({
+      forceFailure: true,
+      failureError: "STAGING_WORKER_FAILURE",
+    });
     const linearAdapter = createProofLinearAdapter();
     const idempotencyKey = "STAGE7D-FAIL-TEST-001"; // gitleaks:allow
 

@@ -261,8 +261,14 @@ export async function runMissionE2dProof(input: {
   const log = (step: string, detail: string) => audit.push({ timestamp: ts(), step, detail });
 
   log("start", `missionId=${missionId} idempotencyKey=${idempotencyKey}`);
-  log("production_snapshot", `workflow_id=${PRODUCTION_WORKFLOW_SNAPSHOT.workflow_id} version=${PRODUCTION_WORKFLOW_SNAPSHOT.version_id} (read-only)`);
-  log("staging_workflow", `workflow_id=${STAGING_WORKFLOW.workflow_id} active=${STAGING_WORKFLOW.active}`);
+  log(
+    "production_snapshot",
+    `workflow_id=${PRODUCTION_WORKFLOW_SNAPSHOT.workflow_id} version=${PRODUCTION_WORKFLOW_SNAPSHOT.version_id} (read-only)`,
+  );
+  log(
+    "staging_workflow",
+    `workflow_id=${STAGING_WORKFLOW.workflow_id} active=${STAGING_WORKFLOW.active}`,
+  );
 
   // ── Set up base state ───────────────────────────────────────────────────────
   await upsertMissionControlState(missionId, "proof-setup", {
@@ -381,7 +387,10 @@ export async function runMissionE2dProof(input: {
   const secondBlockerCount = replayReconcileState.blockers.length;
   const secondArtifactCount = replayReconcileState.artifacts.length;
   const replayIsIdempotent = secondBlockerCount === firstBlockerCount;
-  log("replay:reconcile", `firstBlockers=${firstBlockerCount} secondBlockers=${secondBlockerCount} idempotent=${replayIsIdempotent}`);
+  log(
+    "replay:reconcile",
+    `firstBlockers=${firstBlockerCount} secondBlockers=${secondBlockerCount} idempotent=${replayIsIdempotent}`,
+  );
 
   // Linear search on replay — must find existing, not create
   const replayLinearSearch = await linearAdapter.searchByCorrelationId(happyCorrelationId);
@@ -400,7 +409,10 @@ export async function runMissionE2dProof(input: {
     reconcile_state: replayReconcileState,
     health_status: happyHealth.status,
     handoff_pass: replayN8nOutput.ok,
-    audit_entries: [`replay:linear_reuse:${replayLinearResult.id}`, `replay:idempotent:${replayIsIdempotent}`],
+    audit_entries: [
+      `replay:linear_reuse:${replayLinearResult.id}`,
+      `replay:idempotent:${replayIsIdempotent}`,
+    ],
     is_idempotent: replayIsIdempotent,
     first_blocker_count: firstBlockerCount,
     second_blocker_count: secondBlockerCount,
@@ -460,7 +472,10 @@ export async function runMissionE2dProof(input: {
   });
   const blockersAfterReplay = failReplayState.blockers.length;
   const noDuplicateBlocker = blockersAfterReplay === blockersAfterFailure;
-  log("fail:replay_reconcile", `noDuplicateBlocker=${noDuplicateBlocker} total=${blockersAfterReplay}`);
+  log(
+    "fail:replay_reconcile",
+    `noDuplicateBlocker=${noDuplicateBlocker} total=${blockersAfterReplay}`,
+  );
 
   const failureResult = {
     name: "failure_recovery",
@@ -470,19 +485,29 @@ export async function runMissionE2dProof(input: {
     reconcile_state: failReplayState,
     health_status: "BLOCKED",
     handoff_pass: false,
-    audit_entries: [`fail:blocker_added:${blockerAdded}`, `fail:no_duplicate:${noDuplicateBlocker}`, `fail:no_issue_created:${!failLinearIssue}`],
+    audit_entries: [
+      `fail:blocker_added:${blockerAdded}`,
+      `fail:no_duplicate:${noDuplicateBlocker}`,
+      `fail:no_issue_created:${!failLinearIssue}`,
+    ],
     blocker_added: blockerAdded,
     no_duplicate_issue: !failLinearSearch,
   };
 
   // ── Integration summary ─────────────────────────────────────────────────────
   const integrationSummary = await integrateMissionResults(missionId);
-  log("integration", `final_status=${integrationSummary.final_status} verifications=${integrationSummary.verification_count}`);
+  log(
+    "integration",
+    `final_status=${integrationSummary.final_status} verifications=${integrationSummary.verification_count}`,
+  );
 
   // ── Proof handoff ───────────────────────────────────────────────────────────
   const proofHandoff = buildProofHandoff(missionId, "WS-7D-001", happyArtifactUri, happyN8nOutput);
   const verificationDecision = evaluateHandoffVerification(proofHandoff);
-  log("handoff", `pass=${verificationDecision.pass} reasons=${verificationDecision.reasons.join("|")}`);
+  log(
+    "handoff",
+    `pass=${verificationDecision.pass} reasons=${verificationDecision.reasons.join("|")}`,
+  );
 
   log("done", `Stage 7D proof complete. idempotency_key=${idempotencyKey}`);
 
