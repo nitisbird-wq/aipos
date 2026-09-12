@@ -31,10 +31,12 @@ let currentState: MissionControlState = { ...mockState, artifacts: [] };
 
 vi.mock("@/lib/services/control-plane-state", () => ({
   getMissionControlState: vi.fn(async () => currentState),
-  upsertMissionControlState: vi.fn(async (_missionId: string, _actor: string, patch: Partial<MissionControlState>) => {
-    currentState = { ...currentState, ...patch };
-    return currentState;
-  }),
+  upsertMissionControlState: vi.fn(
+    async (_missionId: string, _actor: string, patch: Partial<MissionControlState>) => {
+      currentState = { ...currentState, ...patch };
+      return currentState;
+    },
+  ),
 }));
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
