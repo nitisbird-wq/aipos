@@ -2,7 +2,10 @@ import type { MissionStrategy, OutcomeWorkstream } from "@/lib/schemas/contracts
 import { OutcomeWorkstreamSchema } from "@/lib/schemas/contracts";
 import type { Playbook } from "@/lib/services/playbook-engine";
 
-type DraftWs = Omit<OutcomeWorkstream, "workstream_id" | "mission_id" | "status"> & {
+type DraftWs = Omit<
+  OutcomeWorkstream,
+  "workstream_id" | "mission_id" | "status" | "approval_state" | "owner_notes"
+> & {
   key: string;
 };
 

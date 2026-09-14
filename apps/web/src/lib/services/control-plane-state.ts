@@ -7,6 +7,7 @@ import {
   type BlockerState,
   type Handoff,
   type MissionControlState,
+  type PlanReviewState,
   type VerificationState,
   type WorkstreamState,
 } from "@/lib/schemas/contracts";
@@ -19,6 +20,7 @@ type ControlPatch = Partial<
   artifacts?: ArtifactState[];
   verifications?: VerificationState[];
   blockers?: BlockerState[];
+  plan_review?: PlanReviewState;
 };
 
 function inferMissionState(mission: MissionObject): MissionControlState["mission_state"] {
@@ -72,6 +74,7 @@ export async function upsertMissionControlState(
     artifacts: patch.artifacts ?? current.artifacts,
     verifications: patch.verifications ?? current.verifications,
     blockers: patch.blockers ?? current.blockers,
+    plan_review: patch.plan_review ?? current.plan_review,
     updated_at: patch.updated_at ?? nowIso(),
   });
   await repo.appendAudit({
