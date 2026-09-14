@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import type { PlanReviewState, OutcomeWorkstream, OwnerQuestion } from "@/lib/schemas/contracts";
@@ -1393,6 +1393,26 @@ export default function PlanReviewPage() {
   const [editState, setEditState] = useState<EditState | null>(null);
   const [addState, setAddState] = useState<AddState | null>(null);
   const [saving, setSaving] = useState<string | null>(null);
+  const [lockConflict, setLockConflict] = useState<{
+    actor: string;
+    planUrl: string;
+    wsTitle: string;
+  } | null>(null);
+
+  // Stable per-tab session identifier used to gate concurrent edits.
+  const sessionIdRef = useRef<string>("");
+  useEffect(() => {
+    try {
+      let id = sessionStorage.getItem("aipos_plan_session_id") ?? "";
+      if (!id) {
+        id = crypto.randomUUID();
+        sessionStorage.setItem("aipos_plan_session_id", id);
+      }
+      sessionIdRef.current = id;
+    } catch {
+      sessionIdRef.current = crypto.randomUUID();
+    }
+  }, []);
 
   const base = `/api/missions/${missionId}/plan`;
 
@@ -1422,26 +1442,91 @@ export default function PlanReviewPage() {
     fetchPlan();
   }, [fetchPlan]);
 
-  async function callApi(url: string, method: string, body?: unknown): Promise<boolean> {
+  async function callApi(
+    url: string,
+    method: string,
+    body?: unknown,
+    wsTitle?: string,
+  ): Promise<boolean> {
     setSaving(url);
     try {
       const res = await fetch(url, {
         method,
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          "x-ws-session-id": sessionIdRef.current,
+        },
         body: body !== undefined ? JSON.stringify(body) : undefined,
       });
-      const data: ApiResponse<PlanReviewState> = await res.json();
+      type RawResponse = {
+        ok: boolean;
+        plan?: PlanReviewState;
+        error?: string | { code?: string; message?: string; lock?: { actor: string; planUrl: string } };
+      };
+      const data = (await res.json()) as RawResponse;
       if (data.ok && data.plan) {
         setPlan(data.plan);
         return true;
       }
-      setError(data.error ?? "Request failed");
+      // Lock conflict: show banner instead of generic error
+      if (res.status === 409 && typeof data.error === "object" && data.error !== null) {
+        const errObj = data.error;
+        if (errObj.code === "WORKSTREAM_LOCKED" && errObj.lock) {
+          setLockConflict({
+            actor: errObj.lock.actor,
+            planUrl: errObj.lock.planUrl,
+            wsTitle: wsTitle ?? url,
+          });
+          return false;
+        }
+      }
+      const msg =
+        typeof data.error === "object" && data.error !== null
+          ? (data.error.message ?? "Request failed")
+          : ((data.error as string | undefined) ?? "Request failed");
+      setError(msg);
       return false;
     } catch {
       setError("Network error");
       return false;
     } finally {
       setSaving(null);
+    }
+  }
+
+  async function acquireEditLock(wsId: string, wsTitle: string): Promise<boolean> {
+    try {
+      const res = await fetch(`${base}/workstreams/${wsId}/lock`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          sessionId: sessionIdRef.current,
+          planUrl: window.location.href,
+        }),
+      });
+      const data = await res.json() as {
+        ok: boolean;
+        error?: { code?: string; lock?: { actor: string; planUrl: string } };
+      };
+      if (data.ok) return true;
+      if (res.status === 409 && data.error?.lock) {
+        setLockConflict({ actor: data.error.lock.actor, planUrl: data.error.lock.planUrl, wsTitle });
+      }
+      return false;
+    } catch {
+      return true; // network error: optimistically allow (lock is best-effort)
+    }
+  }
+
+  async function releaseEditLock(wsId: string): Promise<void> {
+    try {
+      await fetch(`${base}/workstreams/${wsId}/lock`, {
+        method: "DELETE",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ sessionId: sessionIdRef.current }),
+      });
+    } catch {
+      // best-effort; TTL will expire it
     }
   }
 
@@ -1455,7 +1540,10 @@ export default function PlanReviewPage() {
     await callApi(`${base}/workstreams/${wsId}`, "DELETE");
   }
 
-  function startEdit(ws: OutcomeWorkstream) {
+  async function startEdit(ws: OutcomeWorkstream) {
+    const acquired = await acquireEditLock(ws.workstream_id, ws.title);
+    if (!acquired) return; // lockConflict already set
+    setLockConflict(null);
     setEditState({
       wsId: ws.workstream_id,
       title: ws.title,
@@ -1476,22 +1564,36 @@ export default function PlanReviewPage() {
 
   async function submitEdit() {
     if (!editState) return;
-    const ok = await callApi(`${base}/workstreams/${editState.wsId}`, "PATCH", {
-      title: editState.title,
-      objective: editState.objective,
-      reason_required: editState.reason_required,
-      proposed_actions: splitLines(editState.proposed_actions),
-      execution_steps: splitLines(editState.execution_steps),
-      proposed_worker: editState.proposed_worker,
-      proposed_tools: splitComma(editState.proposed_tools),
-      inputs: splitLines(editState.inputs),
-      expected_output: splitLines(editState.expected_output),
-      evidence_requirements: splitLines(editState.evidence_requirements),
-      dependencies: splitComma(editState.dependencies),
-      acceptance_criteria: splitLines(editState.acceptance_criteria),
-      owner_notes: editState.owner_notes,
-    });
-    if (ok) setEditState(null);
+    const wsId = editState.wsId;
+    const ok = await callApi(
+      `${base}/workstreams/${wsId}`,
+      "PATCH",
+      {
+        title: editState.title,
+        objective: editState.objective,
+        reason_required: editState.reason_required,
+        proposed_actions: splitLines(editState.proposed_actions),
+        execution_steps: splitLines(editState.execution_steps),
+        proposed_worker: editState.proposed_worker,
+        proposed_tools: splitComma(editState.proposed_tools),
+        inputs: splitLines(editState.inputs),
+        expected_output: splitLines(editState.expected_output),
+        evidence_requirements: splitLines(editState.evidence_requirements),
+        dependencies: splitComma(editState.dependencies),
+        acceptance_criteria: splitLines(editState.acceptance_criteria),
+        owner_notes: editState.owner_notes,
+      },
+      editState.title,
+    );
+    if (ok) {
+      await releaseEditLock(wsId);
+      setEditState(null);
+    }
+  }
+
+  async function cancelEdit() {
+    if (editState) await releaseEditLock(editState.wsId);
+    setEditState(null);
   }
 
   async function submitAdd() {
@@ -1622,6 +1724,57 @@ export default function PlanReviewPage() {
             workstream reaches <strong>Dispatchable</strong>.
           </p>
         </div>
+
+        {/* Lock conflict banner */}
+        {lockConflict && (
+          <div
+            role="alert"
+            style={{
+              background: "#fef3c7",
+              border: "1px solid #fbbf24",
+              borderRadius: "8px",
+              padding: "0.85rem 1.1rem",
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.4rem",
+            }}
+          >
+            <strong style={{ fontSize: "0.9rem", color: "#78350f" }}>
+              Edit blocked — workstream already open
+            </strong>
+            <p style={{ margin: 0, fontSize: "0.85rem", color: "#92400e" }}>
+              <strong>{lockConflict.wsTitle}</strong> is being edited by{" "}
+              <strong>{lockConflict.actor}</strong> in another session. Close that session or wait
+              for them to finish before editing here.
+            </p>
+            <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap", marginTop: "0.2rem" }}>
+              <a
+                href={lockConflict.planUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  fontSize: "0.82rem",
+                  color: "#1d4ed8",
+                  textDecoration: "underline",
+                  textUnderlineOffset: "2px",
+                }}
+              >
+                Go to primary session →
+              </a>
+              <button
+                className="btn btn-secondary"
+                style={{ fontSize: "0.78rem", padding: "0.3rem 0.6rem" }}
+                onClick={() => setLockConflict(null)}
+              >
+                Dismiss
+              </button>
+            </div>
+            <p style={{ margin: 0, fontSize: "0.72rem", color: "#b45309", opacity: 0.8 }}>
+              Note: this only detects sessions tracked by this server. External AI sessions cannot
+              be detected.
+            </p>
+          </div>
+        )}
 
         {/* Mission summary */}
         <MissionSummary plan={plan} />
@@ -1805,7 +1958,7 @@ export default function PlanReviewPage() {
           isBusy={isBusy}
           onChange={(patch) => setEditState((s) => (s ? { ...s, ...patch } : s))}
           onSubmit={submitEdit}
-          onCancel={() => setEditState(null)}
+          onCancel={cancelEdit}
         />
       )}
 

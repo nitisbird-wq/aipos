@@ -6,6 +6,7 @@ import {
   removePlanWorkstream,
   type EditWorkstreamPatch,
 } from "@/lib/services/mission-plan";
+import { checkLock } from "@/lib/services/workstream-locks";
 
 type Ctx = { params: Promise<{ id: string; wsId: string }> };
 
@@ -13,6 +14,16 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
   try {
     const session = await requireSession();
     const { id, wsId } = await ctx.params;
+    const sessionId = req.headers.get("x-ws-session-id");
+    const conflict = checkLock(id, wsId, sessionId);
+    if (conflict) {
+      return jsonError(
+        "WORKSTREAM_LOCKED",
+        "Another session is already editing this workstream",
+        409,
+        { lock: conflict },
+      );
+    }
     const body = (await req.json()) as EditWorkstreamPatch;
     const plan = await editPlanWorkstream(id, wsId, body, session.actor);
     return jsonOk({ ok: true, plan });
@@ -24,10 +35,20 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
   }
 }
 
-export async function DELETE(_req: NextRequest, ctx: Ctx) {
+export async function DELETE(req: NextRequest, ctx: Ctx) {
   try {
     const session = await requireSession();
     const { id, wsId } = await ctx.params;
+    const sessionId = req.headers.get("x-ws-session-id");
+    const conflict = checkLock(id, wsId, sessionId);
+    if (conflict) {
+      return jsonError(
+        "WORKSTREAM_LOCKED",
+        "Another session is already editing this workstream",
+        409,
+        { lock: conflict },
+      );
+    }
     const plan = await removePlanWorkstream(id, wsId, session.actor);
     return jsonOk({ ok: true, plan });
   } catch (err) {

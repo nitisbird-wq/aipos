@@ -2,13 +2,24 @@ import { NextRequest } from "next/server";
 import { requireSession } from "@/lib/auth/session";
 import { handleRouteError, jsonError, jsonOk } from "@/lib/api/http";
 import { approvePlanWorkstream } from "@/lib/services/mission-plan";
+import { checkLock } from "@/lib/services/workstream-locks";
 
 type Ctx = { params: Promise<{ id: string; wsId: string }> };
 
-export async function POST(_req: NextRequest, ctx: Ctx) {
+export async function POST(req: NextRequest, ctx: Ctx) {
   try {
     const session = await requireSession();
     const { id, wsId } = await ctx.params;
+    const sessionId = req.headers.get("x-ws-session-id");
+    const conflict = checkLock(id, wsId, sessionId);
+    if (conflict) {
+      return jsonError(
+        "WORKSTREAM_LOCKED",
+        "Another session is already editing this workstream",
+        409,
+        { lock: conflict },
+      );
+    }
     const plan = await approvePlanWorkstream(id, wsId, session.actor);
     return jsonOk({ ok: true, plan });
   } catch (err) {
