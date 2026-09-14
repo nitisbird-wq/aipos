@@ -153,8 +153,18 @@ export const OutcomeWorkstreamSchema = z.object({
   parallelizable: z.boolean(),
   execution_order: z.number().int().min(1),
   status: WorkstreamStatusSchema,
+  // Plan-review approval fields
   approval_state: WorkstreamApprovalStateSchema.default("PROPOSED"),
   owner_notes: z.string().default(""),
+  // Rich plan detail fields — required for owner evaluation before approval
+  proposed_actions: z.array(z.string()).default([]),
+  execution_steps: z.array(z.string()).default([]),
+  proposed_worker: z.string().default(""),
+  proposed_tools: z.array(z.string()).default([]),
+  evidence_requirements: z.array(z.string()).default([]),
+  authority_level: z.enum(["L0", "L1", "L2", "L3", "L4"]).default("L1"),
+  human_gate_required: z.boolean().default(false),
+  recovery_strategy: z.string().default(""),
 });
 export type OutcomeWorkstream = z.infer<typeof OutcomeWorkstreamSchema>;
 

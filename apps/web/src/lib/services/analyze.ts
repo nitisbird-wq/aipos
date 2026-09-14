@@ -97,7 +97,11 @@ export function analyzeMissionHeuristic(
 
   const familyRules: Array<[RegExp, string]> = [
     [/\b(code|implement|bug|refactor|typescript|next\.?js|api)\b/, "code"],
-    [/(โค้ด|พัฒน|โปรแกรม|typescript|next\.?js|api)/, "code"],
+    // Thai code detection: require code-adjacent terms; avoid matching พัฒนา (develop) in non-code contexts
+    [
+      /(โค้ด|พัฒนาโปรแกรม|พัฒนาซอฟต์แวร์|พัฒนาระบบ|โปรแกรม(?:มิ่ง)?|typescript|next\.?js|api)/,
+      "code",
+    ],
     [/\b(summar(y|ize)|document|docs|readme)\b/, "docs"],
     [/(สรุป|เอกสาร|docs|readme)/, "docs"],
     [/\b(deck|slides?|presentation|pitch)\b/, "deck"],
@@ -108,12 +112,17 @@ export function analyzeMissionHeuristic(
     [/(วิดีโอ|คลิป)/, "video"],
     [/\b(automat(e|ion)|n8n|workflow)\b/, "automation"],
     [/(อัตโนมัติ|เวิร์กโฟลว์|workflow)/, "automation"],
-    [/\b(research|synthesize|literature)\b/, "research"],
-    [/(วิจัย|สังเคราะห์)/, "research"],
+    // Research: explicit evidence-gathering, recommendation, comparison, or pros/cons signals
+    [/\b(research|synthesize|literature|evidence|compare|evaluate|rank|pros.cons)\b/, "research"],
+    [
+      /(วิจัย|สังเคราะห์|หลักฐาน|เปรียบเทียบ|ข้อดีข้อเสีย|ประเมิน|คัดเลือก|จัดอันดับ|หาข้อมูล|สืบค้น)/,
+      "research",
+    ],
     [/\b(strateg(y|ic)|analyze market)\b/, "strategy_analysis"],
-    [/(กลยุทธ์|วิเคราะห์)/, "strategy_analysis"],
-    [/\b(notion|knowledge|kb)\b/, "knowledge_management"],
-    [/(ความรู้|โนชัน|notion)/, "knowledge_management"],
+    [/(กลยุทธ์|วิเคราะห์ตลาด)/, "strategy_analysis"],
+    // Knowledge management: explicitly managing/organizing a knowledge base, not merely seeking knowledge
+    [/\b(notion|knowledge base|kb|taxonomy|organiz(e|ation))\b/, "knowledge_management"],
+    [/(โนชัน|notion|จัดการความรู้|ฐานความรู้|จัดระเบียบความรู้)/, "knowledge_management"],
     [/\b(data analysis|analytics|dashboard metrics)\b/, "data_analysis"],
     [/(วิเคราะห์ข้อมูล|แดชบอร์ด)/, "data_analysis"],
     [/\b(sop|process design)\b/, "workflow_design"],

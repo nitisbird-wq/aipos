@@ -478,3 +478,68 @@ describe("12. Plan persistence — round-trip through MissionControlState", () =
     expect(plan).toBeNull();
   });
 });
+
+// --- 13. Thai Research+Recommendation regression ---
+const THAI_RESEARCH_MISSION =
+  "หาความรู้และแนะนำเกมพัฒนาเชาวน์ที่เหมาะกับลูก พร้อมหลักฐาน เหตุผล ข้อดีข้อเสีย และแผนการนำไปใช้จริง";
+
+describe("13. Thai Research+Recommendation mission regression", () => {
+  it("routes Thai mission to 'research' playbook, not 'code' or 'knowledge_organization'", () => {
+    const analysis = analyzeMissionHeuristic(THAI_RESEARCH_MISSION);
+    expect(analysis.capability_families).toContain("research");
+    expect(analysis.capability_families).not.toContain("code");
+    expect(analysis.capability_families).not.toContain("knowledge_management");
+  });
+
+  it("strategy selects 'research' playbook for Thai mission", () => {
+    const missionId = "THAI-REGRESSION-001";
+    const strategy = makeStrategy(missionId, THAI_RESEARCH_MISSION);
+    expect(strategy.selected_playbook).toBe("research");
+  });
+
+  it("research decomposition produces ≥6 workstreams for Thai mission", () => {
+    const missionId = "THAI-REGRESSION-002";
+    const strategy = makeStrategy(missionId, THAI_RESEARCH_MISSION);
+    const workstreams = decomposeMissionStrategy(strategy);
+    expect(workstreams.length).toBeGreaterThanOrEqual(6);
+  });
+
+  it("all research workstreams have rich plan detail fields populated", () => {
+    const missionId = "THAI-REGRESSION-003";
+    const strategy = makeStrategy(missionId, THAI_RESEARCH_MISSION);
+    const workstreams = decomposeMissionStrategy(strategy);
+    for (const ws of workstreams) {
+      expect(ws.proposed_actions?.length ?? 0).toBeGreaterThan(0);
+      expect(ws.execution_steps?.length ?? 0).toBeGreaterThan(0);
+      expect(ws.proposed_worker).toBeTruthy();
+      expect(ws.proposed_tools?.length ?? 0).toBeGreaterThan(0);
+      expect(ws.evidence_requirements?.length ?? 0).toBeGreaterThan(0);
+      expect(ws.recovery_strategy).toBeTruthy();
+    }
+  });
+
+  it("dependency integrity is maintained after removePlanWorkstream", async () => {
+    const { missionId } = await seedMission(THAI_RESEARCH_MISSION, "THAI-REGRESSION-004");
+    const strategy = makeStrategy(missionId, THAI_RESEARCH_MISSION);
+    const plan = await generateMissionPlan({ missionId, strategy, actor: "operator:test" });
+
+    // WS2 depends on WS1; remove WS1 — WS2 deps should be cleaned up
+    const ws1 = plan.workstreams.find((ws) => ws.execution_order === 1)!;
+    const ws2 = plan.workstreams.find((ws) => ws.execution_order === 2)!;
+    expect(ws2.dependencies).toContain(ws1.workstream_id);
+
+    const updated = await removePlanWorkstream(missionId, ws1.workstream_id, "operator:test");
+    const updatedWs2 = updated.workstreams.find((ws) => ws.workstream_id === ws2.workstream_id)!;
+    expect(updatedWs2.dependencies).not.toContain(ws1.workstream_id);
+  });
+
+  it("research plan requires WS6 human gate before dispatch", () => {
+    const missionId = "THAI-REGRESSION-005";
+    const strategy = makeStrategy(missionId, THAI_RESEARCH_MISSION);
+    const workstreams = decomposeMissionStrategy(strategy);
+    const ws6 = workstreams.find((ws) => ws.execution_order === 6);
+    expect(ws6).toBeDefined();
+    expect(ws6?.human_gate_required).toBe(true);
+    expect(ws6?.authority_level).toBe("L2");
+  });
+});

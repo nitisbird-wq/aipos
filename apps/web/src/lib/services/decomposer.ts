@@ -4,9 +4,29 @@ import type { Playbook } from "@/lib/services/playbook-engine";
 
 type DraftWs = Omit<
   OutcomeWorkstream,
-  "workstream_id" | "mission_id" | "status" | "approval_state" | "owner_notes"
+  | "workstream_id"
+  | "mission_id"
+  | "status"
+  | "approval_state"
+  | "owner_notes"
+  | "proposed_actions"
+  | "execution_steps"
+  | "proposed_worker"
+  | "proposed_tools"
+  | "evidence_requirements"
+  | "authority_level"
+  | "human_gate_required"
+  | "recovery_strategy"
 > & {
   key: string;
+  proposed_actions?: string[];
+  execution_steps?: string[];
+  proposed_worker?: string;
+  proposed_tools?: string[];
+  evidence_requirements?: string[];
+  authority_level?: OutcomeWorkstream["authority_level"];
+  human_gate_required?: boolean;
+  recovery_strategy?: string;
 };
 
 const GENERIC_TITLES = new Set([
@@ -29,52 +49,280 @@ function playbookTemplates(playbook: string, strategy: MissionStrategy): DraftWs
       return [
         {
           key: "WS1",
-          title: "Frame research questions and source plan",
-          objective: `Define hypotheses and source set for: ${objective}`,
-          reason_required: "Without framed questions, findings cannot be validated",
-          inputs: ["mission_strategy", "context_pack"],
-          expected_output: ["research_questions", "source_plan"],
+          title: "Define evaluation criteria and scope constraints",
+          objective: `Establish measurable criteria and boundaries for: ${objective}`,
+          reason_required:
+            "Criteria must be agreed before research begins to prevent scope drift and enable fair comparison",
+          inputs: ["mission_strategy", "context_pack", "owner_constraints"],
+          expected_output: ["evaluation_criteria", "scope_boundary", "constraint_list"],
           acceptance_criteria: [
-            "Hypotheses listed",
-            "Sources prioritized",
-            "Confidence targets set",
+            "Evaluation criteria are measurable and owner-ranked",
+            "Scope boundaries documented and confirmed",
+            "Key constraints (audience, timeline, resources) captured",
           ],
           dependencies: [],
-          required_capabilities: ["research"],
+          required_capabilities: ["research", "documentation"],
           risk_level: "L1",
           approval_required: false,
           parallelizable: false,
           execution_order: 1,
+          proposed_actions: [
+            "Review mission strategy for stated constraints",
+            "Draft measurable evaluation rubric",
+            "Confirm scope boundary with owner",
+          ],
+          execution_steps: [
+            "Map owner requirements to measurable criteria",
+            "Rank criteria by importance",
+            "Document scope boundary and exclusions",
+          ],
+          proposed_worker: "research_agent",
+          proposed_tools: ["document_writer", "notion_reader"],
+          evidence_requirements: [
+            "Owner-confirmed priority ranking",
+            "Written scope boundary with explicit exclusions",
+          ],
+          authority_level: "L1",
+          human_gate_required: false,
+          recovery_strategy:
+            "Return criteria draft to owner for revision if scope is ambiguous before proceeding to WS2",
         },
         {
           key: "WS2",
-          title: "Gather and score evidence from sources",
-          objective: "Collect evidence with epistemic labels; no silent promotion",
-          reason_required: "Evidence discipline is required before synthesis",
-          inputs: ["research_questions", "source_plan"],
-          expected_output: ["evidence_table", "source_notes"],
-          acceptance_criteria: ["Each claim labeled", "Evidence refs present"],
+          title: "Gather research candidates and collect source evidence",
+          objective: `Research candidate options and collect reliable sources for: ${objective}`,
+          reason_required:
+            "Evidence-backed candidates are required; no recommendation without sourced data",
+          inputs: ["evaluation_criteria", "scope_boundary", "context_pack"],
+          expected_output: ["candidate_list", "source_map", "raw_evidence"],
+          acceptance_criteria: [
+            "Each candidate has at least one cited, reachable source",
+            "Sources are dated and domain-relevant",
+            "Raw evidence is labeled by epistemic status (CONFIRMED/REPORTED/INFERRED)",
+          ],
           dependencies: ["WS1"],
-          required_capabilities: ["research", "documentation"],
+          required_capabilities: ["research"],
           risk_level: "L1",
           approval_required: false,
           parallelizable: true,
           execution_order: 2,
+          proposed_actions: [
+            "Search primary and secondary sources per criteria",
+            "Collect and label evidence with confidence levels",
+            "Document source provenance and date",
+          ],
+          execution_steps: [
+            "Run structured searches per each evaluation criterion",
+            "Collect evidence snippets with source reference",
+            "Label each claim: CONFIRMED / REPORTED / INFERRED / HYPOTHESIS",
+          ],
+          proposed_worker: "research_agent",
+          proposed_tools: ["web_search", "document_reader", "evidence_labeler"],
+          evidence_requirements: [
+            "Each claim has a source URL or reference",
+            "Confidence level assigned to each piece of evidence",
+          ],
+          authority_level: "L1",
+          human_gate_required: false,
+          recovery_strategy:
+            "If a source is unreachable, document the gap and note confidence impact; proceed with remaining sources",
         },
         {
           key: "WS3",
-          title: "Synthesize findings into research deliverable",
-          objective: `Produce ${deliverableType} meeting acceptance criteria`,
-          reason_required: "Final deliverable must answer owner objective with evidence",
-          inputs: ["evidence_table", "deliverable_contract"],
-          expected_output: ["final_deliverable", "evidence_bundle"],
-          acceptance_criteria: criteria,
+          title: "Verify evidence quality and claims",
+          objective: "Validate that collected evidence is accurate, fresh, and source-trustworthy",
+          reason_required:
+            "Unverified claims lead to flawed recommendations; verification is a separate epistemic step",
+          inputs: ["candidate_list", "source_map", "raw_evidence"],
+          expected_output: ["verified_evidence", "source_quality_report", "gap_list"],
+          acceptance_criteria: [
+            "Each claim status is re-evaluated against original source",
+            "Outdated or unreliable sources are flagged",
+            "Evidence gaps are enumerated and risk-assessed",
+          ],
           dependencies: ["WS2"],
-          required_capabilities: ["research", "documentation", "verification"],
-          risk_level: "L2",
+          required_capabilities: ["research", "verification"],
+          risk_level: "L1",
           approval_required: false,
           parallelizable: false,
           execution_order: 3,
+          proposed_actions: [
+            "Cross-check claims against original source",
+            "Flag stale or low-confidence evidence",
+            "Enumerate knowledge gaps",
+          ],
+          execution_steps: [
+            "Re-read each primary source for each key claim",
+            "Downgrade confidence on uncorroborated claims",
+            "Produce gap list with risk level per gap",
+          ],
+          proposed_worker: "verification_agent",
+          proposed_tools: ["document_reader", "web_search"],
+          evidence_requirements: [
+            "Each source accessed and read, not assumed from snippet",
+            "Confidence downgrades documented with reason",
+          ],
+          authority_level: "L1",
+          human_gate_required: false,
+          recovery_strategy:
+            "If evidence gaps are BLOCKERS, pause and surface to owner before continuing to WS4",
+        },
+        {
+          key: "WS4",
+          title: "Compare and rank candidates against criteria",
+          objective: "Apply evaluation criteria to each candidate to produce a ranked comparison",
+          reason_required:
+            "Structured comparison prevents bias and gives owner a transparent basis for decision",
+          inputs: ["verified_evidence", "evaluation_criteria", "candidate_list"],
+          expected_output: ["comparison_matrix", "ranked_list"],
+          acceptance_criteria: [
+            "Every candidate scored against every criterion",
+            "Ranking methodology is transparent and reproducible",
+            "Tie-breaking logic is documented",
+          ],
+          dependencies: ["WS3"],
+          required_capabilities: ["research", "documentation"],
+          risk_level: "L1",
+          approval_required: false,
+          parallelizable: false,
+          execution_order: 4,
+          proposed_actions: [
+            "Build comparison matrix (candidates × criteria)",
+            "Score each cell with evidence reference",
+            "Produce ranked list with explanation",
+          ],
+          execution_steps: [
+            "Populate matrix from verified evidence",
+            "Apply weight from owner-ranked criteria",
+            "Rank candidates by weighted score",
+          ],
+          proposed_worker: "research_agent",
+          proposed_tools: ["document_writer", "spreadsheet_tool"],
+          evidence_requirements: [
+            "Each cell score cites a specific piece of verified evidence",
+            "Weighting method documented",
+          ],
+          authority_level: "L1",
+          human_gate_required: false,
+          recovery_strategy:
+            "Return to WS3 if comparison reveals critical evidence gaps; do not proceed with sparse matrix",
+        },
+        {
+          key: "WS5",
+          title: "Critical review — challenge recommendations, bias, and missing evidence",
+          objective: "Adversarially challenge the ranked list for bias, gaps, and unexamined risks",
+          reason_required:
+            "An independent critical pass prevents confirmation bias before the final recommendation is committed",
+          inputs: ["comparison_matrix", "ranked_list", "verified_evidence"],
+          expected_output: ["critique_report", "bias_flags", "risk_register"],
+          acceptance_criteria: [
+            "At least one counter-argument surfaced per top-ranked candidate",
+            "Known biases in evidence collection are enumerated",
+            "Unexamined risks are documented with severity",
+          ],
+          dependencies: ["WS4"],
+          required_capabilities: ["research", "verification"],
+          risk_level: "L2",
+          approval_required: false,
+          parallelizable: false,
+          execution_order: 5,
+          proposed_actions: [
+            "Steelman the case against the top-ranked option",
+            "Identify sources that could challenge the ranking",
+            "Document remaining uncertainties",
+          ],
+          execution_steps: [
+            "For each top candidate, find strongest counter-evidence",
+            "Flag any ranking cell that relied on a single source",
+            "Produce risk register with likelihood and impact",
+          ],
+          proposed_worker: "critic_agent",
+          proposed_tools: ["web_search", "document_reader", "document_writer"],
+          evidence_requirements: [
+            "Counter-evidence cited for each major finding",
+            "Risk severity rated on consistent scale",
+          ],
+          authority_level: "L1",
+          human_gate_required: false,
+          recovery_strategy:
+            "If critique reveals ranking is unreliable, return to WS3 for additional evidence before WS6",
+        },
+        {
+          key: "WS6",
+          title: "Produce recommendation with reasons, pros/cons and implementation plan",
+          objective: `Deliver ${deliverableType}: ranked recommendation with rationale, trade-offs, and actionable plan for: ${objective}`,
+          reason_required:
+            "Owner needs a decision-ready deliverable with explicit reasons, risks, and a concrete implementation path",
+          inputs: ["comparison_matrix", "ranked_list", "critique_report", "deliverable_contract"],
+          expected_output: ["recommendation_document", "implementation_plan", "evidence_bundle"],
+          acceptance_criteria: criteria,
+          dependencies: ["WS5"],
+          required_capabilities: ["research", "documentation", "verification"],
+          risk_level: "L2",
+          approval_required: true,
+          parallelizable: false,
+          execution_order: 6,
+          proposed_actions: [
+            "Write recommendation with explicit rationale from evidence",
+            "List pros and cons for each option discussed",
+            "Provide step-by-step implementation plan",
+          ],
+          execution_steps: [
+            "Draft recommendation section with top choice and runner-up",
+            "List pros/cons per option from comparison matrix",
+            "Write implementation plan with timeline and milestones",
+            "Attach evidence bundle with all source references",
+          ],
+          proposed_worker: "writer_agent",
+          proposed_tools: ["document_writer", "notion_writer"],
+          evidence_requirements: [
+            "Every recommendation claim cites a verified evidence item",
+            "Implementation plan steps are grounded in constraint list from WS1",
+          ],
+          authority_level: "L2",
+          human_gate_required: true,
+          recovery_strategy:
+            "If owner rejects recommendation, return to WS4 with updated criteria and regenerate",
+        },
+        {
+          key: "WS7",
+          title: "Independent verification of final deliverable",
+          objective: "Verify that the deliverable satisfies all acceptance criteria independently",
+          reason_required:
+            "Author cannot verify their own output; independent verification is required before delivery",
+          inputs: ["recommendation_document", "implementation_plan", "evaluation_criteria"],
+          expected_output: ["verification_report", "delivery_approval"],
+          acceptance_criteria: [
+            "Every acceptance criterion in the deliverable contract is assessed",
+            "All open risks are documented",
+            "Deliverable is ready for owner handoff",
+          ],
+          dependencies: ["WS6"],
+          required_capabilities: ["verification", "documentation"],
+          risk_level: "L1",
+          approval_required: false,
+          parallelizable: false,
+          execution_order: 7,
+          proposed_actions: [
+            "Read deliverable against each acceptance criterion",
+            "Verify evidence bundle completeness",
+            "Confirm implementation plan is actionable",
+          ],
+          execution_steps: [
+            "Check each acceptance criterion: pass / fail / partial",
+            "Flag any unresolved risks from WS5 risk register",
+            "Issue delivery approval if all criteria pass",
+          ],
+          proposed_worker: "verification_agent",
+          proposed_tools: ["document_reader"],
+          evidence_requirements: [
+            "Criterion-by-criterion verification log",
+            "Sign-off record with verifier identity",
+          ],
+          authority_level: "L1",
+          human_gate_required: false,
+          recovery_strategy:
+            "If any acceptance criterion fails, return to WS6 with specific gap for revision",
         },
       ];
     case "debug":

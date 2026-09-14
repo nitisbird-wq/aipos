@@ -342,6 +342,14 @@ const EditWorkstreamPatchSchema = z.object({
   acceptance_criteria: z.array(z.string().min(1)).min(1).optional(),
   required_capabilities: z.array(z.string().min(1)).min(1).optional(),
   approval_required: z.boolean().optional(),
+  proposed_actions: z.array(z.string()).optional(),
+  execution_steps: z.array(z.string()).optional(),
+  proposed_worker: z.string().optional(),
+  proposed_tools: z.array(z.string()).optional(),
+  evidence_requirements: z.array(z.string()).optional(),
+  authority_level: z.enum(["L0", "L1", "L2", "L3", "L4"]).optional(),
+  human_gate_required: z.boolean().optional(),
+  recovery_strategy: z.string().optional(),
 });
 export type EditWorkstreamPatch = z.infer<typeof EditWorkstreamPatchSchema>;
 
@@ -369,7 +377,16 @@ export async function removePlanWorkstream(
 ): Promise<PlanReviewState> {
   return mutatePlan(missionId, actor, (plan) => {
     if (plan.workstreams.length <= 1) throw new Error("CANNOT_REMOVE_LAST_WORKSTREAM");
-    const workstreams = plan.workstreams.filter((ws) => ws.workstream_id !== workstreamId);
+    const workstreams = plan.workstreams
+      .filter((ws) => ws.workstream_id !== workstreamId)
+      .map((ws) =>
+        ws.dependencies.includes(workstreamId)
+          ? OutcomeWorkstreamSchema.parse({
+              ...ws,
+              dependencies: ws.dependencies.filter((dep) => dep !== workstreamId),
+            })
+          : ws,
+      );
     return applyAllApproved({ ...plan, workstreams });
   });
 }
@@ -387,6 +404,14 @@ const AddWorkstreamDraftSchema = z.object({
   parallelizable: z.boolean().default(false),
   dependencies: z.array(z.string()).default([]),
   owner_notes: z.string().default(""),
+  proposed_actions: z.array(z.string()).default([]),
+  execution_steps: z.array(z.string()).default([]),
+  proposed_worker: z.string().default(""),
+  proposed_tools: z.array(z.string()).default([]),
+  evidence_requirements: z.array(z.string()).default([]),
+  authority_level: z.enum(["L0", "L1", "L2", "L3", "L4"]).default("L1"),
+  human_gate_required: z.boolean().default(false),
+  recovery_strategy: z.string().default(""),
 });
 export type AddWorkstreamDraft = z.input<typeof AddWorkstreamDraftSchema>;
 

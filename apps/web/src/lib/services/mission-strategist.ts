@@ -14,35 +14,66 @@ import type { Playbook } from "@/lib/services/playbook-engine";
 
 function inferPlaybook(analysis: AnalyzeResult): Playbook["id"] {
   const caps = analysis.capability_families.join(" ");
-  const text = `${analysis.mission_summary} ${analysis.desired_outcome}`.toLowerCase();
+  const rawText = `${analysis.mission_summary} ${analysis.desired_outcome}`;
+  const text = rawText.toLowerCase();
 
-  if (
-    /\b(bug|debug|reproduc|incident|fail(ing|ure)?|error)\b/.test(text) ||
-    caps.includes("code")
-  ) {
-    if (/\b(bug|debug|reproduc|incident|fail)\b/.test(text)) return "debug";
-  }
-  if (/\b(automat|n8n|workflow|recurring)\b/.test(text) || caps.includes("automation")) {
+  // 1. Explicit bug/incident signals → debug (highest specificity)
+  if (/\b(bug|debug|reproduc|incident|fail(ing|ure)?|error)\b/.test(text)) return "debug";
+
+  // 2. Workflow automation
+  if (/\b(automat(e|ion)|n8n|workflow|recurring)\b/.test(text) || caps.includes("automation")) {
     return "automation";
   }
-  if (/\b(competitor|research|literature|survey)\b/.test(text) || caps.includes("research")) {
-    return "research";
-  }
-  if (/\b(notion|knowledge|taxonomy|organiz)\b/.test(text) || caps.includes("knowledge")) {
-    return "knowledge_organization";
-  }
-  if (/\b(launch|go-to-market|pricing|offer)\b/.test(text) || caps.includes("business")) {
-    return "business_launch";
-  }
-  if (/\b(decision|brief|executive|recommend)\b/.test(text) || caps.includes("strategy")) {
+
+  // 3. Explicit decision framing (brief, executive decision) — check BEFORE research to avoid
+  //    "executive decision brief recommend option" being absorbed by research patterns
+  if (
+    /\b(decision\s+brief|executive\s+brief|decide\s+between|choose\s+between)\b/.test(text) ||
+    (/\b(decision|brief|executive)\b/.test(text) && !/\b(research|evidence|compare)\b/.test(text))
+  ) {
     return "decision";
   }
+
+  // 4. Research + Recommendation — evidence-gathering, comparison, pros/cons signals
+  if (
+    /\b(competitor|research|literature|survey|evidence|compare|evaluate|pros|cons|rank)\b/.test(
+      text,
+    ) ||
+    /(หลักฐาน|เปรียบเทียบ|ข้อดีข้อเสีย|ประเมิน|คัดเลือก|จัดอันดับ|หาข้อมูล|สืบค้น)/.test(rawText) ||
+    caps.includes("research")
+  ) {
+    return "research";
+  }
+
+  // 5. Knowledge base management (organizing an existing KB, not learning)
+  if (
+    /\b(notion|knowledge base|kb|taxonomy|organiz(e|ation))\b/.test(text) ||
+    /(จัดการความรู้|ฐานความรู้|จัดระเบียบ)/.test(rawText) ||
+    caps.includes("knowledge_management")
+  ) {
+    return "knowledge_organization";
+  }
+
+  // 6. Business launch
+  if (/\b(launch|go-to-market|pricing|offer)\b/.test(text) || caps.includes("domain.business")) {
+    return "business_launch";
+  }
+
+  // 7. Decision (broader catch — recommend without evidence = decision brief)
+  if (/\b(decision|brief|recommend)\b/.test(text) || caps.includes("strategy_analysis")) {
+    return "decision";
+  }
+
+  // 8. Creative
   if (/\b(design|prototype|creative|visual)\b/.test(text) || caps.includes("design")) {
     return "creative_synthesis";
   }
+
+  // 9. Software build (only when code family is explicit and no research signals)
   if (caps.includes("code") || /\b(implement|feature|build|software)\b/.test(text)) {
     return "software_build";
   }
+
   return "investigation";
 }
 
