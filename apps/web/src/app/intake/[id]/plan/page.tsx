@@ -305,7 +305,10 @@ function ApprovalBadge({ state }: { state: string }) {
 // ── Edit field helpers ────────────────────────────────────────────────────────
 
 function slugId(label: string) {
-  return label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  return label
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 }
 
 function FieldInput({
@@ -1470,7 +1473,8 @@ export default function PlanReviewPage() {
       type RawResponse = {
         ok: boolean;
         plan?: PlanReviewState;
-        error?: string | { code?: string; message?: string; lock?: { actor: string; planUrl: string } };
+        error?:
+          string | { code?: string; message?: string; lock?: { actor: string; planUrl: string } };
       };
       const data = (await res.json()) as RawResponse;
       if (data.ok && data.plan) {
@@ -1513,13 +1517,17 @@ export default function PlanReviewPage() {
           planUrl: window.location.href,
         }),
       });
-      const data = await res.json() as {
+      const data = (await res.json()) as {
         ok: boolean;
         error?: { code?: string; lock?: { actor: string; planUrl: string } };
       };
       if (data.ok) return true;
       if (res.status === 409 && data.error?.lock) {
-        setLockConflict({ actor: data.error.lock.actor, planUrl: data.error.lock.planUrl, wsTitle });
+        setLockConflict({
+          actor: data.error.lock.actor,
+          planUrl: data.error.lock.planUrl,
+          wsTitle,
+        });
       }
       return false;
     } catch {

@@ -55,7 +55,9 @@ async function goToPlanReview(page: Page) {
     timeout: 30_000,
   });
   // Wait for plan to finish loading/generating
-  await expect(page.locator("text=Generating mission plan").first()).toBeHidden({ timeout: 30_000 });
+  await expect(page.locator("text=Generating mission plan").first()).toBeHidden({
+    timeout: 30_000,
+  });
   // At least one workstream card must exist
   await expect(page.getByRole("button", { name: "Edit" }).first()).toBeVisible({ timeout: 20_000 });
 }
@@ -126,7 +128,7 @@ test("4. clicking Approve changes badge from Proposed to Approved or Dispatchabl
 
   // Badge must change — Approved or Dispatchable (depends on whether no deps)
   await expect(
-    page.locator("text=Approved").first().or(page.locator("text=Dispatchable").first())
+    page.locator("text=Approved").first().or(page.locator("text=Dispatchable").first()),
   ).toBeVisible({ timeout: 10_000 });
 
   // Original Approve button for that card should no longer be the first one
@@ -190,9 +192,9 @@ test("6. Approve All approves all pending workstreams (sticky bar)", async ({ pa
   await approveAllBtn.click();
 
   // After approving all → "Proceed to Dispatch" should appear
-  await expect(
-    page.getByRole("button", { name: /Proceed to Dispatch/i })
-  ).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole("button", { name: /Proceed to Dispatch/i })).toBeVisible({
+    timeout: 15_000,
+  });
 });
 
 // ── 7. Dispatch protection ────────────────────────────────────────────────────
@@ -236,9 +238,13 @@ test("8. dependency display shows WS labels (not raw IDs) in flow and cards", as
     // Look for dependency text — if found, verify it's resolved (not UUID)
     const depsSection = page.locator("text=Depends on").first();
     if (await depsSection.isVisible()) {
-      const nearbyText = await depsSection.locator("..").textContent() ?? "";
+      const nearbyText = (await depsSection.locator("..").textContent()) ?? "";
       // Raw IDs in this system look like "WS-<hex>" not UUIDs, but confirm "WS" labels are shown
-      if (nearbyText.includes("WS1:") || nearbyText.includes("WS2:") || nearbyText.includes("No dependencies")) {
+      if (
+        nearbyText.includes("WS1:") ||
+        nearbyText.includes("WS2:") ||
+        nearbyText.includes("No dependencies")
+      ) {
         foundDep = true;
         break;
       }
@@ -343,14 +349,14 @@ test("11. second browser context sees collision banner when first context holds 
 
     // B should show lock conflict alert banner
     await expect(
-      pageB.locator('[role="alert"]').filter({ hasText: /Edit blocked|already open/i })
+      pageB.locator('[role="alert"]').filter({ hasText: /Edit blocked|already open/i }),
     ).toBeVisible({ timeout: 10_000 });
 
     // Dismiss on B
     await pageB.getByRole("button", { name: "Dismiss" }).click();
     // Wait for the lock conflict banner to disappear (Next.js route announcer also has role=alert, so filter by text)
     await expect(
-      pageB.locator('[role="alert"]').filter({ hasText: /Edit blocked|already open/i })
+      pageB.locator('[role="alert"]').filter({ hasText: /Edit blocked|already open/i }),
     ).toBeHidden({ timeout: 5_000 });
 
     // Cancel edit on A (releases lock)
