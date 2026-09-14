@@ -286,6 +286,7 @@ function ApprovalBadge({ state }: { state: string }) {
   const s = APPROVAL_STYLE[state] ?? APPROVAL_STYLE["PROPOSED"]!;
   return (
     <span
+      data-approval-state={state}
       style={{
         background: s.bg,
         color: s.text,
@@ -303,6 +304,10 @@ function ApprovalBadge({ state }: { state: string }) {
 
 // ── Edit field helpers ────────────────────────────────────────────────────────
 
+function slugId(label: string) {
+  return label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
 function FieldInput({
   label,
   value,
@@ -314,10 +319,12 @@ function FieldInput({
   onChange: (v: string) => void;
   placeholder?: string;
 }) {
+  const id = slugId(label);
   return (
     <div className="field">
-      <label>{label}</label>
+      <label htmlFor={id}>{label}</label>
       <input
+        id={id}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
@@ -340,15 +347,17 @@ function FieldTextarea({
   onChange: (v: string) => void;
   rows?: number;
 }) {
+  const id = slugId(label);
   return (
     <div className="field">
-      <label>
+      <label htmlFor={id}>
         {label}
         {hint && (
           <span style={{ fontWeight: 400, marginLeft: "0.5rem", opacity: 0.7 }}>{hint}</span>
         )}
       </label>
       <textarea
+        id={id}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         style={{ minHeight: rows ? `${rows * 1.6}rem` : undefined }}

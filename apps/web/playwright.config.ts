@@ -21,9 +21,27 @@ export default defineConfig({
     video: "off",
   },
   projects: [
-    { name: "mobile", use: { ...devices["iPhone 12"] } },
-    { name: "ipad", use: { ...devices["iPad Mini"] } },
-    { name: "desktop", use: { viewport: { width: 1280, height: 800 } } },
+    {
+      name: "mobile",
+      use: {
+        ...devices["iPhone 12"],
+        launchOptions: { executablePath: "/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell" },
+      },
+    },
+    {
+      name: "ipad",
+      use: {
+        ...devices["iPad Mini"],
+        launchOptions: { executablePath: "/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell" },
+      },
+    },
+    {
+      name: "desktop",
+      use: {
+        viewport: { width: 1280, height: 800 },
+        launchOptions: { executablePath: "/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell" },
+      },
+    },
   ],
   webServer: {
     command: "npm run dev",
