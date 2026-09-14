@@ -15,7 +15,7 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
     const session = await requireSession();
     const { id, wsId } = await ctx.params;
     const sessionId = req.headers.get("x-ws-session-id");
-    const conflict = checkLock(id, wsId, sessionId);
+    const conflict = await checkLock(id, wsId, sessionId);
     if (conflict) {
       return jsonError(
         "WORKSTREAM_LOCKED",
@@ -40,7 +40,7 @@ export async function DELETE(req: NextRequest, ctx: Ctx) {
     const session = await requireSession();
     const { id, wsId } = await ctx.params;
     const sessionId = req.headers.get("x-ws-session-id");
-    const conflict = checkLock(id, wsId, sessionId);
+    const conflict = await checkLock(id, wsId, sessionId);
     if (conflict) {
       return jsonError(
         "WORKSTREAM_LOCKED",
