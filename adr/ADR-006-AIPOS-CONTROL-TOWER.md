@@ -1,6 +1,6 @@
 # ADR-006 — AIPOS Control Tower (Governance Enforcement)
 
-- **Status:** Proposed (awaiting Human Architecture Approval)  
+- **Status:** Approved (CT-1 architecture approved; CT-2 enforcement MVP implementation authorized)  
 - **Date:** 2026-08-07  
 - **Deciders:** Mission owner (Human)  
 - **Supersedes:** none  
@@ -113,4 +113,4 @@ Never commit, print, or embed secret values in Control Tower reports, logs, or d
 
 | Role | Decision | Date |
 |---|---|---|
-| Mission owner (Human) | ☐ Approve / ☐ Approve with corrections / ☐ Reject | _pending_ |
+| Mission owner (Human) | ☑ Approve | 2026-08-25 (via Claude Code session) |
