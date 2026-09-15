@@ -74,7 +74,11 @@ describe("workstream dispatcher", () => {
   }
 
   it("is idempotent via search-before-create and reuses existing mapping", async () => {
-    const { missionId, workstreams } = await seededMission();
+    const { missionId, workstreams: rawWorkstreams } = await seededMission();
+    const workstreams = rawWorkstreams.map((ws) => ({
+      ...ws,
+      approval_state: "DISPATCHABLE" as const,
+    }));
     const memory: Record<string, { id: string; title: string }> = {};
     let creates = 0;
     const adapter = {
@@ -108,7 +112,11 @@ describe("workstream dispatcher", () => {
   });
 
   it("fails closed when search throws", async () => {
-    const { missionId, workstreams } = await seededMission();
+    const { missionId, workstreams: rawWorkstreams } = await seededMission();
+    const workstreams = rawWorkstreams.map((ws) => ({
+      ...ws,
+      approval_state: "DISPATCHABLE" as const,
+    }));
     const result = await dispatchWorkstreams({
       missionId,
       workstreams: workstreams.slice(0, 1),
@@ -129,7 +137,11 @@ describe("workstream dispatcher", () => {
   });
 
   it("repairs write-back after external create succeeded", async () => {
-    const { missionId, workstreams } = await seededMission();
+    const { missionId, workstreams: rawWorkstreams } = await seededMission();
+    const workstreams = rawWorkstreams.map((ws) => ({
+      ...ws,
+      approval_state: "DISPATCHABLE" as const,
+    }));
     await dispatchWorkstreams({
       missionId,
       workstreams: workstreams.slice(0, 1),

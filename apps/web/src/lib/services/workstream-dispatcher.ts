@@ -43,6 +43,13 @@ export async function dispatchWorkstreams(input: {
   const nextRows: WorkstreamState[] = [...state.workstreams];
 
   for (const stream of input.workstreams) {
+    if (stream.approval_state !== "DISPATCHABLE" && stream.approval_state !== undefined) {
+      blocked.push({
+        workstream_id: stream.workstream_id,
+        reason: `WORKSTREAM_NOT_APPROVED: approval_state=${stream.approval_state}; owner must approve before dispatch`,
+      });
+      continue;
+    }
     const correlationId = correlationIdFor(input.missionId, stream.workstream_id);
     let existing = nextRows.find((row) => row.workstream_id === stream.workstream_id);
     if (!existing) {

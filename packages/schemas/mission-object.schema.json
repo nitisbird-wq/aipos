@@ -32,8 +32,13 @@
     "mapping_version": { "type": "string", "const": "1.0" },
     "status": {
       "type": "string",
-      "enum": ["draft", "ready", "understanding", "blocked", "cancelled"],
-      "description": "MVP lifecycle uses ready|blocked|cancelled. ready = ready_for_planning. draft/understanding reserved for forward compatibility."
+      "enum": ["draft", "ready", "understanding", "active", "blocked", "cancelled", "closed"],
+      "description": "MVP lifecycle uses ready|blocked|cancelled. ready = ready_for_planning. draft/understanding reserved for forward compatibility. active/closed added under ADR-005 (Phase 3a coarse status); closed is reserved until a Closeout ADR ships."
+    },
+    "status_before_block": {
+      "type": ["string", "null"],
+      "enum": ["draft", "ready", "understanding", "active", "blocked", "cancelled", "closed", null],
+      "description": "ADR-005 D-005.3/§5: set on mission_block, restored on mission_unblock, cleared after. Not wired to runtime transitions until Phase 3a.7."
     },
     "planning_status": {
       "type": "string",

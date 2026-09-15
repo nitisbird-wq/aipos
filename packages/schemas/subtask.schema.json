@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aipos.local/schemas/subtask.schema.json",
+  "title": "Subtask",
+  "description": "Phase 3a Subtask aggregate (ADR-005). L0-L1 risk only in 3a. Schema-only contract; runtime persistence lands in later 3a implementation PRs (docs/PHASE_3_DELIVERY_PLAN.md).",
+  "version": "1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "subtask_id",
+    "plan_id",
+    "mission_id",
+    "status",
+    "risk",
+    "depends_on",
+    "body",
+    "created_at",
+    "updated_at"
+  ],
+  "properties": {
+    "subtask_id": { "type": "string", "pattern": "^SUB-" },
+    "plan_id": { "type": "string", "pattern": "^PLN-" },
+    "mission_id": { "type": "string", "pattern": "^MIS-" },
+    "status": {
+      "type": "string",
+      "enum": ["proposed", "approved", "ready", "blocked", "cancelled"]
+    },
+    "risk": { "type": "string", "enum": ["L0", "L1"] },
+    "depends_on": { "type": "array", "items": { "type": "string", "pattern": "^SUB-" } },
+    "body": { "type": "object" },
+    "correlation_id": { "type": "string", "minLength": 1 },
+    "created_at": { "type": "string" },
+    "updated_at": { "type": "string" }
+  }
+}

@@ -90,7 +90,10 @@ async function seedMission(idempotencyKey: string) {
   });
   return {
     missionId: confirmed.mission_id,
-    workstreams: decomposeMissionStrategy(strategy),
+    workstreams: decomposeMissionStrategy(strategy).map((ws) => ({
+      ...ws,
+      approval_state: "DISPATCHABLE" as const,
+    })),
   };
 }
 
