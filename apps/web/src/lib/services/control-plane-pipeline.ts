@@ -93,7 +93,10 @@ export async function runControlPlanePipeline(input: {
     analysis,
     contextPack,
   });
-  const workstreams = decomposeMissionStrategy(strategy);
+  const workstreams = decomposeMissionStrategy(strategy).map((ws) => ({
+    ...ws,
+    approval_state: "DISPATCHABLE" as const,
+  }));
 
   // Capability truth gate: dispatch is forbidden when no routable operator is verified.
   const registry = await listCapabilityRegistry();
