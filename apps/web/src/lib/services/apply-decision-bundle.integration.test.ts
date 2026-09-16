@@ -121,17 +121,16 @@ describe("Owner-approved Decision Bundle — brain-training game research", () =
 
     // WS6 = "produce recommendation" — has notion_writer, L2 authority, Human Gate
     // Identify by notion_writer in tools or by being 2nd-to-last (WS6 of 7)
-    const ws6 = sorted.find((ws) => ws.proposed_tools?.includes("notion_writer"))
-      ?? sorted[sorted.length - 2]!;
+    const ws6 =
+      sorted.find((ws) => ws.proposed_tools?.includes("notion_writer")) ??
+      sorted[sorted.length - 2]!;
     recommendWsId = ws6.workstream_id;
 
     // WS7 = independent verification (last WS, depends on WS6)
     const ws7 = sorted[sorted.length - 1]!;
 
     // WS1-5: approve all workstreams before WS6
-    const beforeWs6 = sorted.filter(
-      (ws) => ws.execution_order < ws6.execution_order,
-    );
+    const beforeWs6 = sorted.filter((ws) => ws.execution_order < ws6.execution_order);
 
     console.log(`\n=== EDIT target: WS${ws6.execution_order} "${ws6.title}" ===`);
     console.log(`    Tools: ${ws6.proposed_tools?.join(",")}`);
@@ -164,9 +163,7 @@ describe("Owner-approved Decision Bundle — brain-training game research", () =
     const result1 = await applyDecisionBundle(bundle1, "operator:nitisbird");
     console.log(`\n=== Bundle 1 result ===`);
     console.log(`  ok: ${result1.ok}, applied: ${result1.applied}, failed: ${result1.failed}`);
-    result1.verifications.forEach((v) =>
-      console.log(`  ${v.workstream_id}: ${v.final_state}`),
-    );
+    result1.verifications.forEach((v) => console.log(`  ${v.workstream_id}: ${v.final_state}`));
 
     expect(result1.ok).toBe(true);
     expect(result1.failed).toBe(0);
@@ -216,9 +213,7 @@ describe("Owner-approved Decision Bundle — brain-training game research", () =
     const result2 = await applyDecisionBundle(bundle2, "operator:nitisbird");
     console.log(`\n=== Bundle 2 result ===`);
     console.log(`  ok: ${result2.ok}, applied: ${result2.applied}, failed: ${result2.failed}`);
-    result2.verifications.forEach((v) =>
-      console.log(`  ${v.workstream_id}: ${v.final_state}`),
-    );
+    result2.verifications.forEach((v) => console.log(`  ${v.workstream_id}: ${v.final_state}`));
 
     expect(result2.ok).toBe(true);
     expect(result2.failed).toBe(0);
