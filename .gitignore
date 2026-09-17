@@ -17,4 +17,8 @@ apps/web/.data/
 apps/web/.data-test/
 .data-stage7-e2e/
 apps/web/.data-stage7-e2e/
+.data-a3-e2e-proof/
+apps/web/.data-a3-e2e-proof/
+.data-test-mission-e2e-7d/
+apps/web/.data-test-mission-e2e-7d/
 AIPOS_AUDIT_REPORT.md
