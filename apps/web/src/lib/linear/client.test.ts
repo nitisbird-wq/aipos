@@ -185,7 +185,10 @@ describe("Linear dispatch client", () => {
         ],
       }),
     });
-    const workstreams = decomposeMissionStrategy(strategy);
+    const workstreams = decomposeMissionStrategy(strategy).map((ws) => ({
+      ...ws,
+      approval_state: "DISPATCHABLE" as const,
+    }));
     const client = createMockLinearClient();
     const result = await dispatchWorkstreams({
       missionId: confirmed.mission_id,

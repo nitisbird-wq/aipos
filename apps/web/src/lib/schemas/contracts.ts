@@ -134,6 +134,9 @@ export type OwnerInteractionContract = z.infer<typeof OwnerInteractionContractSc
 
 export const WorkstreamStatusSchema = z.enum(["pending", "ready", "blocked", "done", "cancelled"]);
 
+export const WorkstreamApprovalStateSchema = z.enum(["PROPOSED", "APPROVED", "DISPATCHABLE"]);
+export type WorkstreamApprovalState = z.infer<typeof WorkstreamApprovalStateSchema>;
+
 export const OutcomeWorkstreamSchema = z.object({
   workstream_id: z.string().min(1),
   mission_id: z.string().min(1),
@@ -150,8 +153,43 @@ export const OutcomeWorkstreamSchema = z.object({
   parallelizable: z.boolean(),
   execution_order: z.number().int().min(1),
   status: WorkstreamStatusSchema,
+  // Plan-review approval fields
+  approval_state: WorkstreamApprovalStateSchema.default("PROPOSED"),
+  owner_notes: z.string().default(""),
+  // Rich plan detail fields — required for owner evaluation before approval
+  proposed_actions: z.array(z.string()).default([]),
+  execution_steps: z.array(z.string()).default([]),
+  proposed_worker: z.string().default(""),
+  proposed_tools: z.array(z.string()).default([]),
+  evidence_requirements: z.array(z.string()).default([]),
+  authority_level: z.enum(["L0", "L1", "L2", "L3", "L4"]).default("L1"),
+  human_gate_required: z.boolean().default(false),
+  recovery_strategy: z.string().default(""),
 });
 export type OutcomeWorkstream = z.infer<typeof OutcomeWorkstreamSchema>;
+
+export const OwnerQuestionSchema = z.object({
+  id: z.string().min(1),
+  question: z.string().min(1),
+  answer: z.string().nullable().default(null),
+  required: z.boolean(),
+});
+export type OwnerQuestion = z.infer<typeof OwnerQuestionSchema>;
+
+export const PlanReviewStatusSchema = z.enum(["PENDING_REVIEW", "IN_REVIEW", "APPROVED"]);
+export type PlanReviewStatus = z.infer<typeof PlanReviewStatusSchema>;
+
+export const PlanReviewStateSchema = z.object({
+  plan_id: z.string().min(1),
+  mission_id: z.string().min(1),
+  strategy_id: z.string().min(1),
+  workstreams: z.array(OutcomeWorkstreamSchema),
+  owner_questions: z.array(OwnerQuestionSchema),
+  review_status: PlanReviewStatusSchema,
+  created_at: z.string().datetime(),
+  updated_at: z.string().datetime(),
+});
+export type PlanReviewState = z.infer<typeof PlanReviewStateSchema>;
 
 export const AuthorityActionSchema = z.object({
   proposed_action: z.string().min(1),
@@ -298,6 +336,7 @@ export const MissionControlStateSchema = z.object({
   artifacts: z.array(ArtifactStateSchema),
   verifications: z.array(VerificationStateSchema),
   blockers: z.array(BlockerStateSchema),
+  plan_review: PlanReviewStateSchema.optional(),
   updated_at: z.string().datetime(),
 });
 export type MissionControlState = z.infer<typeof MissionControlStateSchema>;

@@ -15,6 +15,12 @@ export const TRANSITION_ALLOWED: Record<
   understanding: { mission_block: "blocked", mission_cancel: "cancelled" },
   blocked: { mission_ready: "ready", mission_cancel: "cancelled" },
   cancelled: {},
+  // `active` / `closed` (ADR-005 D-005.3) have no MVP transition-button wiring yet.
+  // Coarse-status block/unblock/cancel commands for these land in the Phase 3a.7
+  // "Mission transitions" PR (status_before_block restore); left empty here so this
+  // Record stays exhaustive over MissionStatus without wiring new runtime behavior.
+  active: {},
+  closed: {},
 };
 
 export const TRANSITION_COMMANDS: CanonicalTransitionCommand[] = [

@@ -92,7 +92,10 @@ describe("AIPOS control plane v1 mission flow", () => {
       analysis,
       contextPack,
     });
-    const workstreams = decomposeMissionStrategy(strategy);
+    const workstreams = decomposeMissionStrategy(strategy).map((ws) => ({
+      ...ws,
+      approval_state: "DISPATCHABLE" as const,
+    }));
 
     const memoryLinear: Record<string, { id: string; title: string }> = {};
     const dispatch = await dispatchWorkstreams({
