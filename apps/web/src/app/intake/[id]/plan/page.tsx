@@ -1,9 +1,16 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import type { PlanReviewState, OutcomeWorkstream, OwnerQuestion } from "@/lib/schemas/contracts";
+import type {
+  PlanReviewState,
+  OutcomeWorkstream,
+  OwnerQuestion,
+  MissionStrategy,
+} from "@/lib/schemas/contracts";
+import { generateAllWorkOrders } from "@/lib/services/work-order-generator";
+import type { AiWorkOrder } from "@/lib/schemas/work-order";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -369,11 +376,323 @@ function FieldTextarea({
   );
 }
 
+// ── Work order helpers ────────────────────────────────────────────────────────
+
+function buildProxyStrategy(plan: PlanReviewState): MissionStrategy {
+  const sorted = [...plan.workstreams].sort((a, b) => a.execution_order - b.execution_order);
+  const lastWs = sorted[sorted.length - 1];
+  const lastOutput = lastWs?.expected_output[0] ?? "Mission deliverables complete";
+  return {
+    strategy_id: plan.strategy_id,
+    mission_id: plan.mission_id,
+    objective: `Complete all workstreams for mission ${plan.mission_id}`,
+    desired_outcome: lastOutput,
+    final_deliverable: {
+      deliverable_type: lastOutput,
+      audience: "Mission owner",
+      purpose: "Complete mission objectives",
+      required_sections: lastWs?.acceptance_criteria ?? ["delivery_confirmed"],
+      required_artifacts: lastWs?.expected_output ?? [],
+      quality_standard: "All acceptance criteria met",
+      acceptance_criteria: lastWs?.acceptance_criteria ?? ["delivery_confirmed"],
+      evidence_requirement: lastWs?.evidence_requirements[0] ?? "delivery_evidence",
+      format: "as_specified_by_workstream",
+      completion_definition: "All workstream acceptance criteria satisfied",
+    },
+    selected_playbook: "research",
+    strategy_reasoning: [`Auto-generated from plan ${plan.plan_id}`],
+    missing_information: [],
+    backward_plan_summary: [`From plan ${plan.plan_id}: complete ${sorted.length} workstreams`],
+    decomposition_ready: true,
+  };
+}
+
+const TASK_TYPE_COLORS: Record<string, { bg: string; color: string; border: string }> = {
+  TRANSCRIPTION: { bg: "#f0f9ff", color: "#0369a1", border: "#bae6fd" },
+  RESEARCH: { bg: "#f0fdf4", color: "#166534", border: "#bbf7d0" },
+  ANALYSIS: { bg: "#fef9c3", color: "#713f12", border: "#fde68a" },
+  WRITING: { bg: "#fdf4ff", color: "#7e22ce", border: "#e9d5ff" },
+  IMAGE_GENERATION: { bg: "#fff7ed", color: "#9a3412", border: "#fed7aa" },
+  PRESENTATION: { bg: "#eff6ff", color: "#1d4ed8", border: "#bfdbfe" },
+  CODING: { bg: "#fef2f2", color: "#991b1b", border: "#fecaca" },
+  VERIFICATION: { bg: "#f0fdfa", color: "#0f766e", border: "#99f6e4" },
+  DELIVERY: { bg: "#f9fafb", color: "#1f2937", border: "#d1d5db" },
+  HUMAN_GATE: { bg: "#fffbeb", color: "#78350f", border: "#fcd34d" },
+};
+
+function WorkOrderPanel({ wo }: { wo: AiWorkOrder }) {
+  const [copied, setCopied] = useState(false);
+  const ts = TASK_TYPE_COLORS[wo.task_type] ?? TASK_TYPE_COLORS["RESEARCH"]!;
+
+  function copyPrompt() {
+    navigator.clipboard.writeText(wo.execution_prompt).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2200);
+    });
+  }
+
+  return (
+    <div
+      style={{
+        padding: "1.1rem 1rem",
+        borderTop: "1px solid var(--border)",
+        display: "flex",
+        flexDirection: "column",
+        gap: "1rem",
+      }}
+    >
+      {/* Header: task type badge + work order id + copy button */}
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          gap: "0.5rem",
+        }}
+      >
+        <span
+          style={{
+            background: ts.bg,
+            color: ts.color,
+            border: `1px solid ${ts.border}`,
+            borderRadius: "6px",
+            padding: "0.2rem 0.6rem",
+            fontSize: "0.78rem",
+            fontWeight: 700,
+            letterSpacing: "0.04em",
+          }}
+        >
+          {wo.task_type}
+        </span>
+        <span
+          style={{
+            fontFamily: "var(--font-mono), monospace",
+            fontSize: "0.76rem",
+            color: "var(--ink-muted)",
+          }}
+        >
+          {wo.work_order_id}
+        </span>
+        <span
+          style={{
+            fontFamily: "var(--font-mono), monospace",
+            fontSize: "0.73rem",
+            color: "var(--ink-muted)",
+            opacity: 0.55,
+          }}
+        >
+          v{wo.prompt_version}
+        </span>
+        <div style={{ marginLeft: "auto" }}>
+          <button
+            className="btn btn-secondary"
+            style={{ fontSize: "0.78rem", padding: "0.35rem 0.7rem" }}
+            onClick={copyPrompt}
+          >
+            {copied ? "✓ Copied" : "Copy Prompt"}
+          </button>
+        </div>
+      </div>
+
+      {/* Execution prompt (read-only) */}
+      <div>
+        <SectionLabel>Execution Prompt — paste into your AI worker</SectionLabel>
+        <pre
+          style={{
+            background: "#f7faf8",
+            border: "1px solid var(--border)",
+            borderRadius: "8px",
+            padding: "0.85rem 1rem",
+            fontSize: "0.79rem",
+            lineHeight: 1.65,
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-word",
+            margin: 0,
+            maxHeight: "18rem",
+            overflowY: "auto",
+          }}
+        >
+          {wo.execution_prompt}
+        </pre>
+      </div>
+
+      {/* Collapsible 13-question detail */}
+      <details>
+        <summary
+          style={{
+            cursor: "pointer",
+            userSelect: "none",
+            fontSize: "0.78rem",
+            fontWeight: 600,
+            color: "var(--ink-muted)",
+            listStyle: "none",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.4rem",
+          }}
+        >
+          <span style={{ fontSize: "0.65rem" }}>▶</span>
+          Full work order — 13 fields, dependencies, evidence, failure
+        </summary>
+
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "0.85rem",
+            paddingTop: "0.9rem",
+          }}
+        >
+          <DetailGrid>
+            <DetailCell label="Q1 — Task objective">{wo.task_objective}</DetailCell>
+            <DetailCell label="Mission context">
+              <span
+                style={{
+                  fontFamily: "var(--font-mono), monospace",
+                  fontSize: "0.8rem",
+                }}
+              >
+                {wo.mission_context}
+              </span>
+            </DetailCell>
+          </DetailGrid>
+
+          <DetailCell label="Q2 — Required inputs">
+            <BulletList items={wo.required_inputs} />
+          </DetailCell>
+
+          <DetailCell label="Q3 — Upstream artifacts consumed">
+            <BulletList items={wo.previous_artifacts.length ? wo.previous_artifacts : ["—"]} />
+          </DetailCell>
+
+          <DetailCell label="Q4 — Proposed actions">
+            <BulletList items={wo.proposed_actions} numbered />
+          </DetailCell>
+
+          <DetailGrid>
+            <DetailCell label="Q5 — Recommended worker">
+              <Chips items={[wo.recommended_worker]} accent />
+            </DetailCell>
+            <DetailCell label="Q6 — Tools">
+              <Chips items={wo.recommended_tools} />
+            </DetailCell>
+          </DetailGrid>
+
+          <DetailCell label="Q8 — Expected output">{wo.expected_output}</DetailCell>
+
+          <DetailGrid>
+            <DetailCell label="Output artifact key">
+              <span
+                style={{ fontFamily: "var(--font-mono), monospace", fontSize: "0.82rem" }}
+              >
+                {wo.output_schema.artifact_key} ({wo.output_schema.artifact_type})
+              </span>
+            </DetailCell>
+            <DetailCell label="Artifact version">
+              <span
+                style={{ fontFamily: "var(--font-mono), monospace", fontSize: "0.82rem" }}
+              >
+                {wo.artifact_version}
+              </span>
+            </DetailCell>
+          </DetailGrid>
+
+          <DetailCell label="Q9 — Evidence requirements">
+            <BulletList items={wo.evidence_requirements} />
+          </DetailCell>
+
+          <DetailCell label="Acceptance criteria">
+            <BulletList items={wo.acceptance_criteria} />
+          </DetailCell>
+
+          <DetailCell label="Q10 — Depends on work orders">
+            {wo.depends_on_work_orders.length ? (
+              <Chips items={wo.depends_on_work_orders} />
+            ) : (
+              <span style={{ color: "var(--ink-muted)", fontSize: "0.85rem" }}>None</span>
+            )}
+          </DetailCell>
+
+          <DetailGrid>
+            <DetailCell label="Q11 — Authority / Risk">
+              <span
+                style={{
+                  fontFamily: "var(--font-mono), monospace",
+                  fontWeight: 700,
+                  color:
+                    wo.authority_level === "L4" || wo.authority_level === "L3"
+                      ? "#9b2c2c"
+                      : wo.authority_level === "L2"
+                        ? "#8a6d1f"
+                        : "var(--accent)",
+                }}
+              >
+                {wo.authority_level}
+              </span>
+              {" / "}
+              <span
+                style={{
+                  fontFamily: "var(--font-mono), monospace",
+                  fontWeight: 700,
+                  color:
+                    wo.risk_level === "L4" || wo.risk_level === "L3"
+                      ? "#9b2c2c"
+                      : wo.risk_level === "L2"
+                        ? "#8a6d1f"
+                        : "var(--ok)",
+                }}
+              >
+                {wo.risk_level}
+              </span>
+            </DetailCell>
+            <DetailCell label="Side-effect class">
+              <span
+                style={{ fontFamily: "var(--font-mono), monospace", fontSize: "0.82rem" }}
+              >
+                {wo.side_effect_class}
+              </span>
+            </DetailCell>
+          </DetailGrid>
+
+          {wo.human_decision_required && wo.human_decision_question && (
+            <DetailCell label="Human decision required">
+              <span style={{ color: "#92400e", fontWeight: 600 }}>
+                ⚠ {wo.human_decision_question}
+              </span>
+            </DetailCell>
+          )}
+
+          {wo.approval_scope && (
+            <DetailCell label="Approval scope (governance)">
+              <span
+                style={{
+                  color: "#7c3aed",
+                  fontWeight: 600,
+                  fontSize: "0.82rem",
+                }}
+              >
+                {wo.approval_scope.scope_description}
+              </span>
+            </DetailCell>
+          )}
+
+          <DetailCell label="Q12 — On failure">{wo.failure_instructions}</DetailCell>
+          <DetailCell label="Retry policy">{wo.retry_policy}</DetailCell>
+          <DetailCell label="Q13 — Handoff / next destination">
+            {wo.handoff_instructions}
+          </DetailCell>
+        </div>
+      </details>
+    </div>
+  );
+}
+
 // ── Workstream card ───────────────────────────────────────────────────────────
 
 function WorkstreamCard({
   ws,
   allWs,
+  wo,
   isBusy,
   onApprove,
   onEdit,
@@ -382,6 +701,7 @@ function WorkstreamCard({
 }: {
   ws: OutcomeWorkstream;
   allWs: OutcomeWorkstream[];
+  wo?: AiWorkOrder;
   isBusy: boolean;
   onApprove: () => void;
   onEdit: () => void;
@@ -708,6 +1028,47 @@ function WorkstreamCard({
           </DetailGrid>
         </div>
       </details>
+
+      {/* AI Work Order panel */}
+      {wo && (
+        <details>
+          <summary
+            style={{
+              padding: "0.55rem 1rem",
+              cursor: "pointer",
+              userSelect: "none",
+              fontSize: "0.82rem",
+              fontWeight: 600,
+              color: "#1d4ed8",
+              background: "#eff6ff",
+              borderTop: "1px solid var(--border)",
+              listStyle: "none",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.4rem",
+            }}
+          >
+            <span style={{ fontSize: "0.7rem" }}>▶</span>
+            AI Work Order — execution prompt, 13 fields, governance
+            <span
+              style={{
+                marginLeft: "auto",
+                background: TASK_TYPE_COLORS[wo.task_type]?.bg ?? "#f9fafb",
+                color: TASK_TYPE_COLORS[wo.task_type]?.color ?? "#374151",
+                border: `1px solid ${TASK_TYPE_COLORS[wo.task_type]?.border ?? "#d1d5db"}`,
+                borderRadius: "5px",
+                padding: "0.1rem 0.45rem",
+                fontSize: "0.72rem",
+                fontWeight: 700,
+                letterSpacing: "0.04em",
+              }}
+            >
+              {wo.task_type}
+            </span>
+          </summary>
+          <WorkOrderPanel wo={wo} />
+        </details>
+      )}
     </div>
   );
 }
@@ -1693,6 +2054,24 @@ export default function PlanReviewPage() {
   const pendingCount = plan.workstreams.filter((ws) => ws.approval_state === "PROPOSED").length;
   const sortedWs = [...plan.workstreams].sort((a, b) => a.execution_order - b.execution_order);
 
+  // Generate AI work orders client-side from plan data.
+  // Uses a proxy strategy reconstructed from the plan so execution prompts
+  // contain actual workstream content even when the full strategy isn't loaded.
+  const workOrderMap = useMemo<Map<string, AiWorkOrder>>(() => {
+    try {
+      const strategy = buildProxyStrategy(plan);
+      const orders = generateAllWorkOrders(
+        { workstreams: plan.workstreams },
+        strategy,
+      );
+      const map = new Map<string, AiWorkOrder>();
+      for (const wo of orders) map.set(wo.workstream_id, wo);
+      return map;
+    } catch {
+      return new Map();
+    }
+  }, [plan]);
+
   return (
     <>
       <div
@@ -1861,6 +2240,7 @@ export default function PlanReviewPage() {
                 key={ws.workstream_id}
                 ws={ws}
                 allWs={plan.workstreams}
+                wo={workOrderMap.get(ws.workstream_id)}
                 isBusy={isBusy}
                 onApprove={() => approveWorkstream(ws.workstream_id)}
                 onEdit={() => startEdit(ws)}
